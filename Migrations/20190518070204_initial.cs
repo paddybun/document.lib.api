@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace document.lib.api.Migrations
 {
-    public partial class Initial : Migration
+    public partial class initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -14,7 +14,8 @@ namespace document.lib.api.Migrations
                     Id = table.Column<Guid>(nullable: false, defaultValueSql: "newsequentialid()"),
                     Name = table.Column<string>(nullable: true),
                     Abbreviation = table.Column<string>(nullable: true),
-                    CreatedAt = table.Column<DateTimeOffset>(nullable: false)
+                    CreatedAt = table.Column<DateTimeOffset>(nullable: false),
+                    LastUpdatedAt = table.Column<DateTimeOffset>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -27,7 +28,8 @@ namespace document.lib.api.Migrations
                 {
                     Id = table.Column<Guid>(nullable: false, defaultValueSql: "newsequentialid()"),
                     Name = table.Column<string>(nullable: true),
-                    CreatedAt = table.Column<DateTimeOffset>(nullable: false)
+                    CreatedAt = table.Column<DateTimeOffset>(nullable: false),
+                    LastUpdatedAt = table.Column<DateTimeOffset>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -40,7 +42,8 @@ namespace document.lib.api.Migrations
                 {
                     Id = table.Column<Guid>(nullable: false, defaultValueSql: "newsequentialid()"),
                     Name = table.Column<string>(nullable: true),
-                    CreatedAt = table.Column<DateTimeOffset>(nullable: false)
+                    CreatedAt = table.Column<DateTimeOffset>(nullable: false),
+                    LastUpdatedAt = table.Column<DateTimeOffset>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -55,7 +58,8 @@ namespace document.lib.api.Migrations
                     Name = table.Column<string>(nullable: true),
                     CategoryId = table.Column<Guid>(nullable: true),
                     FolderId = table.Column<Guid>(nullable: true),
-                    CreatedAt = table.Column<DateTimeOffset>(nullable: false)
+                    CreatedAt = table.Column<DateTimeOffset>(nullable: false),
+                    LastUpdatedAt = table.Column<DateTimeOffset>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -81,7 +85,8 @@ namespace document.lib.api.Migrations
                     Id = table.Column<Guid>(nullable: false, defaultValueSql: "newsequentialid()"),
                     LibDocumentId = table.Column<Guid>(nullable: false),
                     TagId = table.Column<Guid>(nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(nullable: false)
+                    CreatedAt = table.Column<DateTimeOffset>(nullable: false),
+                    LastUpdatedAt = table.Column<DateTimeOffset>(nullable: false)
                 },
                 constraints: table =>
                 {

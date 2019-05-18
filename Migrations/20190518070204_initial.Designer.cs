@@ -10,8 +10,8 @@ using document.lib.api;
 namespace document.lib.api.Migrations
 {
     [DbContext(typeof(DocumentlibContext))]
-    [Migration("20190512192954_Initial")]
-    partial class Initial
+    [Migration("20190518070204_initial")]
+    partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -31,6 +31,8 @@ namespace document.lib.api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt");
 
+                    b.Property<DateTimeOffset>("LastUpdatedAt");
+
                     b.Property<string>("Name");
 
                     b.HasKey("Id");
@@ -45,6 +47,8 @@ namespace document.lib.api.Migrations
                         .HasDefaultValueSql("newsequentialid()");
 
                     b.Property<DateTimeOffset>("CreatedAt");
+
+                    b.Property<DateTimeOffset>("LastUpdatedAt");
 
                     b.Property<Guid>("LibDocumentId");
 
@@ -65,6 +69,8 @@ namespace document.lib.api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt");
 
+                    b.Property<DateTimeOffset>("LastUpdatedAt");
+
                     b.Property<string>("Name");
 
                     b.HasKey("Id");
@@ -84,6 +90,8 @@ namespace document.lib.api.Migrations
 
                     b.Property<Guid?>("FolderId");
 
+                    b.Property<DateTimeOffset>("LastUpdatedAt");
+
                     b.Property<string>("Name");
 
                     b.HasKey("Id");
@@ -102,6 +110,8 @@ namespace document.lib.api.Migrations
                         .HasDefaultValueSql("newsequentialid()");
 
                     b.Property<DateTimeOffset>("CreatedAt");
+
+                    b.Property<DateTimeOffset>("LastUpdatedAt");
 
                     b.Property<string>("Name");
 

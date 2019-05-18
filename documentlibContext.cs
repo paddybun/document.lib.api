@@ -1,4 +1,7 @@
-﻿using document.lib.api.Models;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using document.lib.api.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.api
@@ -22,6 +25,19 @@ namespace document.lib.api
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+        }
+
+        public override int SaveChanges()
+        {
+            OnBeforeSaving();
+            return base.SaveChanges();
+        }
+
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
+        {
+            OnBeforeSaving();
+            return base.SaveChangesAsync(cancellationToken);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -67,6 +83,43 @@ namespace document.lib.api
                 .HasOne(dt => dt.Tag)
                 .WithMany(dt => dt.Documents)
                 .HasForeignKey(dt => dt.LibDocumentId);
+
+            // Hidden Properties
+            modelBuilder.Entity<Category>().Property<DateTimeOffset>("CreatedAt");
+            modelBuilder.Entity<Category>().Property<DateTimeOffset>("LastUpdatedAt");
+            modelBuilder.Entity<DocumentTag>().Property<DateTimeOffset>("CreatedAt");
+            modelBuilder.Entity<DocumentTag>().Property<DateTimeOffset>("LastUpdatedAt");
+            modelBuilder.Entity<Folder>().Property<DateTimeOffset>("CreatedAt");
+            modelBuilder.Entity<Folder>().Property<DateTimeOffset>("LastUpdatedAt");
+            modelBuilder.Entity<LibDocument>().Property<DateTimeOffset>("CreatedAt");
+            modelBuilder.Entity<LibDocument>().Property<DateTimeOffset>("LastUpdatedAt");
+            modelBuilder.Entity<Tag>().Property<DateTimeOffset>("CreatedAt");
+            modelBuilder.Entity<Tag>().Property<DateTimeOffset>("LastUpdatedAt");
+        }
+
+        private void OnBeforeSaving()
+        {
+            var entries = ChangeTracker.Entries();
+            foreach (var entry in entries)
+            {
+                var now = DateTimeOffset.Now;
+                switch (entry.State)
+                {
+                    case EntityState.Modified:
+                        entry.CurrentValues["LastUpdatedAt"] = now;
+                        break;
+
+                    case EntityState.Added:
+                        entry.CurrentValues["CreatedAt"] = now;
+                        entry.CurrentValues["LastUpdatedAt"] = now;
+                        break;
+                    case EntityState.Detached:
+                    case EntityState.Unchanged:
+                    case EntityState.Deleted:
+                    default:
+                        break;
+                }
+            }
         }
     }
 }

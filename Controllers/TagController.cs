@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using document.lib.api.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -16,13 +17,20 @@ namespace document.lib.api.Controllers
             _dbContext = dbContext;
         }
 
+        [HttpGet]
+        public ActionResult GetTags()
+        {
+            var result = _dbContext.Tags.OrderBy(tag => tag.Name);
+            return Ok(JsonConvert.SerializeObject(result));
+        }
+
         [HttpPost]
         public async Task<ActionResult> CreateTag([FromBody]CreateTagRequest request)
         {
-            var tag = new Tag { CreatedAt = DateTimeOffset.Now, Name = request.Name };
+            var tag = new Tag { Name = request.Name };
             _dbContext.Tags.Add(tag);
             await _dbContext.SaveChangesAsync();
-            return Ok(tag);
+            return Ok();
         }
     }
 

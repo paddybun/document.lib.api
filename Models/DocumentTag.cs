@@ -9,6 +9,5 @@ namespace document.lib.api.Models
         public LibDocument LibDocument { get; set; }
         public Guid TagId { get; set; }
         public Tag Tag { get; set; }
-        public DateTimeOffset CreatedAt { get; set; }
     }
 }

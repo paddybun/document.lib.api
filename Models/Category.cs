@@ -10,6 +10,5 @@ namespace document.lib.api.Models
         public Guid Id { get; set; }
         public string Name { get; set; }
         public string Abbreviation { get; set; }
-        public DateTimeOffset CreatedAt { get; set; }
     }
 }
