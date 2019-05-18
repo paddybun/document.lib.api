@@ -27,7 +27,15 @@ namespace document.lib.api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddCors(o => o.AddDefaultPolicy(builder =>
+            {
+                builder.WithOrigins("http://localhost:4200")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            }));
+
+
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddDbContext<DocumentlibContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DocumentLib")));
 
@@ -49,6 +57,8 @@ namespace document.lib.api
             {
                 app.UseHsts();
             }
+
+            app.UseCors();
 
             app.UseSwagger();
             app.UseSwaggerUI(c =>
