@@ -22,33 +22,67 @@ namespace document.lib.api.Controllers
         [HttpGet]
         public ActionResult GetDocuments()
         {
-            var documents = _documentlibContext.LibDocuments.OrderBy(doc => doc.Id);
-            var serialized = JsonConvert.SerializeObject(documents);
-            return Ok(serialized);
+            var documents = _documentlibContext.LibDocuments
+                .Include(doc => doc.Tags)
+                    .ThenInclude(tag => tag.Tag)
+                .Include(doc => doc.Folder)
+                .Include(doc => doc.Category)
+                .OrderBy(doc => doc.Id);
+
+            var response = documents.Select(doc => new GetDocumentResponse
+            {
+                Id = doc.Id.ToString(),
+                Folder = doc.Folder.Name,
+                Category = doc.Category.Name,
+                Tags = doc.Tags.Select(t => t.Tag.Name).ToArray(),
+                Name = doc.Name
+            });
+            return Ok(response);
         }
 
         [HttpPut]
         public async Task<ActionResult> PutDocument([FromBody] PutDocumentRequest request)
         {
-            var tags = _documentlibContext.Tags.Where(tag => request.Tags.Contains(tag.Id));
-            var tagRelations = tags.Select(tag => new DocumentTag {TagId = tag.Id}).ToArray();
+            var category = _documentlibContext.Categories.Single(cat => cat.Id == request.CategoryId);
+            var folder = _documentlibContext.Folders.Single(f => f.Id == request.FolderId);
 
             var newDoc = new LibDocument
             {
-                Category = _documentlibContext.Categories.Single(cat => cat.Id == request.CategoryId),
-                Folder = _documentlibContext.Folders.Single(folder => folder.Id == request.FolderId),
-                Name = request.Name,
-                Tags = tagRelations
+                Category = category,
+                Folder = folder,
+                Name = request.Name
             };
+
+            var tags = _documentlibContext.Tags.Where(tag => request.Tags.Contains(tag.Id));
+            var tagRelations = tags.Select(tag => new DocumentTag { Tag = tag, LibDocument = newDoc }).ToArray();
+            newDoc.Tags = tagRelations;
 
             await _documentlibContext.LibDocuments.AddAsync(newDoc);
             await _documentlibContext.SaveChangesAsync();
-            return Ok(newDoc);
+            return Ok(new PutDocumentResponse
+            {
+                Folder = folder.Name,
+                Category = category.Name,
+                Id = newDoc.Id.ToString(),
+                Tags = tags.Select(t => t.Name).ToArray(),
+                Name = newDoc.Name
+            });
         }
     }
 
     public partial class DocumentController
     {
+        public class PutDocumentResponse : GetDocumentResponse { }
+
+        public class GetDocumentResponse
+        {
+            public string Id { get; set; }
+            public string Name { get; set; }
+            public string[] Tags { get; set; }
+            public string Category { get; set; }
+            public string Folder { get; set; }
+        }
+
         public class PutDocumentRequest
         {
             [JsonProperty("folder")]

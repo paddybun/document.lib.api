@@ -20,17 +20,17 @@ namespace document.lib.api.Controllers
         [HttpGet]
         public ActionResult GetTags()
         {
-            var result = _dbContext.Tags.OrderBy(tag => tag.Name);
-            return Ok(JsonConvert.SerializeObject(result));
+            var tags = _dbContext.Tags.OrderBy(tag => tag.Name);
+            return Ok(tags);
         }
 
-        [HttpPost]
+        [HttpPut]
         public async Task<ActionResult> CreateTag([FromBody]CreateTagRequest request)
         {
             var tag = new Tag { Name = request.Name };
-            _dbContext.Tags.Add(tag);
+            await _dbContext.Tags.AddAsync(tag);
             await _dbContext.SaveChangesAsync();
-            return Ok();
+            return Ok(tag);
         }
     }
 

@@ -92,15 +92,15 @@ namespace document.lib.api.Migrations
                 {
                     table.PrimaryKey("PK_DocumentTags", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_DocumentTags_LibDocuments_LibDocumentId",
-                        column: x => x.LibDocumentId,
-                        principalTable: "LibDocuments",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
                         name: "FK_DocumentTags_Tags_LibDocumentId",
                         column: x => x.LibDocumentId,
                         principalTable: "Tags",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DocumentTags_LibDocuments_TagId",
+                        column: x => x.TagId,
+                        principalTable: "LibDocuments",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -109,6 +109,11 @@ namespace document.lib.api.Migrations
                 name: "IX_DocumentTags_LibDocumentId",
                 table: "DocumentTags",
                 column: "LibDocumentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DocumentTags_TagId",
+                table: "DocumentTags",
+                column: "TagId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_LibDocuments_CategoryId",
@@ -127,10 +132,10 @@ namespace document.lib.api.Migrations
                 name: "DocumentTags");
 
             migrationBuilder.DropTable(
-                name: "LibDocuments");
+                name: "Tags");
 
             migrationBuilder.DropTable(
-                name: "Tags");
+                name: "LibDocuments");
 
             migrationBuilder.DropTable(
                 name: "Categories");

@@ -10,7 +10,7 @@ using document.lib.api;
 namespace document.lib.api.Migrations
 {
     [DbContext(typeof(DocumentlibContext))]
-    [Migration("20190518070204_initial")]
+    [Migration("20190518123109_initial")]
     partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -57,6 +57,8 @@ namespace document.lib.api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("LibDocumentId");
+
+                    b.HasIndex("TagId");
 
                     b.ToTable("DocumentTags");
                 });
@@ -122,14 +124,14 @@ namespace document.lib.api.Migrations
 
             modelBuilder.Entity("document.lib.api.Models.DocumentTag", b =>
                 {
-                    b.HasOne("document.lib.api.Models.LibDocument", "LibDocument")
-                        .WithMany("Tags")
-                        .HasForeignKey("LibDocumentId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.HasOne("document.lib.api.Models.Tag", "Tag")
                         .WithMany("Documents")
                         .HasForeignKey("LibDocumentId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("document.lib.api.Models.LibDocument", "LibDocument")
+                        .WithMany("Tags")
+                        .HasForeignKey("TagId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

@@ -77,7 +77,7 @@ namespace document.lib.api
             modelBuilder.Entity<DocumentTag>()
                 .HasOne(dt => dt.LibDocument)
                 .WithMany(dt => dt.Tags)
-                .HasForeignKey(dt => dt.LibDocumentId);
+                .HasForeignKey(dt => dt.TagId);
 
             modelBuilder.Entity<DocumentTag>()
                 .HasOne(dt => dt.Tag)

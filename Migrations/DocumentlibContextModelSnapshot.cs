@@ -56,6 +56,8 @@ namespace document.lib.api.Migrations
 
                     b.HasIndex("LibDocumentId");
 
+                    b.HasIndex("TagId");
+
                     b.ToTable("DocumentTags");
                 });
 
@@ -120,14 +122,14 @@ namespace document.lib.api.Migrations
 
             modelBuilder.Entity("document.lib.api.Models.DocumentTag", b =>
                 {
-                    b.HasOne("document.lib.api.Models.LibDocument", "LibDocument")
-                        .WithMany("Tags")
-                        .HasForeignKey("LibDocumentId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.HasOne("document.lib.api.Models.Tag", "Tag")
                         .WithMany("Documents")
                         .HasForeignKey("LibDocumentId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("document.lib.api.Models.LibDocument", "LibDocument")
+                        .WithMany("Tags")
+                        .HasForeignKey("TagId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
