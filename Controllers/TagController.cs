@@ -24,6 +24,13 @@ namespace document.lib.api.Controllers
             return Ok(tags);
         }
 
+        [HttpGet("{id}")]
+        public ActionResult GetTagById(Guid id)
+        {
+            var tag = _dbContext.Tags.Single(t => t.Id == id);
+            return Ok(tag);
+        }
+
         [HttpPut]
         public async Task<ActionResult> CreateTag([FromBody]CreateTagRequest request)
         {
