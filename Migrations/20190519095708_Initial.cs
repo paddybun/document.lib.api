@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace document.lib.api.Migrations
 {
-    public partial class initial : Migration
+    public partial class Initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -51,13 +51,35 @@ namespace document.lib.api.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Registers",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false, defaultValueSql: "newsequentialid()"),
+                    Name = table.Column<string>(nullable: true),
+                    DocumentCount = table.Column<int>(nullable: false),
+                    FolderId = table.Column<Guid>(nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(nullable: false),
+                    LastUpdatedAt = table.Column<DateTimeOffset>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Registers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Registers_Folders_FolderId",
+                        column: x => x.FolderId,
+                        principalTable: "Folders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "LibDocuments",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false, defaultValueSql: "newsequentialid()"),
                     Name = table.Column<string>(nullable: true),
                     CategoryId = table.Column<Guid>(nullable: true),
-                    FolderId = table.Column<Guid>(nullable: true),
+                    RegisterId = table.Column<Guid>(nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(nullable: false),
                     LastUpdatedAt = table.Column<DateTimeOffset>(nullable: false)
                 },
@@ -71,11 +93,11 @@ namespace document.lib.api.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_LibDocuments_Folders_FolderId",
-                        column: x => x.FolderId,
-                        principalTable: "Folders",
+                        name: "FK_LibDocuments_Registers_RegisterId",
+                        column: x => x.RegisterId,
+                        principalTable: "Registers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -121,8 +143,13 @@ namespace document.lib.api.Migrations
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_LibDocuments_FolderId",
+                name: "IX_LibDocuments_RegisterId",
                 table: "LibDocuments",
+                column: "RegisterId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Registers_FolderId",
+                table: "Registers",
                 column: "FolderId");
         }
 
@@ -139,6 +166,9 @@ namespace document.lib.api.Migrations
 
             migrationBuilder.DropTable(
                 name: "Categories");
+
+            migrationBuilder.DropTable(
+                name: "Registers");
 
             migrationBuilder.DropTable(
                 name: "Folders");

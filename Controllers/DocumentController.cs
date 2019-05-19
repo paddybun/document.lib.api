@@ -23,14 +23,12 @@ namespace document.lib.api.Controllers
             var documents = _documentlibContext.LibDocuments
                 .Include(doc => doc.Tags)
                     .ThenInclude(tag => tag.Tag)
-                .Include(doc => doc.Folder)
                 .Include(doc => doc.Category)
                 .OrderBy(doc => doc.Id);
 
             var response = documents.Select(doc => new GetDocumentResponse
             {
                 Id = doc.Id.ToString(),
-                Folder = doc.Folder.Name,
                 Category = doc.Category.Name,
                 Tags = doc.Tags.Select(t => t.Tag.Name).ToArray(),
                 Name = doc.Name
@@ -47,7 +45,6 @@ namespace document.lib.api.Controllers
             var newDoc = new LibDocument
             {
                 Category = category,
-                Folder = folder,
                 Name = request.Name
             };
 

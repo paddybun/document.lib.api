@@ -13,6 +13,7 @@ namespace document.lib.api
         public DbSet<Folder> Folders { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<LibDocument> LibDocuments { get; set; }
+        public DbSet<Register> Registers { get; set; }
 
         public DocumentlibContext()
         {
@@ -53,6 +54,8 @@ namespace document.lib.api
                 .HasKey(f => f.Id);
             modelBuilder.Entity<LibDocument>()
                 .HasKey(ld => ld.Id);
+            modelBuilder.Entity<Register>()
+                .HasKey(t => t.Id);
             modelBuilder.Entity<Tag>()
                 .HasKey(t => t.Id);
 
@@ -72,6 +75,9 @@ namespace document.lib.api
             modelBuilder.Entity<Tag>()
                 .Property(t => t.Id)
                 .HasDefaultValueSql("newsequentialid()");
+            modelBuilder.Entity<Register>()
+                .Property(t => t.Id)
+                .HasDefaultValueSql("newsequentialid()");
 
             // N to M mapping
             modelBuilder.Entity<DocumentTag>()
@@ -84,6 +90,26 @@ namespace document.lib.api
                 .WithMany(dt => dt.Documents)
                 .HasForeignKey(dt => dt.LibDocumentId);
 
+            // Relations
+            modelBuilder.Entity<Register>()
+                .HasOne(reg => reg.Folder)
+                .WithMany(folder => folder.Registers)
+                .HasForeignKey(fk => fk.FolderId);
+
+            modelBuilder.Entity<Register>()
+                .HasMany(reg => reg.Documents)
+                .WithOne(doc => doc.Register)
+                .HasForeignKey(fk => fk.RegisterId);
+
+            modelBuilder.Entity<Folder>()
+                .HasMany(f => f.Registers)
+                .WithOne(reg => reg.Folder);
+
+            modelBuilder.Entity<LibDocument>()
+                .HasOne(doc => doc.Register)
+                .WithMany(reg => reg.Documents)
+                .HasForeignKey(fk => fk.RegisterId);
+
             // Hidden Properties
             modelBuilder.Entity<Category>().Property<DateTimeOffset>("CreatedAt");
             modelBuilder.Entity<Category>().Property<DateTimeOffset>("LastUpdatedAt");
@@ -95,6 +121,8 @@ namespace document.lib.api
             modelBuilder.Entity<LibDocument>().Property<DateTimeOffset>("LastUpdatedAt");
             modelBuilder.Entity<Tag>().Property<DateTimeOffset>("CreatedAt");
             modelBuilder.Entity<Tag>().Property<DateTimeOffset>("LastUpdatedAt");
+            modelBuilder.Entity<Register>().Property<DateTimeOffset>("CreatedAt");
+            modelBuilder.Entity<Register>().Property<DateTimeOffset>("LastUpdatedAt");
         }
 
         private void OnBeforeSaving()

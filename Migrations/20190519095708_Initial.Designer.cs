@@ -10,8 +10,8 @@ using document.lib.api;
 namespace document.lib.api.Migrations
 {
     [DbContext(typeof(DocumentlibContext))]
-    [Migration("20190518123109_initial")]
-    partial class initial
+    [Migration("20190519095708_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -90,7 +90,32 @@ namespace document.lib.api.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt");
 
-                    b.Property<Guid?>("FolderId");
+                    b.Property<DateTimeOffset>("LastUpdatedAt");
+
+                    b.Property<string>("Name");
+
+                    b.Property<Guid>("RegisterId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("RegisterId");
+
+                    b.ToTable("LibDocuments");
+                });
+
+            modelBuilder.Entity("document.lib.api.Models.Register", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasDefaultValueSql("newsequentialid()");
+
+                    b.Property<DateTimeOffset>("CreatedAt");
+
+                    b.Property<int>("DocumentCount");
+
+                    b.Property<Guid>("FolderId");
 
                     b.Property<DateTimeOffset>("LastUpdatedAt");
 
@@ -98,11 +123,9 @@ namespace document.lib.api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId");
-
                     b.HasIndex("FolderId");
 
-                    b.ToTable("LibDocuments");
+                    b.ToTable("Registers");
                 });
 
             modelBuilder.Entity("document.lib.api.Models.Tag", b =>
@@ -141,9 +164,18 @@ namespace document.lib.api.Migrations
                         .WithMany()
                         .HasForeignKey("CategoryId");
 
-                    b.HasOne("document.lib.api.Models.Folder", "Folder")
+                    b.HasOne("document.lib.api.Models.Register", "Register")
                         .WithMany("Documents")
-                        .HasForeignKey("FolderId");
+                        .HasForeignKey("RegisterId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("document.lib.api.Models.Register", b =>
+                {
+                    b.HasOne("document.lib.api.Models.Folder", "Folder")
+                        .WithMany("Registers")
+                        .HasForeignKey("FolderId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
         }
