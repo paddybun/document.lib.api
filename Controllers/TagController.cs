@@ -32,10 +32,20 @@ namespace document.lib.api.Controllers
         }
 
         [HttpPut]
-        public async Task<ActionResult> CreateTag([FromBody]CreateTagRequest request)
+        public async Task<ActionResult> CreateTag([FromBody]PutTagRequest request)
         {
             var tag = new Tag { Name = request.Name };
             await _dbContext.Tags.AddAsync(tag);
+            await _dbContext.SaveChangesAsync();
+            return Ok(tag);
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> UpdateTag([FromBody]PostTagRequest request)
+        {
+            var tag = _dbContext.Tags.Single(t => t.Id == request.Id);
+            tag.Name = request.Name;
+            _dbContext.Tags.Update(tag);
             await _dbContext.SaveChangesAsync();
             return Ok(tag);
         }
@@ -43,7 +53,13 @@ namespace document.lib.api.Controllers
 
     public partial class TagController
     {
-        public class CreateTagRequest
+        public class PostTagRequest : PutTagRequest
+        {
+            [JsonProperty(PropertyName = "id")]
+            public Guid Id { get; set; }
+        }
+
+        public class PutTagRequest
         {
             [JsonProperty(PropertyName = "name")]
             public string Name { get; set; }

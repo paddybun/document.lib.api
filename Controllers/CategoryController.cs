@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using document.lib.api.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -23,6 +24,13 @@ namespace document.lib.api.Controllers
             return Ok(categories);
         }
 
+        [HttpGet("{id}")]
+        public ActionResult GetCategories(Guid id)
+        {
+            var categories = _documentlibContext.Categories.Single(cat => cat.Id == id);
+            return Ok(categories);
+        }
+
         [HttpPut]
         public async Task<ActionResult> PutCategory([FromBody]PutCategoryRequest request)
         {
@@ -35,10 +43,28 @@ namespace document.lib.api.Controllers
             await _documentlibContext.SaveChangesAsync();
             return Ok(newCategory);
         }
+
+        [HttpPost]
+        public async Task<ActionResult> UpdateCategory([FromBody]PostCategoryRequest request)
+        {
+            var category = _documentlibContext.Categories.Single(cat => cat.Id == request.Id);
+            category.Name = request.Name;
+            category.Abbreviation = request.Abbreviation;
+
+            _documentlibContext.Update(category);
+            await _documentlibContext.SaveChangesAsync();
+            return Ok(category);
+        }
     }
 
     public partial class CategoryController
     {
+        public class PostCategoryRequest : PutCategoryRequest
+        {
+            [JsonProperty("id")]
+            public Guid Id { get; set; }
+        }
+
         public class PutCategoryRequest
         {
             [JsonProperty("name")]
