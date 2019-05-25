@@ -1,7 +1,8 @@
-﻿using System.Linq;
-using System.Runtime.InteropServices;
+﻿using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using document.lib.api.Models;
+using document.lib.api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,10 +12,12 @@ namespace document.lib.api.Controllers
     public partial class DocumentController : Controller
     {
         private readonly DocumentlibContext _documentlibContext;
+        private readonly IDocumentService _documentService;
 
-        public DocumentController(DocumentlibContext documentlibContext)
+        public DocumentController(DocumentlibContext documentlibContext, IDocumentService documentService)
         {
             _documentlibContext = documentlibContext;
+            _documentService = documentService;
         }
 
         [HttpGet]
@@ -37,27 +40,41 @@ namespace document.lib.api.Controllers
         }
 
         [HttpPut]
-        public async Task<ActionResult> PutDocument([FromBody] PutDocumentRequest request)
+        public async Task<ActionResult> PutDocument([FromForm]PutDocumentRequest request)
         {
-            var category = _documentlibContext.Categories.Single(cat => cat.Id == request.CategoryId);
-            var folder = _documentlibContext.Folders.Single(f => f.Id == request.FolderId);
+            if (request.File?.Length > 0)
+            {
+                using (var stream = new MemoryStream())
+                {
+                    await request.File.CopyToAsync(stream);
+                    await _documentService.UploadDocumentAsync(request.File.FileName, stream.ToArray());
+                }
+            }
+
+            var category = _documentlibContext.Categories.SingleOrDefault(cat => cat.Id == request.Category);
+            var folder = _documentlibContext.Folders.SingleOrDefault(f => f.Id == request.Folder);
+            var reg = _documentlibContext.Registers.First();
 
             var newDoc = new LibDocument
             {
                 Category = category,
-                Name = request.Name
+                Name = request.Name,
+                Register = reg
             };
 
             var tags = _documentlibContext.Tags.Where(tag => request.Tags.Contains(tag.Id));
-            var tagRelations = tags.Select(tag => new DocumentTag { Tag = tag, LibDocument = newDoc }).ToArray();
-            newDoc.Tags = tagRelations;
+            if (tags.Any())
+            {
+                var tagRelations = tags.Select(tag => new DocumentTag { Tag = tag, LibDocument = newDoc }).ToArray();
+                newDoc.Tags = tagRelations;
+            }
 
             await _documentlibContext.LibDocuments.AddAsync(newDoc);
             await _documentlibContext.SaveChangesAsync();
             return Ok(new PutDocumentResponse
             {
-                Folder = folder.Name,
-                Category = category.Name,
+                Folder = folder?.Name,
+                Category = category?.Name,
                 Id = newDoc.Id.ToString(),
                 Tags = tags.Select(t => t.Name).ToArray(),
                 Name = newDoc.Name

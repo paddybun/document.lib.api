@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
 namespace document.lib.api.Controllers
@@ -18,18 +19,17 @@ namespace document.lib.api.Controllers
 
         public class PutDocumentRequest
         {
-            [JsonProperty("folder")]
-            public Guid FolderId { get; set; }
+            public Guid Folder { get; set; }
 
-            [JsonProperty("category")]
-            public Guid CategoryId { get; set; }
+            public Guid Category { get; set; }
 
-            [JsonProperty("name")]
             public string Name { get; set; }
 
-            [JsonProperty("tags")]
             public Guid[] Tags { get; set; }
 
+            public DateTime Date { get; set; }
+
+            public IFormFile File { get; set; }
         }
     }
 }
