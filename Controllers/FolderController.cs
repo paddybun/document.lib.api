@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using document.lib.api.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
 namespace document.lib.api.Controllers
@@ -20,8 +21,19 @@ namespace document.lib.api.Controllers
         [HttpGet]
         public ActionResult GetFolders()
         {
-            var folders = _documentlibContext.Folders.OrderBy(folder => folder.Name);
-            return Ok(folders);
+            var folders = _documentlibContext.Folders
+                .Include(f => f.Registers)
+                .OrderBy(folder => folder.Name);
+
+            var folderResponse = folders.Select(folder => new GetFolderResponse
+            {
+                Id = folder.Id.ToString(),
+                Name = folder.Name,
+                Registers = folder.Registers.Select(reg => reg.Id.ToString()).ToArray(),
+                DocumentCount = folder.Registers.Sum(reg => reg.DocumentCount)
+            });
+
+            return Ok(folderResponse);
         }
 
         [HttpPut]
@@ -39,6 +51,14 @@ namespace document.lib.api.Controllers
 
     public partial class FolderController
     {
+        public class GetFolderResponse
+        {
+            public string Id { get; set; }
+            public string Name { get; set; }
+            public string[] Registers { get; set; }
+            public int DocumentCount { get; set; }
+        }
+
         public class PutFolderRequest
         {
             [JsonProperty("name")]
