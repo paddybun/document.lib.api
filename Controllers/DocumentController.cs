@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using document.lib.api.Models;
 using document.lib.api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -51,33 +50,16 @@ namespace document.lib.api.Controllers
                 }
             }
 
-            var category = _documentlibContext.Categories.SingleOrDefault(cat => cat.Id == request.Category);
-            var folder = _documentlibContext.Folders.SingleOrDefault(f => f.Id == request.Folder);
-            var reg = _documentlibContext.Registers.First();
+            var document = await _documentService.SaveDocumentAsync(request.Name, request.Category, request.Folder, request.Tags);
+            var tags = document.Tags?.Select(x => x.Tag.Name) ?? new string[0];
 
-            var newDoc = new LibDocument
-            {
-                Category = category,
-                Name = request.Name,
-                Register = reg
-            };
-
-            var tags = _documentlibContext.Tags.Where(tag => request.Tags.Contains(tag.Id));
-            if (tags.Any())
-            {
-                var tagRelations = tags.Select(tag => new DocumentTag { Tag = tag, LibDocument = newDoc }).ToArray();
-                newDoc.Tags = tagRelations;
-            }
-
-            await _documentlibContext.LibDocuments.AddAsync(newDoc);
-            await _documentlibContext.SaveChangesAsync();
             return Ok(new PutDocumentResponse
             {
-                Folder = folder?.Name,
-                Category = category?.Name,
-                Id = newDoc.Id.ToString(),
-                Tags = tags.Select(t => t.Name).ToArray(),
-                Name = newDoc.Name
+                Folder = document.Register?.Folder?.Name,
+                Category = document.Category?.Name,
+                Id = document.Id.ToString(),
+                Tags = tags.ToArray(),
+                Name = document.Name
             });
         }
     }

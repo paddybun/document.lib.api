@@ -41,7 +41,7 @@ namespace document.lib.api
             });
 
             services.Configure<LibConnectionOptions>(Configuration.GetSection("ConnectionStrings"));
-            services.AddSingleton<IDocumentService, DocumentService>();
+            services.AddScoped<IDocumentService, DocumentService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
