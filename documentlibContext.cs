@@ -78,6 +78,9 @@ namespace document.lib.api
             modelBuilder.Entity<Register>()
                 .Property(t => t.Id)
                 .HasDefaultValueSql("newsequentialid()");
+            modelBuilder.Entity<LibDocument>()
+                .Property(ld => ld.Date)
+                .HasDefaultValue(DateTimeOffset.Now);
 
             // N to M mapping
             modelBuilder.Entity<DocumentTag>()
