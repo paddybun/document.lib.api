@@ -2,11 +2,13 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using document.lib.api.Controllers;
 using document.lib.api.Models;
 using document.lib.api.Options;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Options;
 
 namespace document.lib.api.Services
@@ -42,7 +44,7 @@ namespace document.lib.api.Services
 
         public async Task UploadDocumentAsync(string filename, Register register, byte[] buffer)
         {
-            var blobname = $"{register.Folder.Name}/{register.Name}/{filename}";
+            var blobname = Getblobname(register, filename);
 
             var blob = _cloudBlobContainer.GetBlockBlobReference(blobname);
             using (MemoryStream srcStream = new MemoryStream(buffer))
@@ -51,12 +53,12 @@ namespace document.lib.api.Services
             }
         }
 
-        public async Task<LibDocument> CreateDocumentAsync(string name, Guid categoryId, Guid folderId, DateTimeOffset date, Guid[] tagIds)
+        public async Task<LibDocument> CreateDocumentAsync(string blobname, DocumentController.PostDocumentRequest request)
         {
-            var category = _documentlibContext.Categories.SingleOrDefault(cat => cat.Id == categoryId);
+            var category = _documentlibContext.Categories.SingleOrDefault(cat => cat.Id == request.Category);
             var folder = _documentlibContext.Folders
                 .Include(f => f.Registers)
-                .Single(f => f.Id == folderId);
+                .Single(f => f.Id == request.Folder);
 
             var register = GetNextRegister(folder);
             register.DocumentCount++;
@@ -64,11 +66,12 @@ namespace document.lib.api.Services
             var newDoc = new LibDocument
             {
                 Category = category,
-                Name = name,
-                Register = register
+                Name = request.Name,
+                Register = register,
+                Blobname = Getblobname(register, blobname)
             };
 
-            var tags = _documentlibContext.Tags.Where(tag => tagIds.Contains(tag.Id));
+            var tags = _documentlibContext.Tags.Where(tag => request.Tags.Contains(tag.Id));
             if (tags.Any())
             {
                 var tagRelations = tags.Select(tag => new DocumentTag { Tag = tag, LibDocument = newDoc }).ToArray();
@@ -118,6 +121,11 @@ namespace document.lib.api.Services
             _documentlibContext.Update(document);
             await _documentlibContext.SaveChangesAsync();
             return document;
+        }
+
+        private string Getblobname(Register register, string filename)
+        {
+            return $"{register.Folder.Name}/{register.Name}/{filename}";
         }
 
         private Register GetNextRegister(Folder folder)

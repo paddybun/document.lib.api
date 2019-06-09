@@ -8,6 +8,7 @@ namespace document.lib.api.Models
         public Guid Id { get; set; }
         public string Name { get; set; }
         public Category Category { get; set; }
+        public string Blobname { get; set; }
         public ICollection<DocumentTag> Tags { get; set; }
         public DateTimeOffset Date { get; set; }
         public Guid RegisterId{ get; set; }

@@ -13,6 +13,7 @@ namespace document.lib.api.Controllers
             public string[] Tags { get; set; }
             public string Category { get; set; }
             public string Folder { get; set; }
+            public string Blobname { get; set; }
             public DateTimeOffset Date { get; set; }
         }
 

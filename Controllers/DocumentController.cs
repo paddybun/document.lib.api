@@ -64,21 +64,23 @@ namespace document.lib.api.Controllers
                 Id = document.Id.ToString(),
                 Tags = tags.ToArray(),
                 Name = document.Name,
-                Date = document.Date
+                Date = document.Date,
+                Blobname = document.Blobname
             });
         }
 
         [HttpPost]
         public async Task<ActionResult> PostDocument([FromForm]PostDocumentRequest request)
         {
-            var document = await _documentService.CreateDocumentAsync(request.Name, request.Category, request.Folder, request.Date, request.Tags);
+            var blobname = request.File?.FileName;
+            var document = await _documentService.CreateDocumentAsync(blobname, request);
 
             if (request.File?.Length > 0)
             {
                 using (var stream = new MemoryStream())
                 {
                     await request.File.CopyToAsync(stream);
-                    await _documentService.UploadDocumentAsync(request.File.FileName, document.Register, stream.ToArray());
+                    await _documentService.UploadDocumentAsync(blobname, document.Register, stream.ToArray());
                 }
             }
 
@@ -91,7 +93,8 @@ namespace document.lib.api.Controllers
                 Id = document.Id.ToString(),
                 Tags = tags.ToArray(),
                 Name = document.Name,
-                Date = document.Date
+                Date = document.Date,
+                Blobname = document.Blobname
             });
         }
 
@@ -118,7 +121,8 @@ namespace document.lib.api.Controllers
                 Id = document.Id.ToString(),
                 Tags = tags.ToArray(),
                 Name = document.Name,
-                Date = document.Date
+                Date = document.Date,
+                Blobname = document.Blobname
             });
         }
     }
