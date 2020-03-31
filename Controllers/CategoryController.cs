@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
 using document.lib.api.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
 namespace document.lib.api.Controllers
@@ -54,6 +56,15 @@ namespace document.lib.api.Controllers
             _documentlibContext.Update(category);
             await _documentlibContext.SaveChangesAsync();
             return Ok(category);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteCategory(Guid id)
+        {
+            var category = await _documentlibContext.Categories.SingleOrDefaultAsync(cat => cat.Id == id);
+            _documentlibContext.Categories.Remove(category);
+            await _documentlibContext.SaveChangesAsync();
+            return Ok("deleted");
         }
     }
 

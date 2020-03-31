@@ -2,9 +2,11 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using document.lib.api.Options;
 using document.lib.api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace document.lib.api.Controllers
 {
@@ -13,11 +15,13 @@ namespace document.lib.api.Controllers
     {
         private readonly DocumentlibContext _documentlibContext;
         private readonly IDocumentService _documentService;
+        private readonly IOptions<LibStorageOptions> _storageOptions;
 
-        public DocumentController(DocumentlibContext documentlibContext, IDocumentService documentService)
+        public DocumentController(DocumentlibContext documentlibContext, IDocumentService documentService, IOptions<LibStorageOptions> storageOptions)
         {
             _documentlibContext = documentlibContext;
             _documentService = documentService;
+            _storageOptions = storageOptions;
         }
 
         [HttpGet]
@@ -65,7 +69,8 @@ namespace document.lib.api.Controllers
                 Tags = tags.ToArray(),
                 Name = document.Name,
                 Date = document.Date,
-                Blobname = document.Blobname
+                Blobname = document.Blobname,
+                DownloadLink = $"{_storageOptions.Value.StorageAccount}/{_storageOptions.Value.StorageContainer}/{document.Blobname}{_storageOptions.Value.StorageSas}"
             });
         }
 
@@ -124,6 +129,34 @@ namespace document.lib.api.Controllers
                 Date = document.Date,
                 Blobname = document.Blobname
             });
+        }
+
+        [HttpGet("download/{id}")]
+        public async Task<ActionResult> DownloadDocument(Guid id)
+        {
+            try
+            {
+                var doc = await _documentService.DownloadDocumentAsync(id);
+                return File(doc.Data, doc.ContentType, doc.Filename);
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ex);
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteDocument(Guid id)
+        {
+            try
+            {
+                await _documentService.DeleteDocumentAsync(id);
+                return Ok("deleted");
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ex);
+            }
         }
     }
 }

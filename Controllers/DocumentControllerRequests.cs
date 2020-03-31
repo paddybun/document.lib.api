@@ -15,6 +15,7 @@ namespace document.lib.api.Controllers
             public string Folder { get; set; }
             public string Blobname { get; set; }
             public DateTimeOffset Date { get; set; }
+            public string DownloadLink { get; set; }
         }
 
         public class PostDocumentRequest

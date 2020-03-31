@@ -41,6 +41,7 @@ namespace document.lib.api.Controllers
         {
             var folder = _documentlibContext.Folders
                 .Include(f => f.Registers)
+                .ThenInclude(reg => reg.Documents)
                 .Single(f => f.Id == id);
 
             var folderResponse = new FolderResponse
@@ -48,7 +49,7 @@ namespace document.lib.api.Controllers
                 Id = folder.Id.ToString(),
                 Name = folder.Name,
                 Registers = folder.Registers.Select(reg => reg.Id.ToString()).ToArray(),
-                DocumentCount = folder.Registers.Sum(reg => reg.DocumentCount)
+                DocumentCount = folder.Registers.Sum(reg => reg.Documents.Count)
             };
 
             return Ok(folderResponse);
@@ -100,6 +101,26 @@ namespace document.lib.api.Controllers
             };
 
             return Ok(response);
+        }
+
+
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteFolder(Guid id)
+        {
+            var folder = await _documentlibContext.Folders
+                .Include(f => f.Registers)
+                .ThenInclude(registers => registers.Documents)
+                .SingleOrDefaultAsync(f => f.Id == id);
+
+            var documents = folder.Registers.SelectMany(reg => reg.Documents);
+
+            _documentlibContext.LibDocuments.RemoveRange(documents);
+            _documentlibContext.Registers.RemoveRange(folder.Registers);
+            _documentlibContext.Folders.Remove(folder);
+            await _documentlibContext.SaveChangesAsync();
+
+            return Ok("deleted");
         }
     }
 

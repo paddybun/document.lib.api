@@ -3,12 +3,12 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using document.lib.api.Controllers;
+using document.lib.api.Dtos;
 using document.lib.api.Models;
 using document.lib.api.Options;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Options;
 
 namespace document.lib.api.Services
@@ -53,6 +53,35 @@ namespace document.lib.api.Services
             }
         }
 
+        public async Task<DocumentDownloadDto> DownloadDocumentAsync(Guid docId)
+        {
+            var document = await _documentlibContext.LibDocuments.SingleOrDefaultAsync(doc => doc.Id == docId);
+            var blob = _cloudBlobContainer.GetBlockBlobReference(document.Blobname);
+            using (var ms = new MemoryStream())
+            {
+                await blob.DownloadToStreamAsync(ms);
+                var blobStream = await blob.OpenReadAsync();
+                var name = blob.Name.Split('/').Last();
+                return new DocumentDownloadDto
+                {
+                    Data = blobStream,
+                    ContentType = blob.Properties.ContentType,
+                    Filename = name
+                };
+            }
+        }
+
+        public async Task DeleteDocumentAsync(Guid docId)
+        {
+            var document = await _documentlibContext.LibDocuments.SingleOrDefaultAsync(doc => doc.Id == docId);
+
+            var blob = _cloudBlobContainer.GetBlockBlobReference(document.Blobname);
+            await blob.DeleteAsync();
+            
+            _documentlibContext.LibDocuments.Remove(document);
+            await _documentlibContext.SaveChangesAsync();
+        }
+
         public async Task<LibDocument> CreateDocumentAsync(string blobname, DocumentController.PostDocumentRequest request)
         {
             var category = _documentlibContext.Categories.SingleOrDefault(cat => cat.Id == request.Category);
@@ -68,6 +97,7 @@ namespace document.lib.api.Services
                 Category = category,
                 Name = request.Name,
                 Register = register,
+                Date = request.Date,
                 Blobname = Getblobname(register, blobname)
             };
 

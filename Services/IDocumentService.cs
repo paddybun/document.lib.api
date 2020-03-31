@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using document.lib.api.Controllers;
+using document.lib.api.Dtos;
 using document.lib.api.Models;
 
 namespace document.lib.api.Services
@@ -11,5 +12,7 @@ namespace document.lib.api.Services
         Task UploadDocumentAsync(string filename, Register register, byte[] buffer);
         Task<LibDocument> CreateDocumentAsync(string blobname, DocumentController.PostDocumentRequest request);
         Task<LibDocument> UpdateDocumentAsync(Guid docId, string name, Guid categoryId, Guid folderId, DateTimeOffset date, Guid[] tagIds);
+        Task<DocumentDownloadDto> DownloadDocumentAsync(Guid docId);
+        Task DeleteDocumentAsync(Guid docId);
     }
 }

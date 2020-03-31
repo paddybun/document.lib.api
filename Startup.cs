@@ -41,6 +41,7 @@ namespace document.lib.api
             });
 
             services.Configure<LibConnectionOptions>(Configuration.GetSection("ConnectionStrings"));
+            services.Configure<LibStorageOptions>(Configuration.GetSection("Blob"));
             services.AddScoped<IDocumentService, DocumentService>();
         }
 
