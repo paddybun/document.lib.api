@@ -81,6 +81,10 @@ namespace document.lib.api
             modelBuilder.Entity<LibDocument>()
                 .Property(ld => ld.Date)
                 .HasDefaultValue(DateTimeOffset.Now);
+            modelBuilder.Entity<Register>()
+                .Property(reg => reg.DisplayName)
+                .IsRequired(false)
+                .HasDefaultValue(string.Empty);
 
             // N to M mapping
             modelBuilder.Entity<DocumentTag>()

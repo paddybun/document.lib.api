@@ -55,6 +55,23 @@ namespace document.lib.api.Controllers
             return Ok(folderResponse);
         }
 
+        [HttpGet("registers/{id}")]
+        public async Task<ActionResult> GetRegisters(Guid id)
+        {
+            var folder = await _documentlibContext.Folders
+                .Include(f => f.Registers)
+                .ThenInclude(reg => reg.Documents)
+                .SingleOrDefaultAsync(f => f.Id == id);
+            var registers = folder.Registers.Select(reg => new RegisterResponse
+            {
+                Id = reg.Id.ToString(),
+                DocumentCount = reg.Documents.Count,
+                DisplayName = reg.DisplayName,
+                Name = reg.Name
+            });
+            return Ok(registers);
+        }
+
         [HttpPost]
         public async Task<ActionResult> PostFolder([FromBody]PostFolderRequest request)
         {
@@ -103,7 +120,24 @@ namespace document.lib.api.Controllers
             return Ok(response);
         }
 
-
+        [HttpPut("register")]
+        public async Task<ActionResult> PutRegister([FromBody]PutRegisterRequest request)
+        {
+            var register = await _documentlibContext.Registers
+                .Include(reg => reg.Documents)
+                .SingleAsync();
+            register.DisplayName = request.DisplayName;
+            _documentlibContext.Update(register);
+            await _documentlibContext.SaveChangesAsync();
+            var response = new RegisterResponse
+            {
+                Id = register.Id.ToString(),
+                Name = register.Name,
+                DisplayName = register.Name,
+                DocumentCount = register.Documents.Count
+            };
+            return Ok(response);
+        }
 
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteFolder(Guid id)
@@ -126,6 +160,14 @@ namespace document.lib.api.Controllers
 
     public partial class FolderController
     {
+        public class RegisterResponse
+        {
+            public string Id { get; set; }
+            public string Name { get; set; }
+            public string DisplayName { get; set; }
+            public int DocumentCount { get; set; }
+        }
+
         public class FolderResponse
         {
             public string Id { get; set; }
@@ -144,6 +186,15 @@ namespace document.lib.api.Controllers
         {
             [JsonProperty("id")]
             public Guid Id { get; set; }
+        }
+
+        public class PutRegisterRequest
+        {
+            [JsonProperty("id")]
+            public Guid Id { get; set; }
+
+            [JsonProperty("displayName")]
+            public string DisplayName { get; set; }
         }
     }
 }
