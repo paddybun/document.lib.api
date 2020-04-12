@@ -62,12 +62,13 @@ namespace document.lib.api.Controllers
                 .Include(f => f.Registers)
                 .ThenInclude(reg => reg.Documents)
                 .SingleOrDefaultAsync(f => f.Id == id);
-            var registers = folder.Registers.Select(reg => new RegisterResponse
+
+            var registers = folder.Registers.OrderBy(reg => reg.Order).Select(reg => new RegisterResponse
             {
                 Id = reg.Id.ToString(),
                 DocumentCount = reg.Documents.Count,
                 DisplayName = reg.DisplayName,
-                Name = reg.Name
+                Order = reg.Order
             });
             return Ok(registers);
         }
@@ -82,7 +83,7 @@ namespace document.lib.api.Controllers
 
             newFolder.Registers.Add(new Register
             {
-                Name = "A",
+                Order = 0,
                 DocumentCount = 0
             });
 
@@ -113,7 +114,7 @@ namespace document.lib.api.Controllers
             {
                 Id = folder.Id.ToString(),
                 Name = folder.Name,
-                Registers = folder.Registers?.Select(reg => reg.Name).ToArray() ?? new string[0],
+                Registers = folder.Registers?.Select(reg => reg.Id.ToString()).ToArray() ?? new string[0],
                 DocumentCount = folder.Registers?.Sum(reg => reg.DocumentCount) ?? 0
             };
 
@@ -126,18 +127,51 @@ namespace document.lib.api.Controllers
             var register = await _documentlibContext.Registers
                 .Include(reg => reg.Documents)
                 .SingleAsync();
+
             register.DisplayName = request.DisplayName;
+
             _documentlibContext.Update(register);
+
             await _documentlibContext.SaveChangesAsync();
             var response = new RegisterResponse
             {
                 Id = register.Id.ToString(),
-                Name = register.Name,
-                DisplayName = register.Name,
+                DisplayName = register.DisplayName,
                 DocumentCount = register.Documents.Count
             };
             return Ok(response);
         }
+
+        [HttpPut("order")]
+        public async Task<ActionResult> OrderRegister([FromBody]OrderRegisterRequest request)
+        {
+            var ids = request.OrderEntries.Select(req => req.Id);
+
+            var registers = await _documentlibContext.Registers
+                .Include(reg => reg.Documents)
+                .Where(reg => ids.Contains(reg.Id))
+                .ToListAsync();
+
+            foreach (var register in registers)
+            {
+                var entry = request.OrderEntries.Single(x => x.Id == register.Id);
+                entry.Order = register.Order;
+            }
+
+            _documentlibContext.Update(registers);
+
+            await _documentlibContext.SaveChangesAsync();
+
+            var response = registers.OrderBy(reg => reg.Order).Select(reg => new RegisterResponse
+            {
+                Id = reg.Id.ToString(),
+                DocumentCount = reg.Documents.Count,
+                DisplayName = reg.DisplayName,
+                Order = reg.Order
+            });
+            return Ok(response);
+        }
+
 
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteFolder(Guid id)
@@ -163,9 +197,9 @@ namespace document.lib.api.Controllers
         public class RegisterResponse
         {
             public string Id { get; set; }
-            public string Name { get; set; }
             public string DisplayName { get; set; }
             public int DocumentCount { get; set; }
+            public int Order { get; set; }
         }
 
         public class FolderResponse
@@ -195,6 +229,21 @@ namespace document.lib.api.Controllers
 
             [JsonProperty("displayName")]
             public string DisplayName { get; set; }
+        }
+
+        public class OrderRegisterRequest
+        {
+            [JsonProperty("orderEntries")]
+            public OrderRegisterEntry[] OrderEntries { get; set; }
+        }
+
+        public class OrderRegisterEntry
+        {
+            [JsonProperty("id")]
+            public Guid Id { get; set; }
+
+            [JsonProperty("order")]
+            public int Order { get; set; }
         }
     }
 }

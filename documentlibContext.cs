@@ -85,6 +85,9 @@ namespace document.lib.api
                 .Property(reg => reg.DisplayName)
                 .IsRequired(false)
                 .HasDefaultValue(string.Empty);
+            modelBuilder.Entity<Register>()
+                .Property(reg => reg.Order)
+                .HasDefaultValue(0);
 
             // N to M mapping
             modelBuilder.Entity<DocumentTag>()

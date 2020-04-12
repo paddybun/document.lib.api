@@ -44,7 +44,7 @@ namespace document.lib.api.Services
 
         public async Task UploadDocumentAsync(string filename, Register register, byte[] buffer)
         {
-            var blobname = Getblobname(register, filename);
+            var blobname = GetBlobname(register, filename);
 
             var blob = _cloudBlobContainer.GetBlockBlobReference(blobname);
             using (MemoryStream srcStream = new MemoryStream(buffer))
@@ -98,7 +98,7 @@ namespace document.lib.api.Services
                 Name = request.Name,
                 Register = register,
                 Date = request.Date,
-                Blobname = Getblobname(register, blobname)
+                Blobname = GetBlobname(register, blobname)
             };
 
             var tags = _documentlibContext.Tags.Where(tag => request.Tags.Contains(tag.Id));
@@ -153,38 +153,31 @@ namespace document.lib.api.Services
             return document;
         }
 
-        private string Getblobname(Register register, string filename)
+        private string GetBlobname(Register register, string filename)
         {
-            return $"{register.Folder.Name}/{register.Name}/{filename}";
+            return $"{register.Folder.Name}/{filename}";
         }
 
         private Register GetNextRegister(Folder folder)
         {
             Register registerToUse;
-            var latestRegister = folder.Registers.OrderByDescending(reg => reg.Name).FirstOrDefault();
+            var latestRegister = folder.Registers.OrderByDescending(reg => reg.Order).FirstOrDefault();
 
             if (latestRegister == null)
             {
                 registerToUse = new Register
                 {
                     DocumentCount = 0,
-                    Folder = folder,
-                    Name = "A"
+                    Order = 0,
+                    Folder = folder
                 };
             }
-            else if (latestRegister.DocumentCount >= 10 && !latestRegister.Name.Equals("Z"))
+            else if (latestRegister.DocumentCount >= 10)
             {
-                if (latestRegister.Name.Equals("Z"))
-                {
-                    // TODO: Inform user nicely, that a new Folder has to be created and used.
-                    throw new Exception("Please start a new Folder.");
-                }
-
-                var newName = Convert.ToChar(latestRegister.Name) + 1;
                 registerToUse = new Register
                 {
                     DocumentCount = 0,
-                    Name = ((char)newName).ToString(),
+                    Order = folder.Registers.Max(reg => reg.Order) + 1,
                     Folder = folder
                 };
             }
