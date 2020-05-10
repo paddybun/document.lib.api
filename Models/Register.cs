@@ -12,5 +12,6 @@ namespace document.lib.api.Models
         public ICollection<LibDocument> Documents { get; set; }
         public Guid FolderId { get; set; }
         public Folder Folder { get; set; }
+        public bool IsActive { get; set; }
     }
 }

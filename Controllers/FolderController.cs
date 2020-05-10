@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using document.lib.api.Models;
+using document.lib.api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -12,10 +13,12 @@ namespace document.lib.api.Controllers
     public partial class FolderController : Controller
     {
         private readonly DocumentlibContext _documentlibContext;
+        private readonly IRegisterService _registerService;
 
-        public FolderController(DocumentlibContext documentlibContext)
+        public FolderController(DocumentlibContext documentlibContext, IRegisterService registerService)
         {
             _documentlibContext = documentlibContext;
+            _registerService = registerService;
         }
 
         [HttpGet]
@@ -68,7 +71,8 @@ namespace document.lib.api.Controllers
                 Id = reg.Id.ToString(),
                 DocumentCount = reg.Documents.Count,
                 DisplayName = reg.DisplayName,
-                Order = reg.Order
+                Order = reg.Order,
+                IsActive = reg.IsActive
             });
             return Ok(registers);
         }
@@ -84,7 +88,8 @@ namespace document.lib.api.Controllers
             newFolder.Registers.Add(new Register
             {
                 Order = 0,
-                DocumentCount = 0
+                DocumentCount = 0,
+                IsActive = true
             });
 
             await _documentlibContext.AddAsync(newFolder);
@@ -124,20 +129,13 @@ namespace document.lib.api.Controllers
         [HttpPut("register")]
         public async Task<ActionResult> PutRegister([FromBody]PutRegisterRequest request)
         {
-            var register = await _documentlibContext.Registers
-                .Include(reg => reg.Documents)
-                .SingleAsync();
-
-            register.DisplayName = request.DisplayName;
-
-            _documentlibContext.Update(register);
-
-            await _documentlibContext.SaveChangesAsync();
+            var register = await _registerService.UpdateRegisterAsync(request.Id, request.DisplayName, request.IsActive);
             var response = new RegisterResponse
             {
                 Id = register.Id.ToString(),
                 DisplayName = register.DisplayName,
-                DocumentCount = register.Documents.Count
+                DocumentCount = register.Documents.Count,
+                IsActive = register.IsActive
             };
             return Ok(response);
         }
@@ -167,7 +165,8 @@ namespace document.lib.api.Controllers
                 Id = reg.Id.ToString(),
                 DocumentCount = reg.Documents.Count,
                 DisplayName = reg.DisplayName,
-                Order = reg.Order
+                Order = reg.Order,
+                IsActive = reg.IsActive
             });
             return Ok(response);
         }
@@ -200,6 +199,7 @@ namespace document.lib.api.Controllers
             public string DisplayName { get; set; }
             public int DocumentCount { get; set; }
             public int Order { get; set; }
+            public bool IsActive { get; set; }
         }
 
         public class FolderResponse
@@ -229,6 +229,9 @@ namespace document.lib.api.Controllers
 
             [JsonProperty("displayName")]
             public string DisplayName { get; set; }
+
+            [JsonProperty("isActive")]
+            public bool? IsActive { get; set; }
         }
 
         public class OrderRegisterRequest

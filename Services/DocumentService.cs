@@ -87,10 +87,10 @@ namespace document.lib.api.Services
             var category = _documentlibContext.Categories.SingleOrDefault(cat => cat.Id == request.Category);
             var folder = _documentlibContext.Folders
                 .Include(f => f.Registers)
+                .ThenInclude(reg => reg.Documents)
                 .Single(f => f.Id == request.Folder);
 
             var register = GetNextRegister(folder);
-            register.DocumentCount++;
 
             var newDoc = new LibDocument
             {
@@ -120,7 +120,9 @@ namespace document.lib.api.Services
             var document = await _documentlibContext.LibDocuments
                 .Include(doc => doc.Category)
                 .Include(doc => doc.Register)
-                .ThenInclude(reg => reg.Folder)
+                    .ThenInclude(reg => reg.Folder)
+                .Include(doc => doc.Register)
+                    .ThenInclude(reg => reg.Documents)
                 .SingleOrDefaultAsync(doc => doc.Id == docId);
 
             document.Name = name;
@@ -161,7 +163,7 @@ namespace document.lib.api.Services
         private Register GetNextRegister(Folder folder)
         {
             Register registerToUse;
-            var latestRegister = folder.Registers.OrderByDescending(reg => reg.Order).FirstOrDefault();
+            var latestRegister = folder.Registers.SingleOrDefault(register => register.IsActive);
 
             if (latestRegister == null)
             {
@@ -169,17 +171,20 @@ namespace document.lib.api.Services
                 {
                     DocumentCount = 0,
                     Order = 0,
-                    Folder = folder
+                    Folder = folder,
+                    IsActive = true
                 };
             }
-            else if (latestRegister.DocumentCount >= 10)
+            else if (latestRegister.Documents.Count >= 2)
             {
                 registerToUse = new Register
                 {
                     DocumentCount = 0,
                     Order = folder.Registers.Max(reg => reg.Order) + 1,
-                    Folder = folder
+                    Folder = folder,
+                    IsActive = true
                 };
+                CloseRegister(latestRegister);
             }
             else
             {
@@ -187,6 +192,12 @@ namespace document.lib.api.Services
             }
 
             return registerToUse;
+        }
+
+        private void CloseRegister(Register reg)
+        {
+            reg.IsActive = false;
+            _documentlibContext.Update(reg);
         }
     }
 }
