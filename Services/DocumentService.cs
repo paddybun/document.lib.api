@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -101,19 +102,28 @@ namespace document.lib.api.Services
                 Blobname = GetBlobname(register, blobname)
             };
 
-            var tags = _documentlibContext.Tags.Where(tag => request.Tags.Contains(tag.Id));
-            if (tags.Any())
-            {
-                var tagRelations = tags.Select(tag => new DocumentTag { Tag = tag, LibDocument = newDoc }).ToArray();
-                newDoc.Tags = tagRelations;
-            }
+            await AddTagsAsync(request.Tags.Split('|'), newDoc);
 
             await _documentlibContext.LibDocuments.AddAsync(newDoc);
             await _documentlibContext.SaveChangesAsync();
             return newDoc;
         }
 
-        public async Task<LibDocument> UpdateDocumentAsync(Guid docId, string name, Guid categoryId, Guid folderId, DateTimeOffset date, Guid[] tagIds)
+        private async Task AddTagsAsync(string[] tags, LibDocument newDoc)
+        {
+            var allTags = await _documentlibContext.Tags.ToListAsync();
+            var newTags = tags.Where(tag => allTags.All(x => x.Name != tag)).Select(tag => new Tag {Name = tag});
+
+            _documentlibContext.Tags.AddRange(newTags);
+            await _documentlibContext.SaveChangesAsync();
+
+            newDoc.Tags?.Clear();
+
+            var tagsToAdd = await _documentlibContext.Tags.Where(tag => tags.Contains(tag.Name)).ToListAsync();
+            newDoc.Tags = tagsToAdd.Select(tag => new DocumentTag {LibDocument = newDoc, Tag = tag}).ToList();
+        }
+
+        public async Task<LibDocument> UpdateDocumentAsync(Guid docId, string name, Guid categoryId, Guid folderId, DateTimeOffset date, string[] tags)
         {
             var category = _documentlibContext.Categories.SingleOrDefault(cat => cat.Id == categoryId);
 
@@ -123,6 +133,8 @@ namespace document.lib.api.Services
                     .ThenInclude(reg => reg.Folder)
                 .Include(doc => doc.Register)
                     .ThenInclude(reg => reg.Documents)
+                .Include(doc => doc.Tags)
+                    .ThenInclude(tag => tag.Tag)
                 .SingleOrDefaultAsync(doc => doc.Id == docId);
 
             document.Name = name;
@@ -141,15 +153,7 @@ namespace document.lib.api.Services
                 _documentlibContext.Update(document.Register);
                 document.Register = register;
             }
-
-            // TODO: Implement tag change detection.
-            var tags = _documentlibContext.Tags.Where(tag => tagIds.Contains(tag.Id));
-            if (tags.Any())
-            {
-                var tagRelations = tags.Select(tag => new DocumentTag { Tag = tag, LibDocument = document }).ToArray();
-                document.Tags = tagRelations;
-            }
-
+            await AddTagsAsync(tags, document);
             _documentlibContext.Update(document);
             await _documentlibContext.SaveChangesAsync();
             return document;

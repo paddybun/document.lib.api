@@ -106,7 +106,7 @@ namespace document.lib.api.Controllers
         [HttpPut]
         public async Task<ActionResult> PutDocument([FromForm]PutDocumentRequest request)
         {
-            var document = await _documentService.UpdateDocumentAsync(request.Id, request.Name, request.Category, request.Folder, request.Date, request.Tags);
+            var document = await _documentService.UpdateDocumentAsync(request.Id, request.Name, request.Category, request.Folder, request.Date, request.Tags.Split('|'));
 
             if (request.File?.Length > 0)
             {

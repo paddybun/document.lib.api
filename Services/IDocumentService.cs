@@ -11,7 +11,7 @@ namespace document.lib.api.Services
     {
         Task UploadDocumentAsync(string filename, Register register, byte[] buffer);
         Task<LibDocument> CreateDocumentAsync(string blobname, DocumentController.PostDocumentRequest request);
-        Task<LibDocument> UpdateDocumentAsync(Guid docId, string name, Guid categoryId, Guid folderId, DateTimeOffset date, Guid[] tagIds);
+        Task<LibDocument> UpdateDocumentAsync(Guid docId, string name, Guid categoryId, Guid folderId, DateTimeOffset date, string[] tags);
         Task<DocumentDownloadDto> DownloadDocumentAsync(Guid docId);
         Task DeleteDocumentAsync(Guid docId);
     }

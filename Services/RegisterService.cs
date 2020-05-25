@@ -5,11 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.api.Services
 {
-    public interface IRegisterService
-    {
-        Task<Register> UpdateRegisterAsync(Guid registerId, string displayName, bool? isActive);
-    }
-
     public class RegisterService : IRegisterService
     {
         private readonly DocumentlibContext _dbContext;

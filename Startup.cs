@@ -44,6 +44,7 @@ namespace document.lib.api
             services.Configure<LibStorageOptions>(Configuration.GetSection("Blob"));
             services.AddScoped<IDocumentService, DocumentService>();
             services.AddScoped<IRegisterService, RegisterService>();
+            services.AddScoped<TagService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

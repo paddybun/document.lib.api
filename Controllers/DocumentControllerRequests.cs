@@ -26,7 +26,7 @@ namespace document.lib.api.Controllers
 
             public string Name { get; set; }
 
-            public Guid[] Tags { get; set; }
+            public string Tags { get; set; }
 
             public DateTimeOffset Date { get; set; }
 

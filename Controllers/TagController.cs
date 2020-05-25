@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using document.lib.api.Models;
+using document.lib.api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -11,10 +12,12 @@ namespace document.lib.api.Controllers
     public partial class TagController : Controller
     {
         private readonly DocumentlibContext _dbContext;
+        private readonly TagService _tagService;
 
-        public TagController(DocumentlibContext dbContext)
+        public TagController(DocumentlibContext dbContext, TagService tagService)
         {
             _dbContext = dbContext;
+            _tagService = tagService;
         }
 
         [HttpGet]
@@ -48,6 +51,13 @@ namespace document.lib.api.Controllers
             _dbContext.Tags.Update(tag);
             await _dbContext.SaveChangesAsync();
             return Ok(tag);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteTag(Guid id)
+        {
+            await _tagService.DeleteTag(id);
+            return Ok("deleted");
         }
     }
 
