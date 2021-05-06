@@ -45,6 +45,7 @@ namespace document.lib.api
             services.AddScoped<IDocumentService, DocumentService>();
             services.AddScoped<IRegisterService, RegisterService>();
             services.AddScoped<TagService>();
+            services.AddScoped<SearchService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
