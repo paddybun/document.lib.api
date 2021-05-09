@@ -1,47 +1,44 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Specialized;
+using Azure.Storage.Blobs.Models;
+using document.lib.functions.Constants;
+using document.lib.functions.Helper;
 using document.lib.functions.TableEntities;
-using Microsoft.Azure.Cosmos.Table;
-using Microsoft.Azure.Cosmos.Table.Queryable;
-using Microsoft.Azure.Documents.Linq;
+using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Linq;
+using Microsoft.WindowsAzure.Storage.Queue.Protocol;
 
 namespace document.lib.functions.Services
 {
     class DocLibService
     {
-        private BlobContainerClient _bcc;
-        private CloudTableClient _tbs;
+        private readonly BlobContainerClient _bcc;
+        private readonly CosmosClient _cosmosClient;
 
         public DocLibService()
         {
             var connectionString = Environment.GetEnvironmentVariable("AzureWebJobsDocumentLibStorage");
             var containerName = Environment.GetEnvironmentVariable("DocumentContainerName");
-            var csa = CloudStorageAccount.Parse(connectionString);
-
+            var cosmosConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsCosmos");
+            _cosmosClient = new CosmosClient(cosmosConnectionString);
             _bcc = new BlobContainerClient(connectionString, containerName);
-            _tbs = csa.CreateCloudTableClient(new TableClientConfiguration());
         }
 
-        public async Task<DocLibDocument> CreateDocLibDocumentAsync(DocLibDocument doc)
+        public async Task<DocLibDocument1> CreateDocLibDocumentAsync(DocLibDocument1 doc)
         {
             doc.Validate();
-            var partitionKey = "document";
-            var documentTableName = "doclib";
-            var metadataTableName = "metadata";
 
-            var doclibTable = _tbs.GetTableReference(documentTableName);
-            var metadataTable = _tbs.GetTableReference(metadataTableName);
+            var db = _cosmosClient.GetDatabase(TableNames.Doclib);
+            var docLibContainer = db.GetContainer(TableNames.Doclib);
 
-            await doclibTable.CreateIfNotExistsAsync();
-            await metadataTable.CreateIfNotExistsAsync();
+            await CreateCategoryAsync(doc, docLibContainer);
+            await CreateTagsAsync(doc, docLibContainer);
 
-            await CreateCategoryAsync(doc, metadataTable);
-            await CreateTagsAsync(doc, metadataTable);
-
-            var folder = GetCurrentFolder(metadataTable) ?? await CreateFolder(metadataTable);
+            var folder = await GetCurrentFolderAsync(docLibContainer) ?? await CreateFolderAsync(docLibContainer);
             var register = GetRegister(folder);
             if (string.IsNullOrEmpty(doc.FolderName) && string.IsNullOrEmpty(doc.RegisterName))
             {
@@ -52,95 +49,80 @@ namespace document.lib.functions.Services
                 {
                     folder.IsFull = true;
                 }
-                await MoveBlob(doc, doclibTable);
-                var folderOp = TableOperation.InsertOrMerge(folder);
-                await metadataTable.ExecuteAsync(folderOp);
+                await MoveBlob(doc, docLibContainer);
+                await docLibContainer.UpsertItemAsync(folder);
             }
 
             var guid = Guid.NewGuid();
+            var id = $"Document.{doc.Name}.{guid}";
+            doc.Id = id;
             doc.Name = $"{doc.Name}_{guid}";
-            doc.PartitionKey = partitionKey;
-            doc.RowKey = doc.Name;
-            doc.ETag = "*";
-            doc.Timestamp = DateTimeOffset.Now;
             doc.Unsorted = false;
 
-            var op = TableOperation.InsertOrMerge(doc);
-            await doclibTable.ExecuteAsync(op);
-
+            await docLibContainer.CreateItemAsync(doc, new PartitionKey(id));
             return doc;
         }
 
-        private async Task CreateCategoryAsync(DocLibDocument doc, CloudTable metadataTable)
+        private async Task CreateCategoryAsync(DocLibDocument1 doc, Container doclibContainer)
         {
-            var partitionKey = "category";
-            var entity = new DocLibCategory
+            var id = $"Category.{doc.Category}";
+            var query = new QueryDefinition("SELECT * FROM doclib dl WHERE dl.id = @id").WithParameter("@id", id);
+            var entity = (await QueryHelper.ExecuteQueryAsync<DocLibCategory>(query, doclibContainer)).SingleOrDefault();
+            if (entity == null)
             {
-                Name = doc.Category,
-                Description = "",
-                ETag = "*",
-                Timestamp = DateTimeOffset.Now,
-                PartitionKey = partitionKey,
-                RowKey = doc.Category.ToLower()
-            };
-            var op = TableOperation.InsertOrReplace(entity);
-            var res = await metadataTable.ExecuteAsync(op);
-        }
-
-        private async Task CreateTagsAsync(DocLibDocument doc, CloudTable metadataTable)
-        {
-            var partitionKey = "tag";
-            var now = DateTimeOffset.Now;
-
-            var batch = new TableBatchOperation();
-            var tagString = doc.Tags.Remove(0, 1);
-            tagString = tagString.Remove(tagString.Length - 1, 1);
-            var tags = tagString.Split("|");
-
-            foreach (var docTag in tags)
-            {
-                var lowercased = docTag.ToLower();
-                batch.InsertOrReplace(new DocLibTag
+                var cat = new DocLibCategory
                 {
-                    Name = lowercased,
-                    Timestamp = now,
-                    ETag = "*",
-                    PartitionKey = partitionKey,
-                    RowKey = lowercased
-                });
+                    Id = id,
+                    Name = doc.Category,
+                    Description = ""
+                };
+                await doclibContainer.CreateItemAsync(cat);
             }
-
-            await metadataTable.ExecuteBatchAsync(batch);
         }
 
-        private DocLibFolder GetCurrentFolder(CloudTable metadataTable)
+        private async Task CreateTagsAsync(DocLibDocument1 doc, Container doclibContainer)
         {
-            var partitionKey = "folder";
-            var query = metadataTable.CreateQuery<DocLibFolder>().Where(x => x.PartitionKey == partitionKey && !x.IsFull).AsTableQuery();
-            var folder = metadataTable.ExecuteQuery(query).FirstOrDefault();
-            return folder;
+            foreach (var docTag in doc.Tags)
+            {
+                var id = $"Tag.{docTag}";
+                var query = new QueryDefinition("SELECT * FROM doclib dl WHERE dl.id = @id").WithParameter("@id", id);
+                var entity = (await QueryHelper.ExecuteQueryAsync<DocLibTag>(query, doclibContainer)).SingleOrDefault();
+                if (entity == null)
+                {
+                    var lowercased = docTag.ToLower();
+                    var tag = new DocLibTag
+                    {
+                        Id = id,
+                        Name = lowercased,
+                    };
+                    await doclibContainer.CreateItemAsync(tag);
+                }
+            }
         }
 
-        private async Task<DocLibFolder> CreateFolder(CloudTable metadataTable)
+        private async Task<DocLibFolder> GetCurrentFolderAsync(Container doclibContainer)
         {
-            var partitionKey = "folder";
-            var guid = Guid.NewGuid();
+            var query = new QueryDefinition("SELECT * FROM doclib dl where dl.IsFull = false");
+            var folders = await QueryHelper.ExecuteQueryAsync<DocLibFolder>(query, doclibContainer);
+            return folders.FirstOrDefault();
+        }
+
+        private async Task<DocLibFolder> CreateFolderAsync(Container doclibContainer)
+        {
+            var guid = Guid.NewGuid().ToString();
+            var id = $"Folder.{guid}";
             var newFolder = new DocLibFolder
             {
-                Name = guid.ToString(),
+                Id = id,
+                Name = guid,
                 CurrentRegister = "1",
                 IsFull = false,
                 TotalDocuments = 0,
                 DisplayName = "Please choose a name",
-                Timestamp = DateTimeOffset.Now,
-                CreatedAt = DateTimeOffset.Now,
-                RowKey = guid.ToString(),
-                PartitionKey = partitionKey,
-                ETag = "*"
+                CreatedAt = DateTimeOffset.Now
             };
             newFolder.Registers.Add("1", 0);
-            var op = TableOperation.Insert(newFolder);
-            await metadataTable.ExecuteAsync(op);
+            await doclibContainer.CreateItemAsync(newFolder);
             return newFolder;
         }
 
@@ -159,18 +141,17 @@ namespace document.lib.functions.Services
             return folder.CurrentRegister;
         }
 
-        private async Task MoveBlob(DocLibDocument doc, CloudTable doclibTable)
+        private async Task MoveBlob(DocLibDocument1 doc, Container doclibContainer)
         {
-            var partitionKey = "unsorted";
-            var unsortedQuery = doclibTable.CreateQuery<DocLibDocument>().Where(x => x.PartitionKey == partitionKey && x.RowKey == doc.PhysicalName).AsTableQuery();
-            var unsortedEntry = doclibTable.ExecuteQuery(unsortedQuery).SingleOrDefault();
+            var query = new QueryDefinition("SELECT * FROM doclib dl WHERE dl.id = @id")
+                    .WithParameter("@id", doc.Id);
+            var unsortedEntry1 = await QueryHelper.ExecuteQueryAsync<DocLibDocument1>(query, doclibContainer);
+            var unsortedEntry = unsortedEntry1.First();
             if (unsortedEntry == null)
             {
                 return;
             }
-            unsortedEntry.Unsorted = false;
-            var updateEntry = TableOperation.InsertOrMerge(unsortedEntry);
-            await doclibTable.ExecuteAsync(updateEntry);
+            await doclibContainer.DeleteItemAsync<DocLibDocument1>(unsortedEntry.Id, new PartitionKey(unsortedEntry.Id));
 
             var newBlobLocation = $"{doc.FolderName}/{doc.RegisterName}/{doc.PhysicalName}";
             var source = _bcc.GetBlobClient(doc.BlobLocation);
@@ -180,6 +161,7 @@ namespace document.lib.functions.Services
                 await destBlob.StartCopyFromUriAsync(source.Uri);
             }
 
+            await source.DeleteAsync();
             doc.BlobLocation = newBlobLocation;
         }
     }

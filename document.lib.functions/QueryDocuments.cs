@@ -1,6 +1,8 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using document.lib.functions.Services;
 using document.lib.functions.TableEntities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -9,6 +11,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Azure.Cosmos.Table.Queryable;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace document.lib.functions
 {
@@ -21,20 +24,18 @@ namespace document.lib.functions
         {
             try
             {
-                var connectionString = Environment.GetEnvironmentVariable("AzureWebJobsDocumentLibStorage");
-                var csa = CloudStorageAccount.Parse(connectionString);
-                var tbs = csa.CreateCloudTableClient(new TableClientConfiguration());
-                var tableName = "doclib";
-                var table = tbs.GetTableReference(tableName);
-                var query = table.CreateQuery<DocLibDocument>().Where(x => x.PartitionKey.Equals("unsorted") && x.Unsorted).AsTableQuery();
-                var results = table.ExecuteQuery(query);
-                return new OkObjectResult(results.Select(x => x.PhysicalName).ToArray());
+                await req.ReadAsStringAsync();
+                using var sr = new StreamReader(req.Body);
+                var obj = await sr.ReadToEndAsync();
+                var query = JsonConvert.DeserializeObject<DocumentQuery>(obj);
+                var queryService = new QueryService();
+                var results = queryService.ExecuteQuery(query).ToList();
+                return new OkObjectResult(results);
             }
             catch (Exception ex)
             {
                 return new BadRequestObjectResult(ex);
             }
-            
         }
     }
 }

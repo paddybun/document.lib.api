@@ -21,16 +21,11 @@ namespace document.lib.functions
         {
             try
             {
-                string requestBody;
-                using (var streamReader = new StreamReader(req.Body))
-                {
-                    requestBody = await streamReader.ReadToEndAsync();
-                }
-                var docLibDocument = JsonConvert.DeserializeObject<DocLibDocument>(requestBody);
+                using var streamReader = new StreamReader(req.Body);
+                var requestBody = await streamReader.ReadToEndAsync();
+                var docLibDocument = JsonConvert.DeserializeObject<DocLibDocument1>(requestBody);
                 var docService = new DocLibService();
-
                 await docService.CreateDocLibDocumentAsync(docLibDocument);
-
                 return new OkObjectResult(docLibDocument);
             }
             catch (Exception ex)

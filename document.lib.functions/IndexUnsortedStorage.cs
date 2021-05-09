@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using document.lib.functions.Services;
 using Microsoft.Azure.WebJobs;
@@ -11,9 +12,17 @@ namespace document.lib.functions
         [FunctionName("IndexUnsortedStorage")]
         public static async Task Run([BlobTrigger("library-storage/unsorted/{name}", Connection = "AzureWebJobsDocumentLibStorage")]ICloudBlob blob, string name, ILogger log)
         {
-            var indexerService = new IndexerService();
-            await indexerService.IndexSingleDocumentAsync(blob);
-            log.LogInformation($"C# Blob trigger function Processed blob\n Name:{name} \n Size: Bytes");
+            try
+            {
+                var indexerService = new IndexerService();
+                await indexerService.IndexSingleDocumentAsync(blob);
+                log.LogInformation($"C# Blob trigger function Processed blob\n Name:{name} \n Size: Bytes");
+            }
+            catch (Exception ex)
+            {
+
+            }
+            
         }
     }
 }

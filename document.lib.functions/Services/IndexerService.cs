@@ -4,8 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using document.lib.functions.Constants;
 using document.lib.functions.TableEntities;
-using Microsoft.Azure.Cosmos.Table;
+using Microsoft.Azure.Cosmos;
 using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace document.lib.functions.Services
@@ -13,72 +14,36 @@ namespace document.lib.functions.Services
     public class IndexerService
     {
         private readonly BlobContainerClient _bcc;
-        private readonly CloudTableClient _tbs;
+        private readonly CosmosClient _cosmosClient;
 
         public IndexerService()
         {
             var connectionString = Environment.GetEnvironmentVariable("AzureWebJobsDocumentLibStorage");
             var containerName = Environment.GetEnvironmentVariable("DocumentContainerName");
             _bcc = new BlobContainerClient(connectionString, containerName);
-            var csa = CloudStorageAccount.Parse(connectionString);
-            _tbs = csa.CreateCloudTableClient(new TableClientConfiguration());
+            var cosmosConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsCosmos");
+            _cosmosClient = new CosmosClient(cosmosConnectionString);
         }
 
-        public async Task<TableResult> IndexSingleDocumentAsync(ICloudBlob blob)
+        public async Task IndexSingleDocumentAsync(ICloudBlob blob)
         {
-            var tableName = "doclib";
-            var table = _tbs.GetTableReference(tableName);
+            var db = _cosmosClient.GetDatabase(TableNames.Doclib);
+            var container = db.GetContainer(TableNames.Doclib);
             var name = blob.Name.Split("/").Last();
-            var doc = new DocLibDocument
+
+            var id = $"UnsortedDocument.{name}";
+            var doc = new DocLibDocument1
             {
+                Id = id,
                 Name = name,
                 PhysicalName = blob.Name,
                 BlobLocation = blob.Name,
-                PartitionKey = "unsorted",
-                RowKey = name,
                 UploadDate = DateTimeOffset.Now,
-                Timestamp = DateTimeOffset.Now,
-                ETag = "*",
                 Unsorted = true,
-                Tags = ""
+                Tags = new string[0]
             };
-            var op = TableOperation.InsertOrMerge(doc);
-            var res = await table.ExecuteAsync(op);
-            return res;
-        }
 
-        public async Task<TableBatchResult> IndexUnsortedAsync()
-        {
-            var tableName = "doclib";
-            var table = _tbs.GetTableReference(tableName);
-            var blobs = _bcc.GetBlobsAsync(prefix: "unsorted").GetAsyncEnumerator();
-            var blobListing = new List<BlobItem>();
-            while (await blobs.MoveNextAsync())
-            {
-                blobListing.Add(blobs.Current);
-            }
-
-            var batch = new TableBatchOperation();
-            foreach (var blob in blobListing)
-            {
-                var name = blob.Name.Split("/").Last();
-                var doc = new DocLibDocument
-                {
-                    Name = name,
-                    PhysicalName = blob.Name,
-                    BlobLocation = blob.Name,
-                    PartitionKey = "unsorted",
-                    RowKey = name,
-                    UploadDate = blob.Properties.LastModified ?? DateTimeOffset.Now,
-                    Timestamp = DateTimeOffset.Now,
-                    ETag = "*",
-                    Unsorted = true,
-                    Tags = ""
-                };
-                batch.InsertOrMerge(doc);
-            }
-            var result = await table.ExecuteBatchAsync(batch);
-            return result;
+            var result = await container.CreateItemAsync(doc, new PartitionKey(id));
         }
     }
 }
