@@ -28,7 +28,7 @@ namespace document.lib.functions.Services
             _bcc = new BlobContainerClient(connectionString, containerName);
         }
 
-        public async Task<DocLibDocument1> CreateDocLibDocumentAsync(DocLibDocument1 doc)
+        public async Task<DocLibDocument> CreateDocLibDocumentAsync(DocLibDocument doc)
         {
             doc.Validate();
 
@@ -63,11 +63,11 @@ namespace document.lib.functions.Services
             return doc;
         }
 
-        private async Task CreateCategoryAsync(DocLibDocument1 doc, Container doclibContainer)
+        private async Task CreateCategoryAsync(DocLibDocument doc, Container doclibContainer)
         {
             var id = $"Category.{doc.Category}";
             var query = new QueryDefinition("SELECT * FROM doclib dl WHERE dl.id = @id").WithParameter("@id", id);
-            var entity = (await QueryHelper.ExecuteQueryAsync<DocLibCategory>(query, doclibContainer)).SingleOrDefault();
+            var entity = (await CosmosQueryHelper.ExecuteQueryAsync<DocLibCategory>(query, doclibContainer)).SingleOrDefault();
             if (entity == null)
             {
                 var cat = new DocLibCategory
@@ -80,13 +80,13 @@ namespace document.lib.functions.Services
             }
         }
 
-        private async Task CreateTagsAsync(DocLibDocument1 doc, Container doclibContainer)
+        private async Task CreateTagsAsync(DocLibDocument doc, Container doclibContainer)
         {
             foreach (var docTag in doc.Tags)
             {
                 var id = $"Tag.{docTag}";
                 var query = new QueryDefinition("SELECT * FROM doclib dl WHERE dl.id = @id").WithParameter("@id", id);
-                var entity = (await QueryHelper.ExecuteQueryAsync<DocLibTag>(query, doclibContainer)).SingleOrDefault();
+                var entity = (await CosmosQueryHelper.ExecuteQueryAsync<DocLibTag>(query, doclibContainer)).SingleOrDefault();
                 if (entity == null)
                 {
                     var lowercased = docTag.ToLower();
@@ -103,7 +103,7 @@ namespace document.lib.functions.Services
         private async Task<DocLibFolder> GetCurrentFolderAsync(Container doclibContainer)
         {
             var query = new QueryDefinition("SELECT * FROM doclib dl where dl.IsFull = false");
-            var folders = await QueryHelper.ExecuteQueryAsync<DocLibFolder>(query, doclibContainer);
+            var folders = await CosmosQueryHelper.ExecuteQueryAsync<DocLibFolder>(query, doclibContainer);
             return folders.FirstOrDefault();
         }
 
@@ -141,17 +141,17 @@ namespace document.lib.functions.Services
             return folder.CurrentRegister;
         }
 
-        private async Task MoveBlob(DocLibDocument1 doc, Container doclibContainer)
+        private async Task MoveBlob(DocLibDocument doc, Container doclibContainer)
         {
             var query = new QueryDefinition("SELECT * FROM doclib dl WHERE dl.id = @id")
                     .WithParameter("@id", doc.Id);
-            var unsortedEntry1 = await QueryHelper.ExecuteQueryAsync<DocLibDocument1>(query, doclibContainer);
+            var unsortedEntry1 = await CosmosQueryHelper.ExecuteQueryAsync<DocLibDocument>(query, doclibContainer);
             var unsortedEntry = unsortedEntry1.First();
             if (unsortedEntry == null)
             {
                 return;
             }
-            await doclibContainer.DeleteItemAsync<DocLibDocument1>(unsortedEntry.Id, new PartitionKey(unsortedEntry.Id));
+            await doclibContainer.DeleteItemAsync<DocLibDocument>(unsortedEntry.Id, new PartitionKey(unsortedEntry.Id));
 
             var newBlobLocation = $"{doc.FolderName}/{doc.RegisterName}/{doc.PhysicalName}";
             var source = _bcc.GetBlobClient(doc.BlobLocation);

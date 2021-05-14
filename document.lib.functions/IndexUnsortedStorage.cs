@@ -16,11 +16,11 @@ namespace document.lib.functions
             {
                 var indexerService = new IndexerService();
                 await indexerService.IndexSingleDocumentAsync(blob);
-                log.LogInformation($"C# Blob trigger function Processed blob\n Name:{name} \n Size: Bytes");
+                log.LogInformation($"Processed blob\n Name:{name} \n Size: Bytes");
             }
             catch (Exception ex)
             {
-
+                log.LogError(ex.Message);
             }
             
         }

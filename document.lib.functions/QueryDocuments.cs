@@ -29,8 +29,8 @@ namespace document.lib.functions
                 var obj = await sr.ReadToEndAsync();
                 var query = JsonConvert.DeserializeObject<DocumentQuery>(obj);
                 var queryService = new QueryService();
-                var results = queryService.ExecuteQuery(query).ToList();
-                return new OkObjectResult(results);
+                var results = await queryService.ExecuteQueryAsync(query);
+                return new OkObjectResult(results.ToList());
             }
             catch (Exception ex)
             {

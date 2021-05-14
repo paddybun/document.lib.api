@@ -2,100 +2,122 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
+using System.Threading.Tasks;
 using document.lib.functions.Constants;
+using document.lib.functions.Helper;
 using document.lib.functions.TableEntities;
+using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Azure.Cosmos.Table.Queryable;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace document.lib.functions.Services
 {
     public class QueryService
     {
-        private CloudTableClient _tbc;
+        private readonly CosmosClient _cosmosClient;
         public QueryService()
         {
-            var connectionString = Environment.GetEnvironmentVariable("AzureWebJobsDocumentLibStorage");
-            var csa = CloudStorageAccount.Parse(connectionString);
-            _tbc = csa.CreateCloudTableClient(new TableClientConfiguration());
+            var cosmosConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsCosmos");
+            _cosmosClient = new CosmosClient(cosmosConnectionString);
         }
 
-        public IEnumerable<DocLibDocument> ExecuteQuery(DocumentQuery query)
+        public async Task<IEnumerable<DocLibDocument>> ExecuteQueryAsync(DocumentQuery query)
         {
-            var table = _tbc.GetTableReference(TableNames.Doclib);
-            var expressions = new List<Expression<Func<DocLibDocument, bool>>>();
+            var db = _cosmosClient.GetDatabase(TableNames.Doclib);
+            var container = db.GetContainer(TableNames.Doclib);
+
+            var sb = new StringBuilder();
+            sb.Append("SELECT * FROM doclib dl WHERE ");
             if (query.Unsorted)
             {
-                var param = Expression.Parameter(typeof(DocLibDocument), "x");
-                var partKeyProp = Expression.Property(param, "PartitionKey");
-                var partKeyConst = Expression.Constant("unsorted", typeof(string));
-                var partKeyExpr = Expression.Equal(partKeyProp, partKeyConst);
-
-                var unsortedProp = Expression.Property(param, "Unsorted");
-                var unsortedConst = Expression.Constant(true, typeof(bool));
-                var unsortedExpr = Expression.Equal(unsortedProp, unsortedConst);
-
-                var body = Expression.And(partKeyExpr, unsortedExpr);
-                var lambda = Expression.Lambda<Func<DocLibDocument, bool>>(body, new[] {param});
-
-                var qq = table.CreateQuery<DocLibDocument>().AsQueryable().Where(lambda);
-                return table.ExecuteQuery(qq.AsTableQuery()).ToList();
+                sb.AppendLine("dl.unsorted = true ");
+                return await CosmosQueryHelper.ExecuteQueryAsync<DocLibDocument>(new QueryDefinition(sb.ToString()), container);
             }
 
-            expressions.Add(x => x.PartitionKey == "document");
-            expressions.Add(x => x.Unsorted == false);
-
+            var andPredicates = new List<string>();
             if (!string.IsNullOrWhiteSpace(query.Category))
             {
-                expressions.Add(x => x.Category == query.Category);
+                andPredicates.Add($"dl.category = '{query.Category}'");
             }
-
             if (!string.IsNullOrWhiteSpace(query.Description))
             {
-                expressions.Add(x => x.Description == query.Description);
+                andPredicates.Add($"dl.description LIKE '%{query.Description}%'");
             }
-
             if (!string.IsNullOrWhiteSpace(query.Company))
             {
-                expressions.Add(x => x.Company == query.Company);
+                andPredicates.Add($"dl.company = '{query.Company}'");
             }
-
             if (!string.IsNullOrWhiteSpace(query.DisplayName))
             {
-                expressions.Add(x => x.DisplayName == query.DisplayName);
+                andPredicates.Add($"dl.displayName = '{query.DisplayName}'");
             }
-
-            if (!string.IsNullOrWhiteSpace(query.PhysicalDocumentName))
+            if (!string.IsNullOrWhiteSpace(query.PhysicalName))
             {
-                expressions.Add(x => x.PhysicalName.Contains(query.PhysicalDocumentName));
+                andPredicates.Add($"dl.physicalName LIKE '%{query.PhysicalName}%'");
             }
-
             if (query.Tags?.Length > 0)
             {
-                expressions.Add(x => x.Tags.Split('|', StringSplitOptions.RemoveEmptyEntries).Any(y => query.Tags.Contains(y, StringComparer.InvariantCultureIgnoreCase)));
+                var tagQueries = new List<string>();
+                foreach (var tag in query.Tags.Select(x => x.ToLower()))
+                {
+                    tagQueries.Add($"ARRAY_CONTAINS(dl.tags, '{tag}')");
+                }
+                andPredicates.Add($"({string.Join(" OR ", tagQueries).Trim()})");
             }
-
-            var dbQuery = table.CreateQuery<DocLibDocument>().AsQueryable();
-            foreach (var expression in expressions)
+            if (query.UploadDateFrom != null)
             {
-                dbQuery = dbQuery.Where(expression);
+                var start = query.UploadDateFrom.Value.ToString("yyyy-MM-ddT00:00:00");
+                var end = query.UploadDateTo?.ToString("yyyy-MM-ddT00:00:00") ?? query.UploadDateFrom.Value.AddDays(1).ToString("yyyy-MM-ddT00:00:00");
+                andPredicates.Add($"(dl.uploadDate BETWEEN '{start}' AND '{end}')");
+            }
+            if (query.DateOfDocumentFrom != null)
+            {
+                var start = query.DateOfDocumentFrom.Value.ToString("yyyy-MM-ddT00:00:00");
+                var end = query.DateOfDocumentTo?.ToString("yyyy-MM-ddT00:00:00") ?? query.DateOfDocumentFrom.Value.AddDays(1).ToString("yyyy-MM-ddT00:00:00");
+                andPredicates.Add($"(dl.dateOfDocument BETWEEN '{start}' AND '{end}')");
             }
 
-            var res = table.ExecuteQuery(dbQuery.AsTableQuery());
-            return res;
+            var combined = string.Join(" AND ", andPredicates);
+            sb.AppendLine(combined.Trim());
+            return await CosmosQueryHelper.ExecuteQueryAsync<DocLibDocument>(new QueryDefinition(sb.ToString()), container);
         }
     }
     public class DocumentQuery
     {
+        [JsonProperty("category")]
         public string Category { get; set; }
+
+        [JsonProperty("description")]
         public string Description { get; set; }
+
+        [JsonProperty("company")]
         public string Company { get; set; }
+
+        [JsonProperty("displayName")]
         public string DisplayName { get; set; }
+
+        [JsonProperty("tags")]
         public string[] Tags { get; set; }
-        public string PhysicalDocumentName { get; set; }
+
+        [JsonProperty("physicalName")]
+        public string PhysicalName { get; set; }
+
+        [JsonProperty("uploadDateFrom")]
         public DateTimeOffset? UploadDateFrom { get; set; }
+
+        [JsonProperty("uploadDateTo")]
         public DateTimeOffset? UploadDateTo { get; set; }
-        public DateTimeOffset? DocumentDateFrom { get; set; }
-        public DateTimeOffset? DocumentDateTo { get; set; }
+
+        [JsonProperty("dateOfDocumentFrom")]
+        public DateTimeOffset? DateOfDocumentFrom { get; set; }
+
+        [JsonProperty("dateOfDocumentTo")]
+        public DateTimeOffset? DateOfDocumentTo { get; set; }
+
+        [JsonProperty("unsorted")]
         public bool Unsorted { get; set; }
     }
 }

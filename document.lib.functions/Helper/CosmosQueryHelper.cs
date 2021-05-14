@@ -4,7 +4,7 @@ using Microsoft.Azure.Cosmos;
 
 namespace document.lib.functions.Helper
 {
-    public static class QueryHelper
+    public static class CosmosQueryHelper
     {
         public static async Task<List<T>> ExecuteQueryAsync<T>(QueryDefinition query, Container container)
         {

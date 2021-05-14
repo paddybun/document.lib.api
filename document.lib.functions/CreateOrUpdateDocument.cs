@@ -23,7 +23,7 @@ namespace document.lib.functions
             {
                 using var streamReader = new StreamReader(req.Body);
                 var requestBody = await streamReader.ReadToEndAsync();
-                var docLibDocument = JsonConvert.DeserializeObject<DocLibDocument1>(requestBody);
+                var docLibDocument = JsonConvert.DeserializeObject<DocLibDocument>(requestBody);
                 var docService = new DocLibService();
                 await docService.CreateDocLibDocumentAsync(docLibDocument);
                 return new OkObjectResult(docLibDocument);

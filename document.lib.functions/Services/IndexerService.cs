@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
 using document.lib.functions.Constants;
 using document.lib.functions.TableEntities;
 using Microsoft.Azure.Cosmos;
@@ -13,14 +11,10 @@ namespace document.lib.functions.Services
 {
     public class IndexerService
     {
-        private readonly BlobContainerClient _bcc;
         private readonly CosmosClient _cosmosClient;
 
         public IndexerService()
         {
-            var connectionString = Environment.GetEnvironmentVariable("AzureWebJobsDocumentLibStorage");
-            var containerName = Environment.GetEnvironmentVariable("DocumentContainerName");
-            _bcc = new BlobContainerClient(connectionString, containerName);
             var cosmosConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsCosmos");
             _cosmosClient = new CosmosClient(cosmosConnectionString);
         }
@@ -32,7 +26,7 @@ namespace document.lib.functions.Services
             var name = blob.Name.Split("/").Last();
 
             var id = $"UnsortedDocument.{name}";
-            var doc = new DocLibDocument1
+            var doc = new DocLibDocument
             {
                 Id = id,
                 Name = name,
@@ -43,7 +37,7 @@ namespace document.lib.functions.Services
                 Tags = new string[0]
             };
 
-            var result = await container.CreateItemAsync(doc, new PartitionKey(id));
+            await container.CreateItemAsync(doc, new PartitionKey(id));
         }
     }
 }
