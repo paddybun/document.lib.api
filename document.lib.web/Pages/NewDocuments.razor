@@ -1,0 +1,61 @@
+﻿@page "/newdocuments"
+@using document.lib.shared.Services
+@using document.lib.shared.TableEntities
+<h3>New Documents</h3>
+
+@inject QueryService QueryService
+@inject BlobClientHelper BlobClientHelper
+@inject ILogger<NewDocuments> Logger
+There are @_documents.Count new Documents to process.
+
+Upload new File: <br/>
+
+<InputFile OnChange="@LoadFilesAsync" multiple></InputFile>
+
+<ul>
+    @foreach (var file in _loadedFiles)
+    {
+        <li>uploading file: @file</li>
+    }
+</ul>
+
+<RadzenDataGrid Data="_documents" TItem="DocLibDocument">
+    <Columns>
+        <RadzenDataGridColumn TItem="DocLibDocument">
+            <Template Context="data">
+                @data.Name
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    List<DocLibDocument> _documents = new List<DocLibDocument>();
+    private readonly List<string> _loadedFiles = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _documents = (await QueryService.ExecuteQueryAsync(new DocumentQuery{ Unsorted = true })).ToList();
+    }
+
+    private async Task LoadFilesAsync(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            var files = e.GetMultipleFiles();
+            _loadedFiles.AddRange(files.Select(x=>x.Name));
+
+            foreach (var file in files)
+            {
+                var buffer = file.OpenReadStream(5120000);
+                await BlobClientHelper.UploadBlobAsync($"unsorted/{file.Name}", buffer);
+                _loadedFiles.Remove(file.Name);
+            }
+        }   
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, ex.Message);
+        }
+        _loadedFiles.Clear();
+    }
+}

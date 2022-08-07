@@ -1,0 +1,24 @@
+﻿@page "/documentoverview"
+@using document.lib.shared.Services
+@using document.lib.shared.TableEntities
+
+@inject QueryService QueryService
+
+<h3>DocumentOverview</h3>
+
+<p>@_documents.Count</p>
+@foreach (var doc in _documents)
+{
+    <div>@doc.DisplayName | @doc.BlobLocation</div>
+}
+
+@code {
+
+    List<DocLibDocument> _documents = new List<DocLibDocument>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _documents = (await QueryService.ExecuteQueryAsync(new DocumentQuery())).ToList();
+    }
+
+}
