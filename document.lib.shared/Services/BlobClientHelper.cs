@@ -20,4 +20,11 @@ public class BlobClientHelper
             await blobClient.UploadAsync(buffer);
         }
     }
+
+    public async Task<Stream> DownloadBlobAsync(string blob)
+    {
+        var blobClient = _blobContainerClient.GetBlobClient(blob);
+        var blobInfo = await blobClient.DownloadAsync();
+        return blobInfo.Value.Content;
+    }
 }
