@@ -1,16 +1,64 @@
 ﻿@page "/documentoverview"
 @using document.lib.shared.Services
 @using document.lib.shared.TableEntities
+@using Microsoft.AspNetCore.Http.Extensions
+@using System.Web
 
 @inject QueryService QueryService
+@inject NavigationManager NavigationManager
 
 <h3>DocumentOverview</h3>
 
-<p>@_documents.Count</p>
-@foreach (var doc in _documents)
-{
-    <div>@doc.DisplayName | @doc.BlobLocation</div>
-}
+<RadzenFieldset Text="Documents">
+    <div class="container-fluid">
+        @foreach (var chunk in _documents.Chunk(3))
+        {
+            <div class="row my-5">
+                @foreach (var doc in chunk)
+                {
+                    <div class="col-md-3">
+                        <RadzenCard>
+                            <RadzenText TextStyle="TextStyle.H6"><strong>Document Information</strong></RadzenText>
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <RadzenText TextStyle="TextStyle.Overline">Name</RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Body1"><b>@(doc.DisplayName)</b></RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Overline">Date</RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Body1"><b>@(doc.DateOfDocument?.ToString("yyyy-MM-dd") ?? "")</b></RadzenText>
+                                    @if (!doc.DigitalOnly)
+                                    {
+                                        <RadzenText TextStyle="TextStyle.Overline">Folder</RadzenText>
+                                        <RadzenText TextStyle="TextStyle.Body1"><b>@(doc.FolderName)</b></RadzenText>
+                                    }
+                                    else
+                                    {
+                                        <RadzenText TextStyle="TextStyle.Overline">Location</RadzenText>
+                                        <RadzenText TextStyle="TextStyle.Body1"><b>Digital only</b></RadzenText>
+                                    }
+                                </div>
+                                <div class="col-md-5">
+                                    <RadzenText TextStyle="TextStyle.Overline">Company</RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Body1"><b>@(doc.Company)</b></RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Overline">Category</RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Body1"><b>@(doc.Category)</b></RadzenText>
+                                    @if (!doc.DigitalOnly)
+                                    {
+                                        <RadzenText TextStyle="TextStyle.Overline">Register</RadzenText>
+                                        <RadzenText TextStyle="TextStyle.Body1"><b>@(doc.RegisterName)</b></RadzenText>
+                                    }
+                                </div>
+                                <div class="col-md-2">
+                                    <RadzenButton Text="Edit" Click="@((args) => Edit(args, doc.PhysicalName))"></RadzenButton>
+                                </div>
+                            </div>
+                        </RadzenCard>
+                    </div>
+                }
+            </div>   
+        }
+    </div>
+</RadzenFieldset>
+
 
 @code {
 
@@ -19,6 +67,11 @@
     protected override async Task OnInitializedAsync()
     {
         _documents = (await QueryService.ExecuteQueryAsync(new DocumentQuery())).ToList();
+    }
+
+    private void Edit(MouseEventArgs args, string physicalName)
+    {
+        NavigationManager.NavigateTo($"/edit/{HttpUtility.UrlEncode(physicalName)}");
     }
 
 }
