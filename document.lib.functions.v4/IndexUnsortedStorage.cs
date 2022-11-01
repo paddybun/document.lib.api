@@ -21,6 +21,7 @@ namespace document.lib.functions.v4
             catch (Exception ex)
             {
                 log.LogError(ex.Message);
+                throw;
             }
             
         }

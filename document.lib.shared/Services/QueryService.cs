@@ -49,7 +49,7 @@ namespace document.lib.shared.Services
             }
             if (!string.IsNullOrWhiteSpace(query.Company))
             {
-                andPredicates.Add($"dl.company = '{query.Company}'");
+                andPredicates.Add($"dl.company LIKE '%{query.Company}%'");
             }
             if (!string.IsNullOrWhiteSpace(query.DisplayName))
             {

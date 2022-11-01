@@ -18,19 +18,20 @@ builder.Services.AddAuthorization(options =>
 });
 
 var cosmosDbConnectionString = builder.Configuration.GetValue<string>("CosmosDbConnection");
+var blobConnectionString = builder.Configuration.GetValue<string>("BlobContainerConnectionString");
+var blobContainer = builder.Configuration.GetValue<string>("BlobContainer");
 var queryService = new QueryService(cosmosDbConnectionString);
-
-var blobClientHelper = new BlobClientHelper(
-    builder.Configuration.GetValue<string>("BlobContainerConnectionString"),
-    builder.Configuration.GetValue<string>("BlobContainer")
-);
+var metadataService = new MetadataService(cosmosDbConnectionString);
+var blobClientHelper = new BlobClientHelper(blobConnectionString,blobContainer);
 
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor()
     .AddMicrosoftIdentityConsentHandler();
+var docLibService = new DocLibService(blobConnectionString, blobContainer,cosmosDbConnectionString);
 
-builder.Services.AddSingleton<DocLibService>();
+builder.Services.AddSingleton(docLibService);
 builder.Services.AddSingleton(queryService);
+builder.Services.AddSingleton(metadataService);
 builder.Services.AddSingleton<IndexerService>();
 builder.Services.AddSingleton(blobClientHelper);
 

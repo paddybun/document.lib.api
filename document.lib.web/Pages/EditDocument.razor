@@ -1,0 +1,287 @@
+﻿@page "/edit"
+@page "/edit/{Name}"
+
+@using document.lib.shared.Services
+@using document.lib.shared.TableEntities
+@using document.lib.shared.Models
+
+@inject QueryService QueryService
+@inject MetadataService MetadataService
+@inject BlobClientHelper BlobClientHelper
+@inject DocLibService DocLibService
+
+<style>
+    .rz-fieldset-content > div.row {
+        margin-bottom: 4px;
+    }
+</style>
+
+@if (Doc == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-4">
+                <RadzenFieldset Text="Document metadata">
+                    <div class="row">
+                        <div class="col-md-4 align-items-center d-flex">
+                            <RadzenLabel Text="Document Id"/>
+                        </div>
+                        <div class="col-md-8">
+                            <RadzenTextBox style="width: 100%;" Name="DocumentId" @bind-Value="Doc.Id" ReadOnly="true"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 align-items-center d-flex">
+                            <RadzenLabel Text="Document Name"/>
+                        </div>
+                        <div class="col-md-8">
+                            <RadzenTextBox style="width: 100%;" Name="DocumentName" @bind-Value="Doc.Name" ReadOnly="true"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 align-items-center d-flex">
+                            <RadzenLabel Text="Blob location"/>
+                        </div>
+                        <div class="col-md-8">
+                            <RadzenTextBox style="width: 100%;" Name="Blob location" @bind-Value="Doc.PhysicalName" ReadOnly="true"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 align-items-center d-flex">
+                            <RadzenLabel Text="Upload date"/>
+                        </div>
+                        <div class="col-md-8">
+                            <RadzenDatePicker style="width: 100%;" Disabled="true" @bind-Value=@Doc.UploadDate/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 align-items-center d-flex">
+                            <RadzenLabel Text="Last update"/>
+                        </div>
+                        <div class="col-md-8">
+                            <RadzenDatePicker style="width: 100%;" Disabled="true" @bind-Value=@Doc.LastUpdate/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 align-items-center d-flex">
+                            <RadzenLabel Text="Unsorted"/>
+                        </div>
+                        <div class="col-md-8">
+                            <RadzenCheckBox @bind-Value=Doc.Unsorted Disabled="true" TriState="false" />
+                        </div>
+                    </div>
+                </RadzenFieldset>
+                <RadzenFieldset Text="Folder data">
+                    <div class="row">
+                        <div class="col-md-4 align-items-center d-flex">
+                            <RadzenLabel Text="Folder name"/>
+                        </div>
+                        <div class="col-md-8">
+                            <RadzenTextBox style="width: 100%;" Name="Folder" @bind-Value="Doc.FolderName" ReadOnly="true"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 align-items-center d-flex">
+                            <RadzenLabel Text="Register"/>
+                        </div>
+                        <div class="col-md-8">
+                            <RadzenTextBox style="width: 100%;" Name="Register" @bind-Value="Doc.RegisterName" ReadOnly="true"/>
+                        </div>
+                    </div>
+                </RadzenFieldset>
+                <RadzenFieldset Text="Document data">
+                    <div class="row">
+                        <div class="col-md-4 align-items-center d-flex">
+                            <RadzenLabel Text="Digital only?"/>
+                        </div>
+                        <div class="col-md-8">
+                            <RadzenCheckBox @bind-Value=Doc.DigitalOnly TriState="false" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 align-items-center d-flex">
+                            <RadzenLabel Text="Display name"/>
+                        </div>
+                        <div class="col-md-8">
+                            <RadzenTextBox style="width: 100%;" Name="DisplayName" @bind-Value="Doc.DisplayName"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 align-items-center d-flex">
+                            <RadzenLabel Text="Category"/>
+                        </div>
+                        <div class="col-md-8">
+                            <RadzenAutoComplete Data=@_categories FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" @bind-Value="Doc.Category" Change=@(ChangeCategory) Style="width: 100%;"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 align-items-center d-flex">
+                            <RadzenLabel Text="Description"/>
+                        </div>
+                        <div class="col-md-8">
+                            <RadzenTextArea @bind-Value="Doc.Description" Cols="50" Rows="6"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 align-items-center d-flex">
+                            <RadzenLabel Text="Company"/>
+                        </div>
+                        <div class="col-md-8">
+                            <RadzenTextBox style="width: 100%;" Name="Company" @bind-Value="Doc.Company" Change="@(CompanyChanged)"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 align-items-center d-flex">
+                            <RadzenLabel Text="Document date"/>
+                        </div>
+                        <div class="col-md-8">
+                            <RadzenDatePicker style="width: 100%;" @bind-Value=@Doc.DateOfDocument Change="@(ChangeDocumentDate)" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 align-items-center d-flex">
+                            <RadzenLabel Text="New Tag:"/>
+                        </div>
+                        <div class="col-md-8">
+                            <RadzenTextBox style="width: 100%;" Name="NTag" @bind-Value=@_tag Change="@(AddTagOnChange)"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 align-items-center d-flex">
+                            <RadzenLabel Text="Tags:"/>
+                        </div>
+                        <div class="col-md-8">
+                            <RadzenDropDown Multiple="true" Chips="true" MaxSelectedLabels="20" AllowClear="true" Data=@_tagDatasource @bind-Value=@_documentTags/>
+                        </div>
+                    </div>
+                </RadzenFieldset>
+                <RadzenFieldset Text="Options">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success" Click=@(args => SaveAsync(Doc))></RadzenButton>
+                        </div>
+                    </div>
+                </RadzenFieldset>
+            </div>
+            <div class="col-md-8">
+                <RadzenFieldset Text="Document preview">
+                    <div class="row">
+                        <div class="col-md-12 align-items-center d-flex">
+                            @if (!string.IsNullOrEmpty(_pdfContent))
+                            {
+                                <object data="@_pdfContent" style="width: 100%; height: 80vh; overflow: hidden;"></object>
+                                <!--
+                                <embed src="@_pdfContent" style="width: 100vw;"/>
+                                <iframe src="@_pdfContent" width="800px" height="2100px" />
+                                -->
+                            }
+                        </div>
+                    </div>
+                </RadzenFieldset>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    [Parameter]
+    public string Name { get; set; }
+
+    public string TempCategory { get; set; }
+
+    public DocLibDocument Doc { get; set; } = new();
+
+    public MetadataResponse Metadata { get; set; } = new();
+
+    private string _pdfContent = "";
+
+    private List<string> _categories = new(){ "" };
+    private List<string> _tagDatasource = new(){ "" };
+
+    private string _tag = "";
+    private List<string> _documentTags = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var doc = await QueryService.ExecuteQueryAsync(new DocumentQuery {PhysicalName = Name});
+        Doc = doc.FirstOrDefault();
+        _documentTags.AddRange(Doc?.Tags.ToList() ?? new List<string>());
+        await DownloadAsync(Doc.BlobLocation);
+        Metadata = await MetadataService.GetMetadataAsync();
+        _categories = Metadata.Categories.Select(x => x.Name).ToList();
+        _tagDatasource = Metadata.Tags.Select(x => x.Name).ToList();
+        await base.OnInitializedAsync();
+    }
+
+    private void Submit(DocLibDocument doc)
+    {
+
+    }
+
+    private async Task DownloadAsync(string blob)
+    {
+        await using var output = new MemoryStream();
+        var buffer = await BlobClientHelper.DownloadBlobAsync(blob);
+        await buffer.CopyToAsync(output);
+        output.Position = 0;
+        var bytes = output.ToArray();
+        _pdfContent = "data:application/pdf;base64,";
+        _pdfContent += Convert.ToBase64String(bytes);
+        StateHasChanged();
+    }
+
+    private void ChangeCategory(object category)
+    {
+        var cat = category.ToString();
+
+        if (!_categories.Contains(cat))
+        {
+            _categories.Add(cat);
+        }
+        AddTagIfNotExists(_tagDatasource, cat);
+        AddTagIfNotExists(_documentTags, cat);
+    }
+
+    private void CompanyChanged(string company)
+    {
+        AddTagIfNotExists(_tagDatasource, company);
+        AddTagIfNotExists(_documentTags, company);
+    }
+
+    private void AddTagIfNotExists(List<string> addTo, string tag)
+    {
+        tag = tag.Trim().ToLower();
+        if (!addTo.Contains(tag)) addTo.Add(tag);
+    }
+
+    private void AddTagOnChange()
+    {
+        AddTagIfNotExists(_tagDatasource, _tag);
+        AddTagIfNotExists(_documentTags, _tag);
+        _tag = "";
+    }
+
+    private async Task SaveAsync(DocLibDocument doc)
+    {
+        Doc.Tags = _documentTags.ToArray();
+        var updatedDoc = await DocLibService.CreateOrUpdateDocumentAsync(doc);
+        Doc = updatedDoc;
+    }
+
+    private void ChangeDocumentDate(DateTime? date)
+    {
+        string currentYear;
+        if (!date.HasValue)
+        {
+            return;
+        }
+        currentYear = date.Value.Year.ToString();
+        AddTagIfNotExists(_tagDatasource, currentYear);
+        AddTagIfNotExists(_documentTags, currentYear);
+    }
+}

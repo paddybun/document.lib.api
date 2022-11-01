@@ -11,12 +11,9 @@ namespace document.lib.shared.Services
         private readonly BlobContainerClient _bcc;
         private readonly CosmosClient _cosmosClient;
 
-        public DocLibService()
+        public DocLibService(string blobContainerConnectionString, string container, string cosmosConnectionString)
         {
-            var connectionString = Environment.GetEnvironmentVariable("DocumentStorageConnection");
-            var containerName = Environment.GetEnvironmentVariable("DocumentContainerName");
-            _bcc = new BlobContainerClient(connectionString, containerName);
-            var cosmosConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsCosmos");
+            _bcc = new BlobContainerClient(blobContainerConnectionString, container);
             _cosmosClient = new CosmosClient(cosmosConnectionString);
         }
 
@@ -56,16 +53,19 @@ namespace document.lib.shared.Services
 
             doc.Tags = doc.Tags.Select(x => x.ToLower()).ToArray();
 
-            // Get folder or create a new one
-            var folder = GetCurrentFolder(docLibContainer) ?? await CreateFolderAsync(docLibContainer);
-
             if (doc.Unsorted)
             {
-                var register = folder.AddDocument();
-                doc.FolderName = folder.Name;
-                doc.RegisterName = register;
+                if (!doc.DigitalOnly)
+                {
+                    // Get folder or create a new one
+                    var folder = GetCurrentFolder(docLibContainer) ?? await CreateFolderAsync(docLibContainer);
+
+                    var register = folder.AddDocument();
+                    doc.FolderName = folder.Name;
+                    doc.RegisterName = register;
+                    await docLibContainer.UpsertItemAsync(folder, new PartitionKey(folder.Id));
+                }
                 await MoveDocument(doc, docLibContainer);
-                await docLibContainer.UpsertItemAsync(folder, new PartitionKey(folder.Id));
                 doc.Unsorted = false;
             }
 
@@ -191,8 +191,20 @@ namespace document.lib.shared.Services
                 return;
             }
             await doclibContainer.DeleteItemAsync<DocLibDocument>(unsortedEntry.Id, new PartitionKey(unsortedEntry.Id));
-            doc.PhysicalName = doc.Unsorted ? doc.PhysicalName.Replace("unsorted/", "") : doc.PhysicalName;
-            var newBlobLocation = $"{doc.FolderName}/{doc.RegisterName}/{doc.PhysicalName}";
+
+            string newBlobLocation;
+            if (doc.DigitalOnly)
+            {
+                doc.PhysicalName = doc.PhysicalName.Replace("unsorted/", "");
+                newBlobLocation = $"digital/{doc.PhysicalName}";
+            }
+            else
+            {
+                doc.PhysicalName = doc.Unsorted ? doc.PhysicalName.Replace("unsorted/", "") : doc.PhysicalName;
+                newBlobLocation = $"{doc.FolderName}/{doc.RegisterName}/{doc.PhysicalName}";
+            }
+            
+            
             await MoveBlob(doc.BlobLocation, newBlobLocation);
             doc.BlobLocation = newBlobLocation;
         }

@@ -1,6 +1,7 @@
 ﻿@page "/newdocuments"
 @using document.lib.shared.Services
 @using document.lib.shared.TableEntities
+@using System.Web
 <h3>New Documents</h3>
 
 @inject QueryService QueryService
@@ -33,7 +34,8 @@ Upload new File: <br/>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="DocLibDocument">
             <Template Context="data">
-                <RadzenButton Click=@(async args => await DownloadAsync(data.BlobLocation)) Text="Download" />
+                <RadzenButton Click=@(async args => await DownloadAsync(data.BlobLocation)) Text="Show Document" />
+                <a href="/edit/@HttpUtility.UrlEncode(data.PhysicalName)">Edit</a>
             </Template>
         </RadzenDataGridColumn>
     </Columns>
@@ -68,7 +70,8 @@ Pdf Preview:
             foreach (var file in files)
             {
                 var buffer = file.OpenReadStream(5120000);
-                await BlobClientHelper.UploadBlobAsync($"unsorted/{file.Name}", buffer);
+                var nameNormalized = file.Name.Trim().Replace(" ", "+");
+                await BlobClientHelper.UploadBlobAsync($"unsorted/{nameNormalized}", buffer);
                 _loadedFiles.Remove(file.Name);
             }
         }   
@@ -76,7 +79,6 @@ Pdf Preview:
         {
             Logger.LogError(ex, ex.Message);
         }
-        _loadedFiles.Clear();
     }
 
     private async Task DownloadAsync(string blob)

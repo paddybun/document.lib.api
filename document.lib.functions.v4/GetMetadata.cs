@@ -16,7 +16,7 @@ namespace document.lib.functions.v4
     public static class GetMetadata
     {
         [Disable("DisableFunction")]
-        [FunctionName("GetMetadata")]
+        [FunctionName("GetMetadataAsync")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest req,
             ILogger log)
