@@ -6,18 +6,18 @@ using Microsoft.Azure.Cosmos;
 
 namespace document.lib.shared.Services
 {
-    public class DocLibService
+    public class DocumentService
     {
         private readonly BlobContainerClient _bcc;
         private readonly CosmosClient _cosmosClient;
 
-        public DocLibService(string blobContainerConnectionString, string container, string cosmosConnectionString)
+        public DocumentService(string blobContainerConnectionString, string container, string cosmosConnectionString)
         {
             _bcc = new BlobContainerClient(blobContainerConnectionString, container);
             _cosmosClient = new CosmosClient(cosmosConnectionString);
         }
 
-        public async Task DeleteDocument(DocLibDocument doc)
+        public async Task DeleteDocumentAsync(DocLibDocument doc)
         {
             if (string.IsNullOrEmpty(doc.Id))
             {
@@ -38,7 +38,26 @@ namespace document.lib.shared.Services
             
         }
 
-        public async Task<DocLibDocument> CreateOrUpdateDocumentAsync(DocLibDocument doc)
+        public async Task<DocLibDocument> UpdateDocumentAsync(DocLibDocument doc)
+        {
+            doc.Validate();
+
+            var db = _cosmosClient.GetDatabase(TableNames.Doclib);
+            var docLibContainer = db.GetContainer(TableNames.Doclib);
+
+            // Create category if not exists
+            await CreateCatergoryAsync(doc, docLibContainer);
+
+            // Create tags if not exists
+            await CreateTagsAsync(doc, docLibContainer);
+
+            doc.Tags = doc.Tags.Select(x => x.ToLower()).ToArray();
+            doc.LastUpdate = DateTimeOffset.Now;
+
+            await docLibContainer.UpsertItemAsync(doc, new PartitionKey(doc.Id));
+            return doc;
+        }
+        public async Task<DocLibDocument> CreateDocumentAsync(DocLibDocument doc)
         {
             doc.Validate();
 

@@ -27,7 +27,7 @@ var blobClientHelper = new BlobClientHelper(blobConnectionString,blobContainer);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor()
     .AddMicrosoftIdentityConsentHandler();
-var docLibService = new DocLibService(blobConnectionString, blobContainer,cosmosDbConnectionString);
+var docLibService = new DocumentService(blobConnectionString, blobContainer,cosmosDbConnectionString);
 
 builder.Services.AddSingleton(docLibService);
 builder.Services.AddSingleton(queryService);

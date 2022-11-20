@@ -2,58 +2,81 @@
 @using document.lib.shared.Services
 @using document.lib.shared.TableEntities
 @using System.Web
+@using Azure.Security.KeyVault.Certificates
 <h3>New Documents</h3>
 
 @inject QueryService QueryService
 @inject BlobClientHelper BlobClientHelper
 @inject ILogger<NewDocuments> Logger
-There are @_documents.Count new Documents to process.
+@inject NavigationManager NavigationManager
+@inject DocumentService DocumentService
 
-Upload new File: <br/>
 
-<InputFile OnChange="@LoadFilesAsync" multiple></InputFile>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-6">
+            <RadzenFieldset Text="Upload documents">
+                <InputFile OnChange="@LoadFilesAsync" multiple></InputFile>
 
-<ul>
-    @foreach (var file in _loadedFiles)
-    {
-        <li>uploading file: @file</li>
-    }
-</ul>
+                <ul>
+                    @foreach (var file in _loadedFiles)
+                    {
+                        <li>uploading file: @file</li>
+                    }
+                </ul>
+            </RadzenFieldset>
+        </div>
+        <div class="col-md-6">
+            <RadzenFieldset Text="New documents">
+                <RadzenDataGrid @ref="_dataGrid" Data="_documents" TItem="DocLibDocument">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="DocLibDocument">
+                            <Template Context="data">
+                                @data.Name
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="DocLibDocument">
+                            <Template Context="data">
+                                @data.BlobLocation
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="DocLibDocument">
+                            <Template Context="data">
+                                <RadzenButton ButtonStyle="ButtonStyle.Info"  Click=@(async args => await DownloadAsync(data.BlobLocation)) Text="Show Document" />
+                                <RadzenButton ButtonStyle="ButtonStyle.Success" Text="Edit" Click=@(args => Edit(args, data.PhysicalName))></RadzenButton>
+                                <RadzenButton ButtonStyle="ButtonStyle.Danger" Text="Delete" Click=@(async args => await DeleteAsync(data))></RadzenButton>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </RadzenFieldset>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <RadzenFieldset Text="PDF preview">
+                    @if (!string.IsNullOrEmpty(_pdfContent))
+                    {
+                        <object data="@_pdfContent" style="width: 100%; height: 80vh; overflow: hidden;"></object>
+                        <!-- <embed src="@_pdfContent" width="800px" height="2100px" /> -->
+                        <!-- <iframe src="@_pdfContent" width="800px" height="2100px" /> -->
+                    }
+                </RadzenFieldset>
+            </div>
+        </div>
+    </div>
+</div>
 
-<RadzenDataGrid Data="_documents" TItem="DocLibDocument">
-    <Columns>
-        <RadzenDataGridColumn TItem="DocLibDocument">
-            <Template Context="data">
-                @data.Name
-            </Template>
-        </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="DocLibDocument">
-            <Template Context="data">
-                @data.BlobLocation
-            </Template>
-        </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="DocLibDocument">
-            <Template Context="data">
-                <RadzenButton Click=@(async args => await DownloadAsync(data.BlobLocation)) Text="Show Document" />
-                <a href="/edit/@HttpUtility.UrlEncode(data.PhysicalName)">Edit</a>
-            </Template>
-        </RadzenDataGridColumn>
-    </Columns>
-</RadzenDataGrid>
 
-Pdf Preview: 
-@if (!string.IsNullOrEmpty(_pdfContent))
-{
-    <p>Preview</p>
-    <embed src="@_pdfContent" width="800px" height="2100px" />
-    <!-- <iframe src="@_pdfContent" width="800px" height="2100px" />
-    <object data="@_pdfContent" width="500" height="200"></object> -->
-}
+
+
+
+
 
 @code {
     List<DocLibDocument> _documents = new List<DocLibDocument>();
     private readonly List<string> _loadedFiles = new();
     private string _pdfContent = "";
+    RadzenDataGrid<DocLibDocument> _dataGrid;
 
     protected override async Task OnInitializedAsync()
     {
@@ -92,4 +115,20 @@ Pdf Preview:
         _pdfContent += Convert.ToBase64String(bytes);
         StateHasChanged();
     }
+
+    private void Edit(MouseEventArgs args, string physicalName)
+    {
+        NavigationManager.NavigateTo($"/edit/{HttpUtility.UrlEncode(physicalName)}");
+    }
+
+    private async Task DeleteAsync(DocLibDocument doc)
+    {
+        await DocumentService.DeleteDocumentAsync(doc);
+        _documents.RemoveAll(x => x.Id == doc.Id);
+        if (_dataGrid != null)
+        {
+            await _dataGrid.Reload();
+        }
+    }
+
 }

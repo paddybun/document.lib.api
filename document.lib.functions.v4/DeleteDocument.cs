@@ -15,7 +15,7 @@ namespace document.lib.functions.v4
     public static class DeleteDocument
     {
         [Disable("DisableFunction")]
-        [FunctionName("DeleteDocument")]
+        [FunctionName("DeleteDocumentAsync")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
             ILogger log)
@@ -25,8 +25,8 @@ namespace document.lib.functions.v4
                 using var streamReader = new StreamReader(req.Body);
                 var requestBody = await streamReader.ReadToEndAsync();
                 var docLibDocument = JsonConvert.DeserializeObject<DocLibDocument>(requestBody);
-                var docService = new DocLibService();
-                await docService.DeleteDocument(docLibDocument);
+                var docService = new DocumentService();
+                await docService.DeleteDocumentAsync(docLibDocument);
                 return new OkObjectResult(new {id = docLibDocument.Id});
             }
             catch (Exception ex)

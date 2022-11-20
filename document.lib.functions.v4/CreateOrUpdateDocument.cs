@@ -25,8 +25,8 @@ namespace document.lib.functions.v4
                 using var streamReader = new StreamReader(req.Body);
                 var requestBody = await streamReader.ReadToEndAsync();
                 var docLibDocument = JsonConvert.DeserializeObject<DocLibDocument>(requestBody);
-                var docService = new DocLibService();
-                var updatedDocument = await docService.CreateOrUpdateDocumentAsync(docLibDocument);
+                var docService = new DocumentService("","","");
+                var updatedDocument = await docService.CreateDocumentAsync(docLibDocument);
                 return new OkObjectResult(updatedDocument);
             }
             catch (Exception ex)

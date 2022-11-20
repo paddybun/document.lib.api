@@ -8,7 +8,7 @@
 @inject QueryService QueryService
 @inject MetadataService MetadataService
 @inject BlobClientHelper BlobClientHelper
-@inject DocLibService DocLibService
+@inject DocumentService _documentService
 
 <style>
     .rz-fieldset-content > div.row {
@@ -162,7 +162,7 @@ else
                 <RadzenFieldset Text="Options">
                     <div class="row">
                         <div class="col-md-4">
-                            <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success" Click=@(args => SaveAsync(Doc))></RadzenButton>
+                            <RadzenButton Text="@(Doc.Unsorted ? "Save" : "Update")" ButtonStyle="ButtonStyle.Success" Click=@(args => SaveAsync(Doc))></RadzenButton>
                         </div>
                     </div>
                 </RadzenFieldset>
@@ -269,7 +269,16 @@ else
     private async Task SaveAsync(DocLibDocument doc)
     {
         Doc.Tags = _documentTags.ToArray();
-        var updatedDoc = await DocLibService.CreateOrUpdateDocumentAsync(doc);
+        DocLibDocument updatedDoc;
+        if (Doc.Unsorted)
+        {
+            updatedDoc = await _documentService.CreateDocumentAsync(doc);
+        }
+        else
+        {
+            updatedDoc = await _documentService.UpdateDocumentAsync(doc);
+        }
+        
         Doc = updatedDoc;
     }
 
