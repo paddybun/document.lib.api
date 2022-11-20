@@ -9,6 +9,7 @@
 @inject MetadataService MetadataService
 @inject BlobClientHelper BlobClientHelper
 @inject DocumentService _documentService
+@inject IJSRuntime JS
 
 <style>
     .rz-fieldset-content > div.row {
@@ -171,13 +172,18 @@ else
                 <RadzenFieldset Text="Document preview">
                     <div class="row">
                         <div class="col-md-12 align-items-center d-flex">
+                            @if (_pdfToLarge)
+                            {
+                                <strong style="display: inline-block">
+                                    PDF is too large to display, sorry
+                                </strong>
+                                <RadzenButton ButtonStyle="ButtonStyle.Success" Click=@(async args => await DownloadPdfAsync(args)) >Download instead</RadzenButton>
+                            }
                             @if (!string.IsNullOrEmpty(_pdfContent))
                             {
                                 <object data="@_pdfContent" style="width: 100%; height: 80vh; overflow: hidden;"></object>
-                                <!--
-                                <embed src="@_pdfContent" style="width: 100vw;"/>
-                                <iframe src="@_pdfContent" width="800px" height="2100px" />
-                                -->
+                                <!-- <embed src="@_pdfContent" style="width: 100vw;"/> -->
+                                <!-- <iframe src="@_pdfContent" width="800px" height="2100px" /> -->
                             }
                         </div>
                     </div>
@@ -199,19 +205,22 @@ else
     public MetadataResponse Metadata { get; set; } = new();
 
     private string _pdfContent = "";
+    private byte[] _pdfBuffer = Array.Empty<byte>();
+    private bool _pdfToLarge = false;
 
     private List<string> _categories = new(){ "" };
     private List<string> _tagDatasource = new(){ "" };
 
     private string _tag = "";
     private List<string> _documentTags = new();
+    
 
     protected override async Task OnInitializedAsync()
     {
         var doc = await QueryService.ExecuteQueryAsync(new DocumentQuery {PhysicalName = Name});
         Doc = doc.FirstOrDefault();
         _documentTags.AddRange(Doc?.Tags.ToList() ?? new List<string>());
-        await DownloadAsync(Doc.BlobLocation);
+        await DownloadAsync();
         Metadata = await MetadataService.GetMetadataAsync();
         _categories = Metadata.Categories.Select(x => x.Name).ToList();
         _tagDatasource = Metadata.Tags.Select(x => x.Name).ToList();
@@ -223,16 +232,24 @@ else
 
     }
 
-    private async Task DownloadAsync(string blob)
+    private async Task DownloadAsync()
     {
         await using var output = new MemoryStream();
-        var buffer = await BlobClientHelper.DownloadBlobAsync(blob);
+        var buffer = await BlobClientHelper.DownloadBlobAsync(Doc.BlobLocation);
         await buffer.CopyToAsync(output);
         output.Position = 0;
-        var bytes = output.ToArray();
-        _pdfContent = "data:application/pdf;base64,";
-        _pdfContent += Convert.ToBase64String(bytes);
-        StateHasChanged();
+        _pdfBuffer = output.ToArray();
+        var sizeInMb = _pdfBuffer.Length / 1024d / 1024d;
+        if (sizeInMb <= 2d)
+        {
+            _pdfContent = "data:application/pdf;base64,";
+            _pdfContent += Convert.ToBase64String(_pdfBuffer);
+            StateHasChanged();
+        }
+        else
+        {
+            _pdfToLarge = true;
+        }
     }
 
     private void ChangeCategory(object category)
@@ -293,4 +310,13 @@ else
         AddTagIfNotExists(_tagDatasource, currentYear);
         AddTagIfNotExists(_documentTags, currentYear);
     }
+
+    private async Task DownloadPdfAsync(MouseEventArgs args)
+    {
+        using var memStream = new MemoryStream(_pdfBuffer);
+        using var streamRef = new DotNetStreamReference(stream: memStream);
+
+        await JS.InvokeVoidAsync("downloadFileFromStream", "tmp.pdf", streamRef);
+    }
+
 }

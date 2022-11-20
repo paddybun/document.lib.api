@@ -18,7 +18,7 @@
                 {
                     <div class="col-md-3">
                         <RadzenCard>
-                            <RadzenText TextStyle="TextStyle.H6"><strong>Document Information</strong></RadzenText>
+                            <RadzenText TextStyle="TextStyle.H6"><strong>@(doc.DisplayName.Length > 50 ? doc.DisplayName.Substring(0,50) + "..." : doc.DisplayName)</strong></RadzenText>
                             <div class="row">
                                 <div class="col-md-5">
                                     <RadzenText TextStyle="TextStyle.Overline">Name</RadzenText>

@@ -150,7 +150,7 @@ namespace document.lib.shared.Services
                 await doclibContainer.CreateItemAsync(cat);
             }
         }
-
+        
         private async Task CreateTagsAsync(DocLibDocument doc, Container doclibContainer)
         {
             foreach (var docTag in doc.Tags)
