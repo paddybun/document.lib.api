@@ -3,6 +3,7 @@ using document.lib.shared.Helper;
 using document.lib.shared.Models;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Options;
 
 namespace document.lib.shared.Services;
 
@@ -10,9 +11,9 @@ public class MetadataService
 {
     private readonly CosmosClient _cosmosClient;
 
-    public MetadataService(string connectionString)
+    public MetadataService(IOptions<AppConfiguration> config)
     {
-        _cosmosClient = new CosmosClient(connectionString);
+        _cosmosClient = new CosmosClient(config.Value.CosmosDbConnection);
     }
 
     public async Task<MetadataResponse> GetMetadataAsync()

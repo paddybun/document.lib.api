@@ -1,0 +1,75 @@
+﻿@page "/folderoverview"
+@using document.lib.shared.Interfaces
+@using document.lib.shared.TableEntities
+@using Azure.Storage.Blobs.Models
+
+@inject IFolderService _folderService;
+
+<RadzenText TextStyle="TextStyle.H1">Folder Overview</RadzenText>
+
+<div class="container-fluid">
+    <div class="row h-25">
+        <RadzenFieldset Text="Search Folders">
+            <div class="col-md-12">
+            </div>
+        </RadzenFieldset>
+    </div>
+    <div class="row h-75">
+        <RadzenFieldset Text="Folders">
+            <div class="col-md-12">
+                @if (_folders.Any())
+                {
+                    <RadzenDataList TItem="DocLibFolder" Data="@_folders" AllowPaging="true" PageSize="5">
+                        <Template Context="folder">
+                            <RadzenCard>
+                                <div class="row">
+                                    <div class="col-3">
+                                        <RadzenText TextStyle="TextStyle.Overline">Name</RadzenText> <br/>
+                                        <RadzenTextBox Placeholder="@folder.DisplayName" Change=@((t) => UpdateFolder(folder, t))></RadzenTextBox>
+                                    </div>
+                                    <div class="col-3">
+                                        <RadzenText TextStyle="TextStyle.Overline">Id</RadzenText>
+                                        <RadzenText TextStyle="TextStyle.Body1">
+                                            <strong>@folder.Id</strong>
+                                        </RadzenText>
+                                    </div>
+                                    <div class="col-3">
+                                        <RadzenText TextStyle="TextStyle.Overline">Aktives Register</RadzenText>
+                                        <RadzenText TextStyle="TextStyle.Body1">
+                                            <strong>@folder.CurrentRegister</strong>
+                                        </RadzenText>
+                                    </div>
+                                    <div class="col-3">
+                                        <RadzenText TextStyle="TextStyle.Overline">Anzahl Dokumente</RadzenText>
+                                        <RadzenText TextStyle="TextStyle.Body1">
+                                            <strong>@folder.TotalDocuments / @folder.DocumentsPerFolder</strong>
+                                        </RadzenText>
+                                    </div>
+                                </div>
+                                
+                            </RadzenCard>
+                        </Template>
+                    </RadzenDataList>
+                }
+            </div>
+        </RadzenFieldset>
+    </div>
+</div>
+
+
+@code {
+
+    private List<DocLibFolder> _folders = new();
+
+    protected override Task OnInitializedAsync()
+    {
+        _folders = _folderService.GetAll();
+        return base.OnInitializedAsync();
+    }
+
+    public async Task UpdateFolder(DocLibFolder folder, string folderName)
+    {
+        folder.DisplayName = folderName;
+        await _folderService.UpdateFolderAsync(folder);
+    }
+}

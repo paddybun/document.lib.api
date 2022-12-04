@@ -1,8 +1,10 @@
 ﻿using System.Text;
 using document.lib.shared.Constants;
 using document.lib.shared.Helper;
+using document.lib.shared.Models;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace document.lib.shared.Services
@@ -10,9 +12,9 @@ namespace document.lib.shared.Services
     public class QueryService
     {
         private readonly CosmosClient _cosmosClient;
-        public QueryService(string connectionString)
+        public QueryService(IOptions<AppConfiguration> config)
         {
-            _cosmosClient = new CosmosClient(connectionString);
+            _cosmosClient = new CosmosClient(config.Value.CosmosDbConnection);
         }
 
         public async Task<IEnumerable<DocLibDocument>> ExecuteQueryAsync(DocumentQuery query)

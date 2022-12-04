@@ -1,5 +1,6 @@
-﻿using Azure.Identity;
-using Azure.Storage.Blobs;
+﻿using Azure.Storage.Blobs;
+using document.lib.shared.Models;
+using Microsoft.Extensions.Options;
 
 namespace document.lib.shared.Services;
 
@@ -7,9 +8,9 @@ public class BlobClientHelper
 {
     private readonly BlobContainerClient _blobContainerClient;
 
-    public BlobClientHelper(string blobContainerConnectionString, string container)
+    public BlobClientHelper(IOptions<AppConfiguration> config)
     {
-        _blobContainerClient = new BlobContainerClient(blobContainerConnectionString, container);
+        _blobContainerClient = new BlobContainerClient(config.Value.BlobContainerConnectionString, config.Value.BlobContainer);
     }
 
     public async Task UploadBlobAsync(string name, Stream buffer)

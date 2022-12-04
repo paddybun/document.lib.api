@@ -33,6 +33,8 @@ namespace document.lib.shared.TableEntities
 
         [JsonProperty("description")]
         public string Description { get; set; } = "";
+        [JsonProperty("folderId")] 
+        public string FolderId { get; set; }
 
         [JsonProperty("folderName")]
         public string FolderName { get; set; } = "";

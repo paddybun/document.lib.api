@@ -1,5 +1,11 @@
+using System.Globalization;
+using document.lib.shared;
+using document.lib.shared.Interfaces;
+using document.lib.shared.Models;
+using document.lib.shared.Repositories;
 using document.lib.shared.Services;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 
@@ -17,23 +23,31 @@ builder.Services.AddAuthorization(options =>
     options.FallbackPolicy = options.DefaultPolicy;
 });
 
-var cosmosDbConnectionString = builder.Configuration.GetValue<string>("CosmosDbConnection");
-var blobConnectionString = builder.Configuration.GetValue<string>("BlobContainerConnectionString");
-var blobContainer = builder.Configuration.GetValue<string>("BlobContainer");
-var queryService = new QueryService(cosmosDbConnectionString);
-var metadataService = new MetadataService(cosmosDbConnectionString);
-var blobClientHelper = new BlobClientHelper(blobConnectionString,blobContainer);
+CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("de-DE");
 
 builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor()
-    .AddMicrosoftIdentityConsentHandler();
-var docLibService = new DocumentService(blobConnectionString, blobContainer,cosmosDbConnectionString);
+builder.Services.AddServerSideBlazor().AddMicrosoftIdentityConsentHandler();
 
-builder.Services.AddSingleton(docLibService);
-builder.Services.AddSingleton(queryService);
-builder.Services.AddSingleton(metadataService);
+// ----- Dependency Injection -----
+builder.Services.Configure<AppConfiguration>(builder.Configuration.GetSection("Config"));
+
+// Repositories
+builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<ITagRepository, TagRepository>();
+builder.Services.AddScoped<IFolderRepository, FolderRepository>();
+
+
+// Services
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<ITagService, TagService>();
+builder.Services.AddScoped<IFolderService,FolderService>();
+
+builder.Services.AddScoped(typeof(QueryService));
+builder.Services.AddScoped(typeof(MetadataService));
 builder.Services.AddSingleton<IndexerService>();
-builder.Services.AddSingleton(blobClientHelper);
+builder.Services.AddSingleton(typeof(BlobClientHelper));
 
 var app = builder.Build();
 

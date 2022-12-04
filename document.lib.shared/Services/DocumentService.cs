@@ -1,20 +1,30 @@
 ﻿using Azure.Storage.Blobs;
 using document.lib.shared.Constants;
-using document.lib.shared.Helper;
+using document.lib.shared.Interfaces;
+using document.lib.shared.Models;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Options;
 
 namespace document.lib.shared.Services
 {
-    public class DocumentService
+    public class DocumentService : IDocumentService
     {
+        private readonly IDocumentRepository _documentRepository;
+        private readonly ICategoryService _categoryService;
+        private readonly ITagService _tagService;
+        private readonly IFolderService _folderService;
         private readonly BlobContainerClient _bcc;
         private readonly CosmosClient _cosmosClient;
 
-        public DocumentService(string blobContainerConnectionString, string container, string cosmosConnectionString)
+        public DocumentService(IOptions<AppConfiguration> config, IDocumentRepository documentRepository, ICategoryService categoryService, ITagService tagService, IFolderService folderService)
         {
-            _bcc = new BlobContainerClient(blobContainerConnectionString, container);
-            _cosmosClient = new CosmosClient(cosmosConnectionString);
+            _documentRepository = documentRepository;
+            _categoryService = categoryService;
+            _tagService = tagService;
+            _folderService = folderService;
+            _bcc = new BlobContainerClient(config.Value.BlobContainerConnectionString, config.Value.BlobContainer);
+            _cosmosClient = new CosmosClient(config.Value.CosmosDbConnection);
         }
 
         public async Task DeleteDocumentAsync(DocLibDocument doc)
@@ -23,19 +33,8 @@ namespace document.lib.shared.Services
             {
                 return;
             }
-            var db = _cosmosClient.GetDatabase(TableNames.Doclib);
-            var docLibContainer = db.GetContainer(TableNames.Doclib);
-            var query = new QueryDefinition("SELECT * FROM doclib dl WHERE dl.id = @id").WithParameter("@id", doc.Id);
-            var entity = (await CosmosQueryHelper.ExecuteQueryAsync<DocLibDocument>(query, docLibContainer)).SingleOrDefault();
-            if (entity != null)
-            {
-                var storagePath = entity.BlobLocation;
-                await docLibContainer.DeleteItemAsync<DocLibDocument>(doc.Id, new PartitionKey(doc.Id));
 
-                var source = _bcc.GetBlobClient(storagePath);
-                await source.DeleteAsync();
-            }
-            
+            await _documentRepository.DeleteDocumentAsync(doc);
         }
 
         public async Task<DocLibDocument> UpdateDocumentAsync(DocLibDocument doc)
@@ -46,10 +45,10 @@ namespace document.lib.shared.Services
             var docLibContainer = db.GetContainer(TableNames.Doclib);
 
             // Create category if not exists
-            await CreateCatergoryAsync(doc, docLibContainer);
+            await _categoryService.CreateOrGetCategoryAsync(doc.Category);
 
             // Create tags if not exists
-            await CreateTagsAsync(doc, docLibContainer);
+            await foreach (var tag in _tagService.CreateOrGetTagsAsync(doc.Tags)) { }
 
             doc.Tags = doc.Tags.Select(x => x.ToLower()).ToArray();
             doc.LastUpdate = DateTimeOffset.Now;
@@ -65,10 +64,10 @@ namespace document.lib.shared.Services
             var docLibContainer = db.GetContainer(TableNames.Doclib);
 
             // Create category if not exists
-            await CreateCatergoryAsync(doc, docLibContainer);
+            await _categoryService.CreateOrGetCategoryAsync(doc.Category);
 
             // Create tags if not exists
-            await CreateTagsAsync(doc, docLibContainer);
+            await foreach (var tag in _tagService.CreateOrGetTagsAsync(doc.Tags)) { }
 
             doc.Tags = doc.Tags.Select(x => x.ToLower()).ToArray();
 
@@ -77,10 +76,11 @@ namespace document.lib.shared.Services
                 if (!doc.DigitalOnly)
                 {
                     // Get folder or create a new one
-                    var folder = GetCurrentFolder(docLibContainer) ?? await CreateFolderAsync(docLibContainer);
+                    var folder = _folderService.GetActiveFolder() ?? await CreateFolderAsync(docLibContainer);
 
                     var register = folder.AddDocument();
-                    doc.FolderName = folder.Name;
+                    doc.FolderId = folder.Id;
+                    doc.FolderName = folder.DisplayName;
                     doc.RegisterName = register;
                     await docLibContainer.UpsertItemAsync(folder, new PartitionKey(folder.Id));
                 }
@@ -130,54 +130,6 @@ namespace document.lib.shared.Services
             await docLibContainer.ReplaceItemAsync(oldFolder, oldFolder.Id, new PartitionKey(oldFolder.Id));
             await docLibContainer.ReplaceItemAsync(dbDoc, dbDoc.Id, new PartitionKey(dbDoc.Id));
             return true;
-        }
-
-        private async Task CreateCatergoryAsync(DocLibDocument doc, Container doclibContainer)
-        {
-            var id = $"Category.{doc.Category}";
-            var category = doclibContainer.GetItemLinqQueryable<DocLibCategory>(true)
-                .Where(x => x.Id == id)
-                .AsEnumerable()
-                .FirstOrDefault();
-            if (category == null)
-            {
-                var cat = new DocLibCategory
-                {
-                    Id = id,
-                    Name = doc.Category,
-                    Description = ""
-                };
-                await doclibContainer.CreateItemAsync(cat);
-            }
-        }
-        
-        private async Task CreateTagsAsync(DocLibDocument doc, Container doclibContainer)
-        {
-            foreach (var docTag in doc.Tags)
-            {
-                var id = $"Tag.{docTag}";
-                var tag = doclibContainer.GetItemLinqQueryable<DocLibTag>(true)
-                    .Where(x => x.Id == id)
-                    .AsEnumerable()
-                    .FirstOrDefault();
-                if (tag == null)
-                {
-                    var lowercased = docTag.ToLower();
-                    await doclibContainer.CreateItemAsync(new DocLibTag
-                    {
-                        Id = id,
-                        Name = lowercased,
-                    });
-                }
-            }
-        }
-
-        private DocLibFolder GetCurrentFolder(Container doclibContainer)
-        {
-            return doclibContainer.GetItemLinqQueryable<DocLibFolder>(true)
-                .Where(x => x.IsFull == false)
-                .AsEnumerable()
-                .FirstOrDefault();
         }
 
         private async Task<DocLibFolder> CreateFolderAsync(Container doclibContainer)

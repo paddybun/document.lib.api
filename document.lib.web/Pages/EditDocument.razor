@@ -4,11 +4,12 @@
 @using document.lib.shared.Services
 @using document.lib.shared.TableEntities
 @using document.lib.shared.Models
+@using document.lib.shared.Interfaces
 
 @inject QueryService QueryService
 @inject MetadataService MetadataService
 @inject BlobClientHelper BlobClientHelper
-@inject DocumentService _documentService
+@inject IDocumentService _documentService
 @inject IJSRuntime JS
 
 <style>
@@ -56,7 +57,7 @@ else
                             <RadzenLabel Text="Upload date"/>
                         </div>
                         <div class="col-md-8">
-                            <RadzenDatePicker style="width: 100%;" Disabled="true" @bind-Value=@Doc.UploadDate/>
+                            <RadzenDatePicker DateFormat="dd.MM.yyyy" style="width: 100%;" Disabled="true" @bind-Value=@Doc.UploadDate/>
                         </div>
                     </div>
                     <div class="row">
@@ -64,7 +65,7 @@ else
                             <RadzenLabel Text="Last update"/>
                         </div>
                         <div class="col-md-8">
-                            <RadzenDatePicker style="width: 100%;" Disabled="true" @bind-Value=@Doc.LastUpdate/>
+                            <RadzenDatePicker DateFormat="dd.MM.yyyy" style="width: 100%;" Disabled="true" @bind-Value=@Doc.LastUpdate />
                         </div>
                     </div>
                     <div class="row">
@@ -140,7 +141,7 @@ else
                             <RadzenLabel Text="Document date"/>
                         </div>
                         <div class="col-md-8">
-                            <RadzenDatePicker style="width: 100%;" @bind-Value=@Doc.DateOfDocument Change="@(ChangeDocumentDate)" />
+                            <RadzenDatePicker DateFormat="dd.MM.yyyy" style="width: 100%;" @bind-Value=@Doc.DateOfDocument Change="@(ChangeDocumentDate)" />
                         </div>
                     </div>
                     <div class="row">

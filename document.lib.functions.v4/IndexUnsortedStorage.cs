@@ -10,7 +10,7 @@ namespace document.lib.functions.v4
     public static class IndexUnsortedStorage
     {
         [FunctionName("IndexUnsortedStorage")]
-        public static async Task Run([BlobTrigger("library-storage/unsorted/{name}", Connection = "DocumentStorageConnection")] BlobClient blob, string name, ILogger log)
+        public static async Task Run([BlobTrigger("library-storage/unsorted/{name}", Source = BlobTriggerSource.EventGrid, Connection = "DocumentStorageConnection")] BlobClient blob, string name, ILogger log)
         {
             try
             {
