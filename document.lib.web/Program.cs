@@ -1,10 +1,14 @@
 using System.Globalization;
+using Azure.Storage.Blobs;
 using document.lib.shared;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
 using document.lib.shared.Repositories;
 using document.lib.shared.Services;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Fluent;
+using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
@@ -29,7 +33,8 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor().AddMicrosoftIdentityConsentHandler();
 
 // ----- Dependency Injection -----
-builder.Services.Configure<AppConfiguration>(builder.Configuration.GetSection("Config"));
+var config = builder.Configuration.GetSection("Config");
+builder.Services.Configure<AppConfiguration>(config);
 
 // Repositories
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
@@ -48,6 +53,12 @@ builder.Services.AddScoped(typeof(QueryService));
 builder.Services.AddScoped(typeof(MetadataService));
 builder.Services.AddSingleton<IndexerService>();
 builder.Services.AddSingleton(typeof(BlobClientHelper));
+
+var cosmosClient = new CosmosClient(config["CosmosDbConnection"]);
+builder.Services.AddSingleton(cosmosClient);
+
+var blobContainerClient = new BlobContainerClient(config["BlobServiceConnectionString"], config["BlobContainer"]);
+builder.Services.AddSingleton(blobContainerClient);
 
 var app = builder.Build();
 

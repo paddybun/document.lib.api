@@ -8,7 +8,7 @@ public class AppConfiguration
 
     public string CosmosDbConnection { get; set; }
 
-    public string BlobContainerConnectionString { get; set; }
+    public string BlobServiceConnectionString { get; set; }
 
     public string BlobContainer { get; set; }
 }

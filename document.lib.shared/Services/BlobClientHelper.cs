@@ -10,7 +10,7 @@ public class BlobClientHelper
 
     public BlobClientHelper(IOptions<AppConfiguration> config)
     {
-        _blobContainerClient = new BlobContainerClient(config.Value.BlobContainerConnectionString, config.Value.BlobContainer);
+        _blobContainerClient = new BlobContainerClient(config.Value.BlobServiceConnectionString, config.Value.BlobContainer);
     }
 
     public async Task UploadBlobAsync(string name, Stream buffer)

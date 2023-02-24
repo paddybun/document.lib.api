@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "document.lib.shared", "docu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "document.lib.functions.v4", "document.lib.functions.v4\document.lib.functions.v4.csproj", "{6D63AB17-097B-46F3-948B-980FECAFEE07}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "document.lib.test", "document.lib.test\document.lib.test.csproj", "{E2DB1E21-E514-4B52-B6E4-AF440646D5A1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{6D63AB17-097B-46F3-948B-980FECAFEE07}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6D63AB17-097B-46F3-948B-980FECAFEE07}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6D63AB17-097B-46F3-948B-980FECAFEE07}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2DB1E21-E514-4B52-B6E4-AF440646D5A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2DB1E21-E514-4B52-B6E4-AF440646D5A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2DB1E21-E514-4B52-B6E4-AF440646D5A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2DB1E21-E514-4B52-B6E4-AF440646D5A1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

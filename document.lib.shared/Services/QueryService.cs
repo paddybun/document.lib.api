@@ -12,9 +12,9 @@ namespace document.lib.shared.Services
     public class QueryService
     {
         private readonly CosmosClient _cosmosClient;
-        public QueryService(IOptions<AppConfiguration> config)
+        public QueryService(CosmosClient cosmosClient)
         {
-            _cosmosClient = new CosmosClient(config.Value.CosmosDbConnection);
+            _cosmosClient = cosmosClient;
         }
 
         public async Task<IEnumerable<DocLibDocument>> ExecuteQueryAsync(DocumentQuery query)

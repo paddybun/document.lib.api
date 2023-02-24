@@ -11,9 +11,9 @@ public class MetadataService
 {
     private readonly CosmosClient _cosmosClient;
 
-    public MetadataService(IOptions<AppConfiguration> config)
+    public MetadataService(CosmosClient cosmosClient)
     {
-        _cosmosClient = new CosmosClient(config.Value.CosmosDbConnection);
+        _cosmosClient = cosmosClient;
     }
 
     public async Task<MetadataResponse> GetMetadataAsync()

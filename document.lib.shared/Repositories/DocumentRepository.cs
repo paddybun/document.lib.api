@@ -16,7 +16,7 @@ public class DocumentRepository : IDocumentRepository
 
     public DocumentRepository(IOptions<AppConfiguration> config)
     {
-        _bcc = new BlobContainerClient(config.Value.BlobContainerConnectionString, config.Value.BlobContainer);
+        _bcc = new BlobContainerClient(config.Value.BlobServiceConnectionString, config.Value.BlobContainer);
         var cosmosClient = new CosmosClient(config.Value.CosmosDbConnection);
         var db = cosmosClient.GetDatabase(TableNames.Doclib);
         _cosmosContainer = db.GetContainer(TableNames.Doclib);

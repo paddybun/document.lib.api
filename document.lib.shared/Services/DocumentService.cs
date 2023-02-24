@@ -14,17 +14,17 @@ namespace document.lib.shared.Services
         private readonly ICategoryService _categoryService;
         private readonly ITagService _tagService;
         private readonly IFolderService _folderService;
-        private readonly BlobContainerClient _bcc;
+        private readonly BlobContainerClient _blobContainerClient;
         private readonly CosmosClient _cosmosClient;
 
-        public DocumentService(IOptions<AppConfiguration> config, IDocumentRepository documentRepository, ICategoryService categoryService, ITagService tagService, IFolderService folderService)
+        public DocumentService(BlobContainerClient blobContainerClient, CosmosClient cosmosClient, IDocumentRepository documentRepository, ICategoryService categoryService, ITagService tagService, IFolderService folderService)
         {
             _documentRepository = documentRepository;
             _categoryService = categoryService;
             _tagService = tagService;
             _folderService = folderService;
-            _bcc = new BlobContainerClient(config.Value.BlobContainerConnectionString, config.Value.BlobContainer);
-            _cosmosClient = new CosmosClient(config.Value.CosmosDbConnection);
+            _blobContainerClient = blobContainerClient;
+            _cosmosClient = cosmosClient;
         }
 
         public async Task DeleteDocumentAsync(DocLibDocument doc)
@@ -73,10 +73,11 @@ namespace document.lib.shared.Services
 
             if (doc.Unsorted)
             {
+                DocLibFolder folder = null;
                 if (!doc.DigitalOnly)
                 {
                     // Get folder or create a new one
-                    var folder = _folderService.GetActiveFolder() ?? await CreateFolderAsync(docLibContainer);
+                    folder = _folderService.GetActiveFolder() ?? await CreateFolderAsync(docLibContainer);
 
                     var register = folder.AddDocument();
                     doc.FolderId = folder.Id;
@@ -84,7 +85,7 @@ namespace document.lib.shared.Services
                     doc.RegisterName = register;
                     await docLibContainer.UpsertItemAsync(folder, new PartitionKey(folder.Id));
                 }
-                await MoveDocument(doc, docLibContainer);
+                await MoveDocumentFromUnsorted(doc, folder, docLibContainer);
                 doc.Unsorted = false;
             }
 
@@ -151,7 +152,7 @@ namespace document.lib.shared.Services
             return newFolder;
         }
 
-        private async Task MoveDocument(DocLibDocument doc, Container doclibContainer)
+        private async Task MoveDocumentFromUnsorted(DocLibDocument doc, DocLibFolder folder, Container doclibContainer)
         {
             var unsortedEntry = doclibContainer.GetItemLinqQueryable<DocLibDocument>(true)
                                     .Where(x => x.Id == doc.Id)
@@ -172,7 +173,7 @@ namespace document.lib.shared.Services
             else
             {
                 doc.PhysicalName = doc.Unsorted ? doc.PhysicalName.Replace("unsorted/", "") : doc.PhysicalName;
-                newBlobLocation = $"{doc.FolderName}/{doc.RegisterName}/{doc.PhysicalName}";
+                newBlobLocation = $"{folder.Name}/{doc.RegisterName}/{doc.PhysicalName}";
             }
             
             
@@ -182,10 +183,10 @@ namespace document.lib.shared.Services
 
         private async Task MoveBlob(string from, string to)
         {
-            var source = _bcc.GetBlobClient(from);
+            var source = _blobContainerClient.GetBlobClient(from);
             if (await source.ExistsAsync())
             {
-                var destBlob = _bcc.GetBlobClient(to);
+                var destBlob = _blobContainerClient.GetBlobClient(to);
                 await destBlob.StartCopyFromUriAsync(source.Uri);
             }
 
