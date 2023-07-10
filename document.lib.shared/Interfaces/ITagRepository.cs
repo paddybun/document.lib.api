@@ -4,7 +4,7 @@ namespace document.lib.shared.Interfaces;
 
 public interface ITagRepository
 {
-    DocLibTag GetTagByName(string tagName);
-    DocLibTag GetTagById(string id);
+    Task<DocLibTag> GetTagByNameAsync(string tagName);
+    Task<DocLibTag> GetTagByIdAsync(string id);
     Task<DocLibTag> CreateTagAsync(string tagName);
 }

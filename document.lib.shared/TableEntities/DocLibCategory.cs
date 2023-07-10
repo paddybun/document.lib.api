@@ -10,6 +10,9 @@ namespace document.lib.shared.TableEntities
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        [JsonProperty("displayName")]
+        public string DisplayName { get; set; }
+
         [JsonProperty("description")]
         public string Description { get; set; }
     }

@@ -11,7 +11,7 @@ namespace document.lib.shared.TableEntities
         [JsonProperty("registers")] public Dictionary<string, int> Registers { get; set; } = new Dictionary<string, int>();
         [JsonProperty("totalDocuments")] public int TotalDocuments { get; set; }
         [JsonProperty("documentsPerRegister")] public int DocumentsPerRegister { get; set; } = 10;
-        [JsonProperty("documentsPerFolder")] public int DocumentsPerFolder { get; set; } = 310;
+        [JsonProperty("documentsPerFolder")] public int DocumentsPerFolder { get; set; } = 200;
         [JsonProperty("createdAt")] public DateTimeOffset CreatedAt { get; set; }
         [JsonProperty("isFull")] public bool IsFull { get; set; }
 

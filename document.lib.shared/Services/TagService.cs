@@ -12,17 +12,20 @@ public class TagService : ITagService
         _repository = repository;
     }
 
-    public async IAsyncEnumerable<DocLibTag> CreateOrGetTagsAsync(string[] tags)
+    public async Task<List<DocLibTag>> CreateOrGetTagsAsync(string[] tags)
     {
+        var toReturn = new List<DocLibTag>();
         foreach (var tag in tags)
         {
-            yield return await CreateOrGetTagAsync(tag);
+            toReturn.Add(await CreateOrGetTagAsync(tag));
         }
+
+        return toReturn;
     }
 
     public async Task<DocLibTag> CreateOrGetTagAsync(string tag)
     {
-        var tagEntity = _repository.GetTagByName(tag);
+        var tagEntity = await _repository.GetTagByNameAsync(tag);
         if (tagEntity == null)
         {
             return await _repository.CreateTagAsync(tag);

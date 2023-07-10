@@ -1,6 +1,5 @@
 ﻿using document.lib.shared.Interfaces;
 using document.lib.shared.TableEntities;
-using Microsoft.Azure.Cosmos;
 
 namespace document.lib.shared.Services;
 
@@ -15,20 +14,48 @@ public class FolderService : IFolderService
         _documentRepository = documentRepository;
     }
 
-    public DocLibFolder GetActiveFolder()
+    public async Task<DocLibFolder> GetFolderByNameAsync(string name)
     {
-        return _repository.GetCurrentlyActiveFolder();
+        return await _repository.GetFolderByNameAsync(name);
     }
 
-    public List<DocLibFolder> GetAll()
+    public async Task<DocLibFolder> GetActiveFolderAsync()
     {
-        var folders = _repository.GetAllFolders();
+        var folder = await _repository.GetActiveFolderAsync() ?? await CreateNewFolderAsync();
+        return folder;
+    }
+
+    public async Task<DocLibFolder> CreateNewFolderAsync(int maxFolderSize = 200, int maxRegisterSize = 10)
+    {
+        return await _repository.CreateFolderAsync(new DocLibFolder { Name = $"New Folder {DateTimeOffset.UtcNow:yyyy-MM-dd}", DocumentsPerFolder = maxFolderSize, DocumentsPerRegister = maxRegisterSize});
+    }
+
+    public async Task<DocLibFolder> CreateOrGetFolderByIdAsync(string id, int maxFolderSize = 200, int maxRegisterSize = 10)
+    {
+        var folder = await _repository.GetFolderByIdAsync(id) ?? await CreateNewFolderAsync(maxFolderSize, maxRegisterSize);
+        return folder;
+    }
+
+    public async Task<List<DocLibFolder>> GetAllAsync()
+    {
+        var folders = await _repository.GetAllFoldersAsync();
         return folders;
     }
 
     public async Task UpdateFolderAsync(DocLibFolder folder)
     {
-        await _repository.UpdateNameAsync(folder);
-        await _documentRepository.UpdateFolderReferenceAsync(folder.Id, folder.DisplayName);
+        throw new NotImplementedException();
+        // await _repository.UpdateFolderAsync(folder);
+        // await _documentRepository.UpdateFolderReferenceAsync(folder.Id, folder.DisplayName);
+    }
+
+    public async Task AddDocumentToFolderAsync(DocLibFolder folder, DocLibDocument doc)
+    {
+        await _repository.AddDocumentToFolderAsync(folder, doc);
+    }
+
+    public async Task RemoveDocumentFromFolder(DocLibFolder folder, DocLibDocument doc)
+    {
+        await _repository.RemoveDocFromFolderAsync(folder, doc);
     }
 }

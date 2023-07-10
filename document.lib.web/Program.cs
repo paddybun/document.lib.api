@@ -1,15 +1,15 @@
 using System.Globalization;
 using Azure.Storage.Blobs;
-using document.lib.shared;
+using document.lib.ef;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
 using document.lib.shared.Repositories;
+using document.lib.shared.Repositories.Cosmos;
+using document.lib.shared.Repositories.Sql;
 using document.lib.shared.Services;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Fluent;
-using Microsoft.Extensions.Azure;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 
@@ -35,19 +35,35 @@ builder.Services.AddServerSideBlazor().AddMicrosoftIdentityConsentHandler();
 // ----- Dependency Injection -----
 var config = builder.Configuration.GetSection("Config");
 builder.Services.Configure<AppConfiguration>(config);
+builder.Services.AddDbContext<DocumentLibContext>(opts =>
+{
+    opts.UseSqlServer(config["DbConnectionString"], x => x.MigrationsAssembly("document.lib.ef"));
+});
 
 // Repositories
-builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
-builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-builder.Services.AddScoped<ITagRepository, TagRepository>();
-builder.Services.AddScoped<IFolderRepository, FolderRepository>();
-
+var provider = config["Provider"];
+switch (provider)
+{
+    case "sql":
+        builder.Services.AddScoped<IDocumentRepository, DocumentSqlRepository>();
+        builder.Services.AddScoped<ICategoryRepository, CategorySqlRepository>();
+        builder.Services.AddScoped<ITagRepository, TagSqlRepository>();
+        builder.Services.AddScoped<IFolderRepository, FolderSqlRepository>();
+        break;
+    case "cosmos":
+        builder.Services.AddScoped<IDocumentRepository, DocumentCosmosRepository>();
+        builder.Services.AddScoped<ICategoryRepository, CategoryCosmosRepository>();
+        builder.Services.AddScoped<ITagRepository, TagCosmosRepository>();
+        builder.Services.AddScoped<IFolderRepository, FolderCosmosRepository>();
+        break;
+}
 
 // Services
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IFolderService,FolderService>();
+builder.Services.AddTransient<OneTimeSetup>();
 
 builder.Services.AddScoped(typeof(QueryService));
 builder.Services.AddScoped(typeof(MetadataService));
@@ -82,5 +98,8 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
+
+var setup = app.Services.GetService<OneTimeSetup>();
+await setup.CreateDefaultsAsync();
 
 app.Run();

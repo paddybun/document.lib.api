@@ -61,10 +61,10 @@
 
     private List<DocLibFolder> _folders = new();
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        _folders = _folderService.GetAll();
-        return base.OnInitializedAsync();
+        _folders = await _folderService.GetAllAsync();
+        await base.OnInitializedAsync();
     }
 
     public async Task UpdateFolder(DocLibFolder folder, string folderName)

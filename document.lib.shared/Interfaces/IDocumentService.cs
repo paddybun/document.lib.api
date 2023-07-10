@@ -6,6 +6,6 @@ public interface IDocumentService
 {
     Task DeleteDocumentAsync(DocLibDocument doc);
     Task<DocLibDocument> UpdateDocumentAsync(DocLibDocument doc);
-    Task<DocLibDocument> CreateDocumentAsync(DocLibDocument doc);
+    Task<DocLibDocument> CreateNewDocumentAsync(DocLibDocument doc);
     Task<bool> MoveDocumentAsync(DocLibDocument doc);
 }

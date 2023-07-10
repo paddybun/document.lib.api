@@ -7,14 +7,14 @@ using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
 
-namespace document.lib.shared.Repositories;
+namespace document.lib.shared.Repositories.Cosmos;
 
-public class DocumentRepository : IDocumentRepository
+public class DocumentCosmosRepository : IDocumentRepository
 {
     private readonly BlobContainerClient _bcc;
     private readonly Container _cosmosContainer;
 
-    public DocumentRepository(IOptions<AppConfiguration> config)
+    public DocumentCosmosRepository(IOptions<AppConfiguration> config)
     {
         _bcc = new BlobContainerClient(config.Value.BlobServiceConnectionString, config.Value.BlobContainer);
         var cosmosClient = new CosmosClient(config.Value.CosmosDbConnection);
@@ -59,5 +59,40 @@ public class DocumentRepository : IDocumentRepository
             await _cosmosContainer.PatchItemAsync<DocLibDocument>(document.Id, new PartitionKey(document.Id),
                 operations);
         }
+    }
+
+    public Task<DocLibDocument> CreateDocumentAsync(DocLibDocument document)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<DocLibDocument> GetDocumentById(string id)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<DocLibDocument> GetDocumentByName(string name)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<DocLibDocument>> GetDocuments(int page, int count)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<int> GetDocumentCount()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<DocLibDocument>> GetDocumentsForFolder(string folderName, int page, int count)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<DocLibDocument> UpdateDocumentAsync(DocLibDocument document, DocLibCategory category, DocLibFolder folder, DocLibTag[] tags)
+    {
+        throw new NotImplementedException();
     }
 }

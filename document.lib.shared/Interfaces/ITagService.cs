@@ -4,6 +4,6 @@ namespace document.lib.shared.Interfaces;
 
 public interface ITagService
 {
-    IAsyncEnumerable<DocLibTag> CreateOrGetTagsAsync(string[] tags);
+    Task<List<DocLibTag>> CreateOrGetTagsAsync(string[] tags);
     Task<DocLibTag> CreateOrGetTagAsync(string tag);
 }

@@ -5,32 +5,32 @@ using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
 
-namespace document.lib.shared.Repositories;
+namespace document.lib.shared.Repositories.Cosmos;
 
-public class TagRepository : ITagRepository
+public class TagCosmosRepository : ITagRepository
 {
     private readonly Container _cosmosContainer;
 
-    public TagRepository(IOptions<AppConfiguration> config)
+    public TagCosmosRepository(IOptions<AppConfiguration> config)
     {
         var cosmosClient = new CosmosClient(config.Value.CosmosDbConnection);
         var db = cosmosClient.GetDatabase(TableNames.Doclib);
         _cosmosContainer = db.GetContainer(TableNames.Doclib);
     }
 
-
-    public DocLibTag GetTagByName(string tagName)
+    public async Task<DocLibTag> GetTagByNameAsync(string tagName)
     {
-        return GetTagById($"Tag.{tagName}");
+        var tag = await GetTagByIdAsync($"Tag.{tagName}");
+        return tag;
     }
 
-    public DocLibTag GetTagById(string id)
+    public async Task<DocLibTag> GetTagByIdAsync(string id)
     {
         var tag = _cosmosContainer.GetItemLinqQueryable<DocLibTag>(true)
             .Where(x => x.Id == id)
             .AsEnumerable()
             .FirstOrDefault();
-        return tag;
+        return await Task.FromResult(tag);
     }
     
     public async Task<DocLibTag> CreateTagAsync(string tagName)

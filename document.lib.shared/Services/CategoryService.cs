@@ -12,12 +12,18 @@ public class CategoryService : ICategoryService
         _categoryRepository = categoryRepository;
     }
 
+    public async Task<DocLibCategory> GetCategoryByNameAsync(string name)
+    {
+        return await _categoryRepository.GetCategoryByNameAsync(name);
+    }
+
     public async Task<DocLibCategory> CreateOrGetCategoryAsync(string category)
     {
-        var categoryEntity = _categoryRepository.GetCategoryByName(category);
+        var docLibCategory = new DocLibCategory {Name = category};
+        var categoryEntity = await _categoryRepository.GetCategoryByNameAsync(category);
         if (categoryEntity == null)
         {
-            return await _categoryRepository.CreateCategoryAsync(category);
+            return await _categoryRepository.CreateCategoryAsync(docLibCategory);
         }
 
         return categoryEntity;

@@ -290,7 +290,7 @@ else
         DocLibDocument updatedDoc;
         if (Doc.Unsorted)
         {
-            updatedDoc = await _documentService.CreateDocumentAsync(doc);
+            updatedDoc = await _documentService.CreateNewDocumentAsync(doc);
         }
         else
         {
