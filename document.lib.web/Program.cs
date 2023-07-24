@@ -3,7 +3,6 @@ using Azure.Storage.Blobs;
 using document.lib.ef;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
-using document.lib.shared.Repositories;
 using document.lib.shared.Repositories.Cosmos;
 using document.lib.shared.Repositories.Sql;
 using document.lib.shared.Services;
@@ -35,26 +34,29 @@ builder.Services.AddServerSideBlazor().AddMicrosoftIdentityConsentHandler();
 // ----- Dependency Injection -----
 var config = builder.Configuration.GetSection("Config");
 builder.Services.Configure<AppConfiguration>(config);
-builder.Services.AddDbContext<DocumentLibContext>(opts =>
-{
-    opts.UseSqlServer(config["DbConnectionString"], x => x.MigrationsAssembly("document.lib.ef"));
-});
 
 // Repositories
 var provider = config["Provider"];
 switch (provider)
 {
     case "sql":
+        builder.Services.AddDbContext<DocumentLibContext>(opts =>
+        {
+            opts.UseSqlServer(config["DbConnectionString"], x => x.MigrationsAssembly("document.lib.ef"));
+        });
         builder.Services.AddScoped<IDocumentRepository, DocumentSqlRepository>();
         builder.Services.AddScoped<ICategoryRepository, CategorySqlRepository>();
         builder.Services.AddScoped<ITagRepository, TagSqlRepository>();
         builder.Services.AddScoped<IFolderRepository, FolderSqlRepository>();
         break;
     case "cosmos":
+        builder.Services.AddSingleton(new CosmosClient(config["CosmosDbConnection"]));
         builder.Services.AddScoped<IDocumentRepository, DocumentCosmosRepository>();
         builder.Services.AddScoped<ICategoryRepository, CategoryCosmosRepository>();
         builder.Services.AddScoped<ITagRepository, TagCosmosRepository>();
         builder.Services.AddScoped<IFolderRepository, FolderCosmosRepository>();
+        builder.Services.AddScoped(typeof(CosmosQueryService));
+        builder.Services.AddScoped(typeof(CosmosMetadataService));
         break;
 }
 
@@ -65,13 +67,8 @@ builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IFolderService,FolderService>();
 builder.Services.AddTransient<OneTimeSetup>();
 
-builder.Services.AddScoped(typeof(QueryService));
-builder.Services.AddScoped(typeof(MetadataService));
 builder.Services.AddSingleton<IndexerService>();
 builder.Services.AddSingleton(typeof(BlobClientHelper));
-
-var cosmosClient = new CosmosClient(config["CosmosDbConnection"]);
-builder.Services.AddSingleton(cosmosClient);
 
 var blobContainerClient = new BlobContainerClient(config["BlobServiceConnectionString"], config["BlobContainer"]);
 builder.Services.AddSingleton(blobContainerClient);
@@ -100,6 +97,6 @@ app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
 var setup = app.Services.GetService<OneTimeSetup>();
-await setup.CreateDefaultsAsync();
+await setup!.CreateDefaultsAsync();
 
 app.Run();

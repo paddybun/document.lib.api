@@ -6,8 +6,8 @@
 @using document.lib.shared.Models
 @using document.lib.shared.Interfaces
 
-@inject QueryService QueryService
-@inject MetadataService MetadataService
+@inject CosmosQueryService _cosmosQueryService
+@inject CosmosMetadataService _cosmosMetadataService
 @inject BlobClientHelper BlobClientHelper
 @inject IDocumentService _documentService
 @inject IJSRuntime JS
@@ -218,11 +218,11 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var doc = await QueryService.ExecuteQueryAsync(new DocumentQuery {PhysicalName = Name});
+        var doc = await _cosmosQueryService.ExecuteQueryAsync(new DocumentQuery {PhysicalName = Name});
         Doc = doc.FirstOrDefault();
         _documentTags.AddRange(Doc?.Tags.ToList() ?? new List<string>());
         await DownloadAsync();
-        Metadata = await MetadataService.GetMetadataAsync();
+        Metadata = await _cosmosMetadataService.GetMetadataAsync();
         _categories = Metadata.Categories.Select(x => x.Name).ToList();
         _tagDatasource = Metadata.Tags.Select(x => x.Name).ToList();
         await base.OnInitializedAsync();

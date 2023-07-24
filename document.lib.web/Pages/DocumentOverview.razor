@@ -4,7 +4,7 @@
 @using Microsoft.AspNetCore.Http.Extensions
 @using System.Web
 
-@inject QueryService QueryService
+@inject CosmosQueryService _cosmosQueryService
 @inject NavigationManager NavigationManager
 
 <h3>DocumentOverview</h3>
@@ -66,7 +66,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _documents = (await QueryService.ExecuteQueryAsync(new DocumentQuery())).ToList();
+        _documents = (await _cosmosQueryService.ExecuteQueryAsync(new DocumentQuery())).ToList();
     }
 
     private void Edit(MouseEventArgs args, string physicalName)
