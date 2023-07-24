@@ -38,13 +38,18 @@ public class TagSqlRepository : ITagRepository
         return Map(efTag);
     }
 
+    public async Task<List<DocLibTag>> GetTagsAsync()
+    {
+        var tags = await _context.Tags.ToListAsync();
+        return tags.Select(Map).ToList();
+    }
+
     public async Task<DocLibTag> CreateTagAsync(string tagName)
     {
         var tag = new EfTag {Name = tagName, DisplayName = tagName};
         await _context.AddAsync(tag);
         await _context.SaveChangesAsync();
         return Map(tag);
-
     }
 
     private DocLibTag Map(EfTag efTag)

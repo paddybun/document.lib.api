@@ -36,6 +36,12 @@ public class CategorySqlRepository: ICategoryRepository
         return Map(efCategory);
     }
 
+    public async Task<List<DocLibCategory>> GetCategoriesAsync()
+    {
+        var categories = await _context.Categories.ToListAsync();
+        return categories.Select(Map).ToList();
+    }
+
     public async Task<DocLibCategory> CreateCategoryAsync(DocLibCategory category)
     {
         var efCategory = new EfCategory

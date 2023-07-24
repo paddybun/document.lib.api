@@ -43,6 +43,15 @@ public class CategoryCosmosRepository : ICategoryRepository
         return await Task.FromResult(category);
     }
 
+    public async Task<List<DocLibCategory>> GetCategoriesAsync()
+    {
+        var categories = _cosmosContainer.GetItemLinqQueryable<DocLibCategory>(true)
+            .Where(x => x.Id == $"Category.")
+            .AsEnumerable()
+            .ToList();
+        return await Task.FromResult(categories);
+    }
+
     public async Task<DocLibCategory> CreateCategoryAsync(DocLibCategory category)
     {
         var id = $"Category.{category.Name}";

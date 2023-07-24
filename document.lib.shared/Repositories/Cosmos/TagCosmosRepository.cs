@@ -35,6 +35,15 @@ public class TagCosmosRepository : ITagRepository
         return await Task.FromResult(tag);
     }
 
+    public async Task<List<DocLibTag>> GetTagsAsync()
+    {
+        var tags = _cosmosContainer.GetItemLinqQueryable<DocLibTag>(true)
+            .Where(x => x.Id.StartsWith("Tag."))
+            .AsEnumerable()
+            .ToList();
+        return await Task.FromResult(tags);
+    }
+
     public async Task<DocLibTag> CreateTagAsync(string tagName)
     {
         var id = $"Tag.{tagName}";
