@@ -43,7 +43,7 @@ public class DocumentLibContext : DbContext
         foreach (var insertedEntry in insertedEntries)
         {
             //If the inserted object is an BaseField. 
-            if (insertedEntry is BaseFields bf)
+            if (insertedEntry is EfBaseFields bf)
             {
                 bf.DateCreated = DateTimeOffset.UtcNow;
             }
@@ -58,7 +58,7 @@ public class DocumentLibContext : DbContext
         foreach (var modifiedEntry in modifiedEntries)
         {
             //If the inserted object is an BaseField. 
-            if (modifiedEntry is BaseFields bf)
+            if (modifiedEntry is EfBaseFields bf)
             {
                 bf.DateModified = DateTimeOffset.UtcNow;
             }

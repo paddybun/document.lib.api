@@ -1,5 +1,7 @@
-﻿using Azure.Storage.Blobs;
+﻿using System.Net.Quic;
+using Azure.Storage.Blobs;
 using document.lib.shared.Interfaces;
+using document.lib.shared.Models.QueryDtos;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
 using DocLibDocument = document.lib.shared.TableEntities.DocLibDocument;
@@ -61,7 +63,15 @@ namespace document.lib.shared.Services
         public async Task<bool> MoveDocumentAsync(DocLibDocument doc)
         {
             var oldPath = doc.BlobLocation;
-            var dbDoc = await _documentRepository.GetDocumentById(doc.Id);
+            var queryParams = new DocumentQueryParameters();
+            
+            if (int.TryParse(doc.Id, out var id))
+                queryParams.Id = id;
+            else
+                queryParams.Name = doc.Id;
+
+
+            var dbDoc = await _documentRepository.GetDocumentAsync(queryParams);
             if (dbDoc == null || doc.FolderName == dbDoc.FolderName) return false;
 
             var oldFolder = await _folderService.GetFolderByNameAsync(dbDoc.FolderName);
@@ -71,7 +81,7 @@ namespace document.lib.shared.Services
             await _folderService.RemoveDocumentFromFolder(oldFolder, dbDoc);
             await _folderService.AddDocumentToFolderAsync(newFolder, dbDoc);
 
-            var relocatedDoc = await _documentRepository.GetDocumentById(doc.Id);
+            var relocatedDoc = await _documentRepository.GetDocumentAsync(queryParams);
             dbDoc.BlobLocation = $"{newFolder.Name}/{relocatedDoc.RegisterName}/{dbDoc.PhysicalName}";
             
             await MoveBlob(oldPath, dbDoc.BlobLocation);

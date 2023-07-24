@@ -1,7 +1,9 @@
 ﻿using Azure;
 using document.lib.ef;
 using document.lib.ef.Entities;
+using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
+using document.lib.shared.Models.QueryDtos;
 using document.lib.shared.TableEntities;
 using Microsoft.EntityFrameworkCore;
 using DocLibDocument = document.lib.shared.TableEntities.DocLibDocument;
@@ -38,38 +40,39 @@ public class DocumentSqlRepository: IDocumentRepository
         return Map(efDocument);
     }
 
-    public async Task<DocLibDocument> GetDocumentById(string id)
+    public async Task<DocLibDocument> GetDocumentAsync(DocumentQueryParameters queryParameters)
     {
-        var efDocument = await _context
-            .Documents
-            .Include(x => x.Register)
-            .ThenInclude(x => x.Folder)
-            .Include(x => x.Category)
-            .Include(x => x.Tags)
-            .SingleOrDefaultAsync(x => x.Id == int.Parse(id));
+        if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
+        if (!queryParameters.IsValid()) throw new InvalidQueryParameterException(queryParameters.GetType());
+
+        EfDocument efDocument;
+        if (queryParameters.Id.HasValue)
+        {
+            efDocument = await _context
+                .Documents
+                .Include(x => x.Register)
+                .ThenInclude(x => x.Folder)
+                .Include(x => x.Category)
+                .Include(x => x.Tags)
+                .SingleOrDefaultAsync(x => x.Id == queryParameters.Id.Value);
+        }
+        else
+        {
+            efDocument = await _context
+                .Documents
+                .Include(x => x.Register)
+                .ThenInclude(x => x.Folder)
+                .Include(x => x.Category)
+                .Include(x => x.Tags)
+                .SingleOrDefaultAsync(x => x.Name == queryParameters.Name);
+        }
         return Map(efDocument);
     }
 
-    public async Task<DocLibDocument> GetDocumentByName(string name)
-    {
-        var efDocument = await _context
-            .Documents
-            .Include(x => x.Register)
-            .ThenInclude(x => x.Folder)
-            .Include(x => x.Category)
-            .Include(x => x.Tags)
-            .SingleOrDefaultAsync(x => x.Name == name);
-
-        return Map(efDocument);
-    }
-
-    public async Task<List<DocLibDocument>> GetDocuments(int page, int count)
+    public async Task<List<DocLibDocument>> GetDocumentsAsync(int page, int count)
     {
         var efDocuments = await _context
             .Documents
-            .Include(x => x.Register)
-            .ThenInclude(x => x.Folder)
-            .Include(x => x.Category)
             .Include(x => x.Tags)
             .Skip(page).Take(count)
             .ToListAsync();
@@ -78,12 +81,12 @@ public class DocumentSqlRepository: IDocumentRepository
         return mapped;
     }
 
-    public async Task<int> GetDocumentCount()
+    public async Task<int> GetDocumentCountAsync()
     {
         return await _context.Documents.CountAsync();
     }
 
-    public async Task<List<DocLibDocument>> GetDocumentsForFolder(string folderName, int page, int count)
+    public async Task<List<DocLibDocument>> GetDocumentsForFolderAsync(string folderName, int page, int count)
     {
         var efDocuments = await _context
             .Documents

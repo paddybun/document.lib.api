@@ -1,8 +1,10 @@
 ﻿using Azure.Storage.Blobs;
 using document.lib.shared.Constants;
+using document.lib.shared.Exceptions;
 using document.lib.shared.Helper;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
+using document.lib.shared.Models.QueryDtos;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
@@ -66,27 +68,37 @@ public class DocumentCosmosRepository : IDocumentRepository
         throw new NotImplementedException();
     }
 
-    public Task<DocLibDocument> GetDocumentById(string id)
+    public async Task<DocLibDocument> GetDocumentAsync(DocumentQueryParameters queryParameters)
+    {
+        if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
+        if (string.IsNullOrWhiteSpace(queryParameters.Name)) 
+            throw new InvalidQueryParameterException("Document query in cosmos repository only allows searching by name. Name should look like xyz.<Id as guid>");
+
+        var id = queryParameters.Name.Split('.').Last();
+        var document = _cosmosContainer.GetItemLinqQueryable<DocLibDocument>(true)
+            .Where(x => x.Id.EndsWith(id))
+            .AsEnumerable()
+            .FirstOrDefault();
+
+        return await Task.FromResult(document);
+    }
+
+    public async Task<List<DocLibDocument>> GetDocumentsAsync(int page, int count)
+    {
+        var documents = _cosmosContainer.GetItemLinqQueryable<DocLibDocument>(true)
+            .Where(x => x.Id.StartsWith("Document."))
+            .AsEnumerable()
+            .ToList();
+
+        return await Task.FromResult(documents);
+    }
+
+    public Task<int> GetDocumentCountAsync()
     {
         throw new NotImplementedException();
     }
 
-    public Task<DocLibDocument> GetDocumentByName(string name)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<List<DocLibDocument>> GetDocuments(int page, int count)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<int> GetDocumentCount()
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<List<DocLibDocument>> GetDocumentsForFolder(string folderName, int page, int count)
+    public Task<List<DocLibDocument>> GetDocumentsForFolderAsync(string folderName, int page, int count)
     {
         throw new NotImplementedException();
     }

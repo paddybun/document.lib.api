@@ -1,6 +1,6 @@
 ﻿namespace document.lib.ef.Entities;
 
-public class EfRegister: BaseFields
+public class EfRegister: EfBaseFields
 {
     public int Id { get; set; }
     public string Name { get; set; }

@@ -5,12 +5,17 @@ namespace document.lib.shared.Exceptions;
 public class InvalidQueryParameterException: Exception
 {
     public InvalidQueryParameterException(): 
-        base("Invalid query parameters")
+        this("Invalid query parameters")
+    {
+    }
+
+    public InvalidQueryParameterException(string message) :
+        base(message)
     {
     }
 
     public InvalidQueryParameterException(MemberInfo queryParamType) :
-        base($"Invalid query parameters for: {queryParamType.Name}")
+        this($"Invalid query parameters for: {queryParamType.Name}")
     {
     }
 }
