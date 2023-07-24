@@ -1,4 +1,5 @@
 ﻿using document.lib.shared.Constants;
+using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
 using document.lib.shared.Models.QueryDtos;
@@ -21,6 +22,9 @@ public class CategoryCosmosRepository : ICategoryRepository
 
     public async Task<DocLibCategory> GetCategoryAsync(CategoryQueryParameters queryParameters)
     {
+        if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
+        if (!queryParameters.IsValid()) throw new InvalidQueryParameterException(queryParameters.GetType());
+
         DocLibCategory category;
         if (queryParameters.Id.HasValue)
         {

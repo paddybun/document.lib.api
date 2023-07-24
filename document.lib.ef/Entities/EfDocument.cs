@@ -1,6 +1,6 @@
 ﻿namespace document.lib.ef.Entities;
 
-public class DocLibDocument: BaseFields
+public class EfDocument: BaseFields
 {
     public int Id { get; set; }
     public string Name { get; set; }
@@ -11,9 +11,9 @@ public class DocLibDocument: BaseFields
     public DateTimeOffset? DateOfDocument { get; set; }
     public DateTimeOffset UploadDate { get; set; }
     public string Description { get; set; }
-    public Register Register { get; set; }
-    public ICollection<Tag> Tags { get; set; }
+    public EfRegister Register { get; set; }
+    public ICollection<EfTag> Tags { get; set; }
     public bool Unsorted { get; set; }
-    public Category Category { get; set; }
+    public EfCategory Category { get; set; }
     public bool Digital { get; set; }
 }

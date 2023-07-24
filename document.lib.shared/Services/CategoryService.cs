@@ -15,13 +15,13 @@ public class CategoryService : ICategoryService
 
     public async Task<DocLibCategory> GetCategoryAsync(string name)
     {
-        return await _categoryRepository.GetCategoryAsync(new CategoryQueryParameters{Name = name});
+        return await _categoryRepository.GetCategoryAsync(new CategoryQueryParameters(name: name));
     }
 
     public async Task<DocLibCategory> CreateOrGetCategoryAsync(string category)
     {
         var docLibCategory = new DocLibCategory {Name = category};
-        var categoryEntity = await _categoryRepository.GetCategoryAsync(new CategoryQueryParameters{ Name = category});
+        var categoryEntity = await _categoryRepository.GetCategoryAsync(new CategoryQueryParameters(name: category));
         if (categoryEntity == null)
         {
             return await _categoryRepository.CreateCategoryAsync(docLibCategory);

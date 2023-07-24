@@ -1,6 +1,7 @@
 ﻿using System.Net.Quic;
 using document.lib.ef;
 using document.lib.ef.Entities;
+using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.QueryDtos;
 using document.lib.shared.TableEntities;
@@ -18,22 +19,12 @@ public class CategorySqlRepository: ICategoryRepository
         _context = context;
     }
 
-    public async Task<DocLibCategory> GetCategoryByIdAsync(string id)
-    {
-        var parsedId = int.Parse(id);
-        var efCategory = await _context.Categories.SingleOrDefaultAsync(x => x.Id == parsedId);
-        return Map(efCategory);
-    }
-
-    public async Task<DocLibCategory> GetCategoryByNameAsync(string categoryName)
-    {
-        var efCategory = await _context.Categories.SingleOrDefaultAsync(x => x.Name == categoryName);
-        return Map(efCategory);
-    }
-
     public async Task<DocLibCategory> GetCategoryAsync(CategoryQueryParameters queryParameters)
     {
-        Category efCategory;
+        if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
+        if (!queryParameters.IsValid()) throw new InvalidQueryParameterException(queryParameters.GetType());
+
+        EfCategory efCategory;
         if (queryParameters.Id.HasValue)
         {
             efCategory = await _context.Categories.SingleOrDefaultAsync(x => x.Id == queryParameters.Id.Value);
@@ -47,7 +38,7 @@ public class CategorySqlRepository: ICategoryRepository
 
     public async Task<DocLibCategory> CreateCategoryAsync(DocLibCategory category)
     {
-        var efCategory = new Category
+        var efCategory = new EfCategory
         {
             Name = category.Name,
             Description = category.Description,
@@ -58,14 +49,15 @@ public class CategorySqlRepository: ICategoryRepository
         return Map(efCategory);
     }
 
-    private DocLibCategory Map(Category category)
+    // TODO: Refactor to corresponding mapper
+    private static DocLibCategory Map(EfCategory efCategory)
     {
-        if (category == null) return null;
+        if (efCategory == null) return null;
         return new DocLibCategory
         {
-            Name = category.Name,
-            Description = category.Description,
-            Id = category.Id.ToString()
+            Name = efCategory.Name,
+            Description = efCategory.Description,
+            Id = efCategory.Id.ToString()
         };
     }
 }

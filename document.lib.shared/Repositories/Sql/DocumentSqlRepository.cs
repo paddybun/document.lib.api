@@ -1,10 +1,10 @@
 ﻿using Azure;
 using document.lib.ef;
+using document.lib.ef.Entities;
 using document.lib.shared.Interfaces;
 using document.lib.shared.TableEntities;
 using Microsoft.EntityFrameworkCore;
 using DocLibDocument = document.lib.shared.TableEntities.DocLibDocument;
-using EfDoc = document.lib.ef.Entities.DocLibDocument;
 
 namespace document.lib.shared.Repositories.Sql;
 
@@ -20,7 +20,7 @@ public class DocumentSqlRepository: IDocumentRepository
     public async Task<DocLibDocument> CreateDocumentAsync(DocLibDocument document)
     {
         var register = await _context.Registers.SingleOrDefaultAsync(x => x.Name == "unsorted");
-        var efDocument = new EfDoc
+        var efDocument = new EfDocument
         {
             Name = document.Name,
             DisplayName = document.DisplayName,
@@ -158,7 +158,7 @@ public class DocumentSqlRepository: IDocumentRepository
         await _context.SaveChangesAsync();
     }
 
-    private DocLibDocument Map(EfDoc efDocument)
+    private DocLibDocument Map(EfDocument efDocument)
     {
         if (efDocument == null) return null;
 

@@ -5,11 +5,11 @@ namespace document.lib.ef;
 
 public class DocumentLibContext : DbContext
 {
-    public DbSet<Category> Categories { get; set; }
-    public DbSet<DocLibDocument> Documents { get; set; }
-    public DbSet<Folder> Folders { get; set; }
-    public DbSet<Register> Registers { get; set; }
-    public DbSet<Tag> Tags { get; set; }
+    public DbSet<EfCategory> Categories { get; set; }
+    public DbSet<EfDocument> Documents { get; set; }
+    public DbSet<EfFolder> Folders { get; set; }
+    public DbSet<EfRegister> Registers { get; set; }
+    public DbSet<EfTag> Tags { get; set; }
 
     public DocumentLibContext()
     {

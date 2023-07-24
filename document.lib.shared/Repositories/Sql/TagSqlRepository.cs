@@ -33,14 +33,14 @@ public class TagSqlRepository : ITagRepository, IDisposable
 
     public async Task<DocLibTag> CreateTagAsync(string tagName)
     {
-        var tag = new Tag {Name = tagName, DisplayName = tagName};
+        var tag = new EfTag {Name = tagName, DisplayName = tagName};
         await _context.AddAsync(tag);
         await _context.SaveChangesAsync();
         return Map(tag);
 
     }
 
-    private DocLibTag Map(Tag efTag)
+    private DocLibTag Map(EfTag efTag)
     {
         if (efTag == null) return null;
         return new DocLibTag

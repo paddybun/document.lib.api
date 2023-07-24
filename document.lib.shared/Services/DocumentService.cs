@@ -38,7 +38,7 @@ namespace document.lib.shared.Services
             doc.Validate();
             var category = await _categoryService.CreateOrGetCategoryAsync(doc.Category);
             var tags = await _tagService.CreateOrGetTagsAsync(doc.Tags);
-            var folder = await _folderService.CreateOrGetFolderByIdAsync(doc.FolderId);
+            var folder = await _folderService.GetOrCreateFolderByIdAsync(doc.FolderId);
 
             if (doc.Unsorted)
             {
@@ -53,7 +53,7 @@ namespace document.lib.shared.Services
         {
             doc.Validate();
             var document = await _documentRepository.CreateDocumentAsync(doc);
-            var folder = await _folderService.GetActiveFolderAsync();
+            var folder = await _folderService.GetOrCreateActiveFolderAsync();
             if (folder != null) { folder = await _folderService.CreateNewFolderAsync(); }
             return document;
         }
@@ -83,7 +83,7 @@ namespace document.lib.shared.Services
         private async Task MoveDocumentFromUnsorted(DocLibDocument doc)
         {
             var dbFolder = await _folderService.GetFolderByNameAsync("unsorted");
-            var newFolder = await _folderService.GetActiveFolderAsync();
+            var newFolder = await _folderService.GetOrCreateActiveFolderAsync();
             await _folderService.RemoveDocumentFromFolder(dbFolder, doc);
 
             string newBlobLocation;

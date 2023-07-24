@@ -1,7 +1,8 @@
-﻿using System.Security.Cryptography.X509Certificates;
-using document.lib.ef;
+﻿using document.lib.ef;
 using document.lib.ef.Entities;
+using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
+using document.lib.shared.Models.QueryDtos;
 using document.lib.shared.TableEntities;
 using Microsoft.EntityFrameworkCore;
 using DocLibDocument = document.lib.shared.TableEntities.DocLibDocument;
@@ -17,28 +18,32 @@ public class FolderSqlRepository: IFolderRepository
         _context = context;
     }
 
-    public async Task<DocLibFolder> GetFolderByNameAsync(string folderName)
+    public async Task<DocLibFolder> GetFolderAsync(FolderQueryParameters queryParameters)
     {
-        var efFolder = await _context.Folders
-            .Include(x => x.Registers)
-            .SingleOrDefaultAsync(x => x.Name == folderName);
-        return Map(efFolder);
-    }
+        if (!queryParameters.IsValid())
+        {
+            throw new InvalidQueryParameterException(queryParameters.GetType());
+        }
 
-    public async Task<DocLibFolder> GetFolderByIdAsync(string id)
-    {
-        var parsedId = int.Parse(id);
-        var efFolder = await _context.Folders
-            .Include(x => x.Registers)
-            .SingleOrDefaultAsync(x => x.Id == parsedId);
-        return Map(efFolder);
-    }
-
-    public async Task<DocLibFolder> GetActiveFolderAsync()
-    {
-        var efFolder = await _context.Folders
-            .Include(x => x.Registers)
-            .FirstOrDefaultAsync(x => !x.IsFull && (x.Name != "unsorted" || x.Name != "digital"));
+        EfFolder efFolder = null;
+        if (queryParameters.Id.HasValue)
+        {
+            efFolder = await _context.Folders
+                .Include(x => x.Registers)
+                .SingleOrDefaultAsync(x => x.Id == queryParameters.Id.Value);
+        }
+        else if (!string.IsNullOrWhiteSpace(queryParameters.Name))
+        {
+            efFolder = await _context.Folders
+                .Include(x => x.Registers)
+                .SingleOrDefaultAsync(x => x.Name == queryParameters.Name);
+        }
+        else if (queryParameters.ActiveFolder.HasValue)
+        {
+            efFolder = await _context.Folders
+                .Include(x => x.Registers)
+                .FirstOrDefaultAsync(x => !x.IsFull && (x.Name != "unsorted" || x.Name != "digital"));
+        }
         return Map(efFolder);
     }
 
@@ -51,13 +56,13 @@ public class FolderSqlRepository: IFolderRepository
 
     public async Task<DocLibFolder> CreateFolderAsync(DocLibFolder folder)
     {
-        var efRegister = new Register
+        var efRegister = new EfRegister
         {
             Name = "1",
             DisplayName = "1",
             DocumentCount = 0
         };
-        var efFolder = new Folder
+        var efFolder = new EfFolder
         {
             Name = folder.Name,
             DisplayName = folder.DisplayName,
@@ -99,10 +104,10 @@ public class FolderSqlRepository: IFolderRepository
         if (efRegister == null)
         {
             var newIx = int.Parse(efFolder.Registers.OrderByDescending(x => x.Name).First().Name);
-            efRegister = new Register
+            efRegister = new EfRegister
             {
                 Name = (++newIx).ToString(),
-                Documents = new List<ef.Entities.DocLibDocument> {efDocument},
+                Documents = new List<ef.Entities.EfDocument> {efDocument},
                 DisplayName = "",
                 DocumentCount = 1,
                 Folder = efFolder
@@ -130,7 +135,7 @@ public class FolderSqlRepository: IFolderRepository
             .SingleAsync(x => x.Id == int.Parse(document.FolderId));
         
         var efRegister = efFolder.Registers.Single(x => x.Name == document.RegisterName);
-        var newList = new List<ef.Entities.DocLibDocument>(efRegister.Documents);
+        var newList = new List<EfDocument>(efRegister.Documents);
         newList.RemoveAll(x => x.Id == int.Parse(document.Id));
         efRegister.Documents = newList;
         efRegister.DocumentCount--;
@@ -140,20 +145,20 @@ public class FolderSqlRepository: IFolderRepository
         await _context.SaveChangesAsync();
     }
 
-    private DocLibFolder Map(Folder folder)
+    private DocLibFolder Map(EfFolder efFolder)
     {
-        if (folder == null) return null;
+        if (efFolder == null) return null;
         return new DocLibFolder
         {
-            Name = folder.Name,
-            DisplayName = folder.DisplayName,
-            CreatedAt = folder.DateCreated,
-            CurrentRegister = folder.CurrentRegister.Name,
-            DocumentsPerFolder = folder.MaxDocumentsFolder,
-            DocumentsPerRegister = folder.MaxDocumentsRegister,
-            Id = folder.Id.ToString(),
-            IsFull = folder.IsFull,
-            Registers = folder.Registers.ToDictionary(x => x.Name, x => x.DocumentCount)
+            Name = efFolder.Name,
+            DisplayName = efFolder.DisplayName,
+            CreatedAt = efFolder.DateCreated,
+            CurrentRegister = efFolder.CurrentRegister.Name,
+            DocumentsPerFolder = efFolder.MaxDocumentsFolder,
+            DocumentsPerRegister = efFolder.MaxDocumentsRegister,
+            Id = efFolder.Id.ToString(),
+            IsFull = efFolder.IsFull,
+            Registers = efFolder.Registers.ToDictionary(x => x.Name, x => x.DocumentCount)
         };
     }
 }

@@ -1,6 +1,8 @@
 ﻿using document.lib.shared.Constants;
+using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
+using document.lib.shared.Models.QueryDtos;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
@@ -10,34 +12,40 @@ namespace document.lib.shared.Repositories.Cosmos;
 public class FolderCosmosRepository : IFolderRepository
 {
     private readonly Container _cosmosContainer;
-
+    
     public FolderCosmosRepository(IOptions<AppConfiguration> config)
     {
         var cosmosClient = new CosmosClient(config.Value.CosmosDbConnection);
         var db = cosmosClient.GetDatabase(TableNames.Doclib);
         _cosmosContainer = db.GetContainer(TableNames.Doclib);
     }
-
-    public async Task<DocLibFolder> GetFolderByNameAsync(string folderName)
+    
+    public async Task<DocLibFolder> GetFolderAsync(FolderQueryParameters queryParameters)
     {
-        return await GetFolderByIdAsync($"Folder.{folderName}");
-    }
-
-    public async Task<DocLibFolder> GetFolderByIdAsync(string id)
-    {
-        var folder = _cosmosContainer.GetItemLinqQueryable<DocLibFolder>(true)
-            .Where(x => x.Id == id)
-            .AsEnumerable()
-            .FirstOrDefault();
-        return await Task.FromResult(folder);
-    }
-
-    public async Task<DocLibFolder> GetActiveFolderAsync()
-    {
-        var folder = _cosmosContainer.GetItemLinqQueryable<DocLibFolder>(true)
-            .Where(x => x.IsFull == false)
-            .AsEnumerable()
-            .FirstOrDefault();
+        if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
+        if (!queryParameters.IsValid()) throw new InvalidQueryParameterException(queryParameters.GetType());
+        DocLibFolder folder = null;
+        if (queryParameters.Id.HasValue)
+        {
+            folder = _cosmosContainer.GetItemLinqQueryable<DocLibFolder>(true)
+                .Where(x => x.Id == queryParameters.Id.Value.ToString())
+                .AsEnumerable()
+                .FirstOrDefault();
+        }
+        else if (!string.IsNullOrWhiteSpace(queryParameters.Name))
+        {
+            folder = _cosmosContainer.GetItemLinqQueryable<DocLibFolder>(true)
+                .Where(x => x.Id == $"Folder.{queryParameters.Name}")
+                .AsEnumerable()
+                .FirstOrDefault();
+        }
+        else if (queryParameters.ActiveFolder.HasValue && queryParameters.ActiveFolder.Value)
+        {
+            folder = _cosmosContainer.GetItemLinqQueryable<DocLibFolder>(true)
+                .Where(x => x.IsFull == false)
+                .AsEnumerable()
+                .FirstOrDefault();
+        }
         return await Task.FromResult(folder);
     }
 

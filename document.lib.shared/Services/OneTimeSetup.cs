@@ -16,7 +16,7 @@ public class OneTimeSetup
     public async Task CreateDefaultsAsync()
     {
         await _categoryService.CreateOrGetCategoryAsync("uncategorized");
-        await _folderService.CreateOrGetFolderByIdAsync("unsorted", int.MaxValue, int.MaxValue);
-        await _folderService.CreateOrGetFolderByIdAsync("digital", int.MaxValue, int.MaxValue);
+        await _folderService.GetOrCreateFolderByIdAsync("unsorted", int.MaxValue, int.MaxValue);
+        await _folderService.GetOrCreateFolderByIdAsync("digital", int.MaxValue, int.MaxValue);
     }
 }

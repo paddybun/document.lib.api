@@ -1,6 +1,6 @@
 ﻿namespace document.lib.ef.Entities;
 
-public class Category: BaseFields
+public class EfCategory: BaseFields
 {
     public int Id { get; set; }
     public string Name { get; set; }

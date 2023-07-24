@@ -1,4 +1,5 @@
 ﻿using document.lib.shared.Interfaces;
+using document.lib.shared.Models.QueryDtos;
 using document.lib.shared.TableEntities;
 
 namespace document.lib.shared.Services;
@@ -16,13 +17,12 @@ public class FolderService : IFolderService
 
     public async Task<DocLibFolder> GetFolderByNameAsync(string name)
     {
-        return await _repository.GetFolderByNameAsync(name);
+        return await _repository.GetFolderAsync(new FolderQueryParameters(name: name));
     }
 
-    public async Task<DocLibFolder> GetActiveFolderAsync()
+    public async Task<DocLibFolder> GetOrCreateActiveFolderAsync()
     {
-        var folder = await _repository.GetActiveFolderAsync() ?? await CreateNewFolderAsync();
-        return folder;
+        return await _repository.GetFolderAsync(new FolderQueryParameters(activeFolder: true)) ?? await CreateNewFolderAsync();
     }
 
     public async Task<DocLibFolder> CreateNewFolderAsync(int maxFolderSize = 200, int maxRegisterSize = 10)
@@ -30,9 +30,21 @@ public class FolderService : IFolderService
         return await _repository.CreateFolderAsync(new DocLibFolder { Name = $"New Folder {DateTimeOffset.UtcNow:yyyy-MM-dd}", DocumentsPerFolder = maxFolderSize, DocumentsPerRegister = maxRegisterSize});
     }
 
-    public async Task<DocLibFolder> CreateOrGetFolderByIdAsync(string id, int maxFolderSize = 200, int maxRegisterSize = 10)
+    public async Task<DocLibFolder> GetOrCreateFolderByIdAsync(string id, int maxFolderSize = 200, int maxRegisterSize = 10)
     {
-        var folder = await _repository.GetFolderByIdAsync(id) ?? await CreateNewFolderAsync(maxFolderSize, maxRegisterSize);
+        if (id == null) throw new ArgumentNullException(nameof(id));
+
+        DocLibFolder folder = null;
+        if (int.TryParse(id, out var parsedId))
+        {
+            folder = await _repository.GetFolderAsync(new FolderQueryParameters(id: parsedId)) ?? await CreateNewFolderAsync(maxFolderSize, maxRegisterSize);
+        }
+        else
+        {
+            // If id could not be parsed as int, it is assumed that a cosmos id is used in the format: 'Folder.f9c900c2-aaa4-41c9-a7d2-d4ad928ffc95'
+            var cosmosId = id.Split('.').Last();
+            folder = await _repository.GetFolderAsync(new FolderQueryParameters(name: cosmosId)) ?? await CreateNewFolderAsync(maxFolderSize, maxRegisterSize);
+        }
         return folder;
     }
 
