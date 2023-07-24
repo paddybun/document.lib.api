@@ -3,6 +3,7 @@ using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
 using document.lib.shared.Models.QueryDtos;
+using document.lib.shared.Models.ViewModels;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
@@ -20,7 +21,7 @@ public class TagCosmosRepository : ITagRepository
         _cosmosContainer = db.GetContainer(TableNames.Doclib);
     }
 
-    public async Task<DocLibTag> GetTagAsync(TagQueryParameters queryParameters)
+    public async Task<TagModel> GetTagAsync(TagQueryParameters queryParameters)
     {
         if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
         if (string.IsNullOrWhiteSpace(queryParameters.Name))
@@ -32,19 +33,20 @@ public class TagCosmosRepository : ITagRepository
             .AsEnumerable()
             .FirstOrDefault();
 
-        return await Task.FromResult(tag);
+        return await Task.FromResult(Map(tag));
     }
 
-    public async Task<List<DocLibTag>> GetTagsAsync()
+    public async Task<List<TagModel>> GetTagsAsync()
     {
         var tags = _cosmosContainer.GetItemLinqQueryable<DocLibTag>(true)
             .Where(x => x.Id.StartsWith("Tag."))
             .AsEnumerable()
             .ToList();
-        return await Task.FromResult(tags);
+
+        return await Task.FromResult(tags.Select(Map).ToList());
     }
 
-    public async Task<DocLibTag> CreateTagAsync(string tagName)
+    public async Task<TagModel> CreateTagAsync(string tagName)
     {
         var id = $"Tag.{tagName}";
         var lowercased = tagName;
@@ -53,6 +55,19 @@ public class TagCosmosRepository : ITagRepository
             Id = id,
             Name = lowercased,
         });
-        return response.Resource;
+
+        return Map(response.Resource);
+    }
+
+    private static TagModel Map(DocLibTag tag)
+    {
+        if (tag == null) return null;
+
+        return new TagModel
+        {
+            Name = tag.Name,
+            DisplayName = tag.DisplayName,
+            Id = tag.Id
+        };
     }
 }

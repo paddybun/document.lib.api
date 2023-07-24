@@ -54,7 +54,7 @@ public class FolderService : IFolderService
         return folders;
     }
 
-    public async Task UpdateFolderAsync(DocLibFolder folder)
+    public Task UpdateFolderAsync(DocLibFolder folder)
     {
         throw new NotImplementedException();
         // await _repository.UpdateFolderAsync(folder);

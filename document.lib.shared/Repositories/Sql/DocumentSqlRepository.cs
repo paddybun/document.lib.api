@@ -4,6 +4,7 @@ using document.lib.ef.Entities;
 using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.QueryDtos;
+using document.lib.shared.Models.ViewModels;
 using document.lib.shared.TableEntities;
 using Microsoft.EntityFrameworkCore;
 using DocLibDocument = document.lib.shared.TableEntities.DocLibDocument;
@@ -102,7 +103,8 @@ public class DocumentSqlRepository: IDocumentRepository
         return mapped;
     }
 
-    public async Task<DocLibDocument> UpdateDocumentAsync(DocLibDocument document, DocLibCategory category = null, DocLibFolder folder = null, DocLibTag[] tags = null)
+    public async Task<DocLibDocument> UpdateDocumentAsync(DocLibDocument document, CategoryModel category = null, DocLibFolder folder = null,
+        TagModel[] tags = null)
     {
         var efDoc = _context
             .Documents

@@ -5,6 +5,7 @@ using document.lib.shared.Helper;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
 using document.lib.shared.Models.QueryDtos;
+using document.lib.shared.Models.ViewModels;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
@@ -103,7 +104,7 @@ public class DocumentCosmosRepository : IDocumentRepository
         throw new NotImplementedException();
     }
 
-    public Task<DocLibDocument> UpdateDocumentAsync(DocLibDocument document, DocLibCategory category, DocLibFolder folder, DocLibTag[] tags)
+    public Task<DocLibDocument> UpdateDocumentAsync(DocLibDocument document, CategoryModel category, DocLibFolder folder, TagModel[] tags)
     {
         throw new NotImplementedException();
     }
