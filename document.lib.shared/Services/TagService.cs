@@ -1,4 +1,5 @@
 ﻿using document.lib.shared.Interfaces;
+using document.lib.shared.Models.QueryDtos;
 using document.lib.shared.TableEntities;
 
 namespace document.lib.shared.Services;
@@ -12,17 +13,20 @@ public class TagService : ITagService
         _repository = repository;
     }
 
-    public async IAsyncEnumerable<DocLibTag> CreateOrGetTagsAsync(string[] tags)
+    public async Task<List<DocLibTag>> GetOrCreateTagsAsync(string[] tags)
     {
+        var toReturn = new List<DocLibTag>();
         foreach (var tag in tags)
         {
-            yield return await CreateOrGetTagAsync(tag);
+            toReturn.Add(await GetOrCreateTagAsync(tag));
         }
+
+        return toReturn;
     }
 
-    public async Task<DocLibTag> CreateOrGetTagAsync(string tag)
+    public async Task<DocLibTag> GetOrCreateTagAsync(string tag)
     {
-        var tagEntity = _repository.GetTagByName(tag);
+        var tagEntity = await _repository.GetTagAsync(new TagQueryParameters(name: tag));
         if (tagEntity == null)
         {
             return await _repository.CreateTagAsync(tag);

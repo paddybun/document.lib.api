@@ -8,5 +8,7 @@ namespace document.lib.shared.TableEntities
         public string Id { get; set; }
         [JsonProperty("name")]
         public string Name { get; set; }
+        [JsonProperty("displayName")]
+        public string DisplayName { get; set; }
     }
 }

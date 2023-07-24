@@ -1,10 +1,10 @@
-﻿using Azure.Storage.Blobs;
-using document.lib.shared.Constants;
+﻿using System.Net.Quic;
+using Azure.Storage.Blobs;
 using document.lib.shared.Interfaces;
-using document.lib.shared.Models;
+using document.lib.shared.Models.QueryDtos;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
-using Microsoft.Extensions.Options;
+using DocLibDocument = document.lib.shared.TableEntities.DocLibDocument;
 
 namespace document.lib.shared.Services
 {
@@ -15,16 +15,14 @@ namespace document.lib.shared.Services
         private readonly ITagService _tagService;
         private readonly IFolderService _folderService;
         private readonly BlobContainerClient _blobContainerClient;
-        private readonly CosmosClient _cosmosClient;
 
-        public DocumentService(BlobContainerClient blobContainerClient, CosmosClient cosmosClient, IDocumentRepository documentRepository, ICategoryService categoryService, ITagService tagService, IFolderService folderService)
+        public DocumentService(BlobContainerClient blobContainerClient, IDocumentRepository documentRepository, ICategoryService categoryService, ITagService tagService, IFolderService folderService)
         {
             _documentRepository = documentRepository;
             _categoryService = categoryService;
             _tagService = tagService;
             _folderService = folderService;
             _blobContainerClient = blobContainerClient;
-            _cosmosClient = cosmosClient;
         }
 
         public async Task DeleteDocumentAsync(DocLibDocument doc)
@@ -40,129 +38,63 @@ namespace document.lib.shared.Services
         public async Task<DocLibDocument> UpdateDocumentAsync(DocLibDocument doc)
         {
             doc.Validate();
-
-            var db = _cosmosClient.GetDatabase(TableNames.Doclib);
-            var docLibContainer = db.GetContainer(TableNames.Doclib);
-
-            // Create category if not exists
-            await _categoryService.CreateOrGetCategoryAsync(doc.Category);
-
-            // Create tags if not exists
-            await foreach (var tag in _tagService.CreateOrGetTagsAsync(doc.Tags)) { }
-
-            doc.Tags = doc.Tags.Select(x => x.ToLower()).ToArray();
-            doc.LastUpdate = DateTimeOffset.Now;
-
-            await docLibContainer.UpsertItemAsync(doc, new PartitionKey(doc.Id));
-            return doc;
-        }
-        public async Task<DocLibDocument> CreateDocumentAsync(DocLibDocument doc)
-        {
-            doc.Validate();
-
-            var db = _cosmosClient.GetDatabase(TableNames.Doclib);
-            var docLibContainer = db.GetContainer(TableNames.Doclib);
-
-            // Create category if not exists
-            await _categoryService.CreateOrGetCategoryAsync(doc.Category);
-
-            // Create tags if not exists
-            await foreach (var tag in _tagService.CreateOrGetTagsAsync(doc.Tags)) { }
-
-            doc.Tags = doc.Tags.Select(x => x.ToLower()).ToArray();
+            var category = await _categoryService.CreateOrGetCategoryAsync(doc.Category);
+            var tags = await _tagService.GetOrCreateTagsAsync(doc.Tags);
+            var folder = await _folderService.GetOrCreateFolderByIdAsync(doc.FolderId);
 
             if (doc.Unsorted)
             {
-                DocLibFolder folder = null;
-                if (!doc.DigitalOnly)
-                {
-                    // Get folder or create a new one
-                    folder = _folderService.GetActiveFolder() ?? await CreateFolderAsync(docLibContainer);
-
-                    var register = folder.AddDocument();
-                    doc.FolderId = folder.Id;
-                    doc.FolderName = folder.DisplayName;
-                    doc.RegisterName = register;
-                    await docLibContainer.UpsertItemAsync(folder, new PartitionKey(folder.Id));
-                }
-                await MoveDocumentFromUnsorted(doc, folder, docLibContainer);
-                doc.Unsorted = false;
+                await MoveDocumentFromUnsorted(doc);
             }
 
-            var guid = Guid.NewGuid();
-            var id = $"Document.{doc.Name}.{guid}";
-            doc.Id = id;
-            doc.Name = $"{doc.Name}_{guid}";
-            doc.LastUpdate = DateTimeOffset.Now;
+            var res = await _documentRepository.UpdateDocumentAsync(doc, category, folder, tags.ToArray());
+            return res;
+        }
 
-            await docLibContainer.UpsertItemAsync(doc, new PartitionKey(id));
-            return doc;
+        public async Task<DocLibDocument> CreateNewDocumentAsync(DocLibDocument doc)
+        {
+            doc.Validate();
+            var document = await _documentRepository.CreateDocumentAsync(doc);
+            var folder = await _folderService.GetOrCreateActiveFolderAsync();
+            if (folder != null) { folder = await _folderService.CreateNewFolderAsync(); }
+            return document;
         }
 
         public async Task<bool> MoveDocumentAsync(DocLibDocument doc)
         {
-            var db = _cosmosClient.GetDatabase(TableNames.Doclib);
-            var docLibContainer = db.GetContainer(TableNames.Doclib);
+            var oldPath = doc.BlobLocation;
+            var queryParams = new DocumentQueryParameters();
+            
+            if (int.TryParse(doc.Id, out var id))
+                queryParams.Id = id;
+            else
+                queryParams.Name = doc.Id;
 
-            var dbDoc = docLibContainer.GetItemLinqQueryable<DocLibDocument>(true)
-                .Where(x => x.Id == doc.Id)
-                .AsEnumerable()
-                .FirstOrDefault(x => x.Id == doc.Id);
 
+            var dbDoc = await _documentRepository.GetDocumentAsync(queryParams);
             if (dbDoc == null || doc.FolderName == dbDoc.FolderName) return false;
 
-            var oldFolder = docLibContainer.GetItemLinqQueryable<DocLibFolder>(true)
-                .Where(x => x.Name == dbDoc.FolderName)
-                .AsEnumerable()
-                .FirstOrDefault();
+            var oldFolder = await _folderService.GetFolderByNameAsync(dbDoc.FolderName);
+            var newFolder = await _folderService.GetFolderByNameAsync(doc.FolderName);
 
-            var folder = docLibContainer.GetItemLinqQueryable<DocLibFolder>(true)
-                .Where(x => x.Name == doc.FolderName)
-                .AsEnumerable()
-                .FirstOrDefault();
+            if (oldFolder == null || newFolder == null) return false;
+            await _folderService.RemoveDocumentFromFolder(oldFolder, dbDoc);
+            await _folderService.AddDocumentToFolderAsync(newFolder, dbDoc);
 
-            if (oldFolder == null || folder == null) return false;
+            var relocatedDoc = await _documentRepository.GetDocumentAsync(queryParams);
+            dbDoc.BlobLocation = $"{newFolder.Name}/{relocatedDoc.RegisterName}/{dbDoc.PhysicalName}";
+            
+            await MoveBlob(oldPath, dbDoc.BlobLocation);
+            await _documentRepository.UpdateDocumentAsync(dbDoc);
 
-            oldFolder.RemoveDocument(dbDoc.RegisterName);
-            var register = folder.AddDocument();
-            dbDoc.RegisterName = register;
-
-            await docLibContainer.ReplaceItemAsync(folder, folder.Id, new PartitionKey(folder.Id));
-            await docLibContainer.ReplaceItemAsync(oldFolder, oldFolder.Id, new PartitionKey(oldFolder.Id));
-            await docLibContainer.ReplaceItemAsync(dbDoc, dbDoc.Id, new PartitionKey(dbDoc.Id));
             return true;
         }
 
-        private async Task<DocLibFolder> CreateFolderAsync(Container doclibContainer)
+        private async Task MoveDocumentFromUnsorted(DocLibDocument doc)
         {
-            var guid = Guid.NewGuid().ToString();
-            var id = $"Folder.{guid}";
-            var newFolder = new DocLibFolder
-            {
-                Id = id,
-                Name = guid,
-                CurrentRegister = "1",
-                IsFull = false,
-                TotalDocuments = 0,
-                DisplayName = "Please choose a name",
-                CreatedAt = DateTimeOffset.Now
-            };
-            newFolder.Registers.Add("1", 0);
-            await doclibContainer.CreateItemAsync(newFolder, new PartitionKey(id));
-            return newFolder;
-        }
-
-        private async Task MoveDocumentFromUnsorted(DocLibDocument doc, DocLibFolder folder, Container doclibContainer)
-        {
-            var unsortedEntry = doclibContainer.GetItemLinqQueryable<DocLibDocument>(true)
-                                    .Where(x => x.Id == doc.Id)
-                                    .AsEnumerable()
-                                    .FirstOrDefault();
-            if (unsortedEntry == null)
-            {
-                return;
-            }
-            await doclibContainer.DeleteItemAsync<DocLibDocument>(unsortedEntry.Id, new PartitionKey(unsortedEntry.Id));
+            var dbFolder = await _folderService.GetFolderByNameAsync("unsorted");
+            var newFolder = await _folderService.GetOrCreateActiveFolderAsync();
+            await _folderService.RemoveDocumentFromFolder(dbFolder, doc);
 
             string newBlobLocation;
             if (doc.DigitalOnly)
@@ -173,7 +105,7 @@ namespace document.lib.shared.Services
             else
             {
                 doc.PhysicalName = doc.Unsorted ? doc.PhysicalName.Replace("unsorted/", "") : doc.PhysicalName;
-                newBlobLocation = $"{folder.Name}/{doc.RegisterName}/{doc.PhysicalName}";
+                newBlobLocation = $"{newFolder.Name}/{newFolder.CurrentRegister}/{doc.PhysicalName}";
             }
             
             

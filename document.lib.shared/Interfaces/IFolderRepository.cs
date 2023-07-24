@@ -1,12 +1,15 @@
-﻿using document.lib.shared.TableEntities;
+﻿using document.lib.shared.Models.QueryDtos;
+using document.lib.shared.TableEntities;
+using DocLibDocument = document.lib.shared.TableEntities.DocLibDocument;
 
 namespace document.lib.shared.Interfaces;
 
 public interface IFolderRepository
 {
-    DocLibFolder GetFolderByName(string folderName);
-    DocLibFolder GetFolderById(string id);
-    DocLibFolder GetCurrentlyActiveFolder();
-    List<DocLibFolder> GetAllFolders();
-    Task UpdateNameAsync(DocLibFolder folder);
+    Task<DocLibFolder> GetFolderAsync(FolderQueryParameters queryParameters);
+    Task<List<DocLibFolder>> GetAllFoldersAsync();
+    Task<DocLibFolder> CreateFolderAsync(DocLibFolder folder);
+    Task UpdateFolderAsync(DocLibFolder folder);
+    Task AddDocumentToFolderAsync(DocLibFolder folder, DocLibDocument document);
+    Task RemoveDocFromFolderAsync(DocLibFolder folder, DocLibDocument document);
 }

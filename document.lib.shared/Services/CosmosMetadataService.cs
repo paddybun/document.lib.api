@@ -7,11 +7,11 @@ using Microsoft.Extensions.Options;
 
 namespace document.lib.shared.Services;
 
-public class MetadataService
+public class CosmosMetadataService
 {
     private readonly CosmosClient _cosmosClient;
 
-    public MetadataService(CosmosClient cosmosClient)
+    public CosmosMetadataService(CosmosClient cosmosClient)
     {
         _cosmosClient = cosmosClient;
     }

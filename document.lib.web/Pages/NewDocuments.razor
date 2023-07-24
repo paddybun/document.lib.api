@@ -5,7 +5,7 @@
 @using document.lib.shared.Interfaces
 <h3>New Documents</h3>
 
-@inject QueryService QueryService
+@inject CosmosQueryService _cosmosQueryService
 @inject BlobClientHelper BlobClientHelper
 @inject ILogger<NewDocuments> Logger
 @inject NavigationManager NavigationManager
@@ -80,7 +80,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _documents = (await QueryService.ExecuteQueryAsync(new DocumentQuery{ Unsorted = true })).ToList();
+        _documents = (await _cosmosQueryService.ExecuteQueryAsync(new DocumentQuery{ Unsorted = true })).ToList();
     }
 
     private async Task LoadFilesAsync(InputFileChangeEventArgs e)

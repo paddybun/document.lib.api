@@ -1,18 +1,16 @@
 ﻿using System.Text;
 using document.lib.shared.Constants;
 using document.lib.shared.Helper;
-using document.lib.shared.Models;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace document.lib.shared.Services
 {
-    public class QueryService
+    public class CosmosQueryService
     {
         private readonly CosmosClient _cosmosClient;
-        public QueryService(CosmosClient cosmosClient)
+        public CosmosQueryService(CosmosClient cosmosClient)
         {
             _cosmosClient = cosmosClient;
         }
