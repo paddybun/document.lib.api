@@ -1,5 +1,4 @@
-﻿using Azure;
-using document.lib.ef;
+﻿using document.lib.ef;
 using document.lib.ef.Entities;
 using document.lib.shared.Interfaces;
 using document.lib.shared.TableEntities;

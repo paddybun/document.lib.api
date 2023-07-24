@@ -4,7 +4,7 @@ namespace document.lib.shared.Interfaces;
 
 public interface ICategoryService
 {
-    Task<DocLibCategory> GetCategoryByNameAsync(string name);
+    Task<DocLibCategory> GetCategoryAsync(string name);
 
     Task<DocLibCategory> CreateOrGetCategoryAsync(string category);
 }

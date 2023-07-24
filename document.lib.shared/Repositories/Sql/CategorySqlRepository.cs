@@ -1,6 +1,8 @@
-﻿using document.lib.ef;
+﻿using System.Net.Quic;
+using document.lib.ef;
 using document.lib.ef.Entities;
 using document.lib.shared.Interfaces;
+using document.lib.shared.Models.QueryDtos;
 using document.lib.shared.TableEntities;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,6 +28,20 @@ public class CategorySqlRepository: ICategoryRepository
     public async Task<DocLibCategory> GetCategoryByNameAsync(string categoryName)
     {
         var efCategory = await _context.Categories.SingleOrDefaultAsync(x => x.Name == categoryName);
+        return Map(efCategory);
+    }
+
+    public async Task<DocLibCategory> GetCategoryAsync(CategoryQueryParameters queryParameters)
+    {
+        Category efCategory;
+        if (queryParameters.Id.HasValue)
+        {
+            efCategory = await _context.Categories.SingleOrDefaultAsync(x => x.Id == queryParameters.Id.Value);
+        }
+        else
+        {
+            efCategory = await _context.Categories.SingleOrDefaultAsync(x => x.Name == queryParameters.Name);
+        }
         return Map(efCategory);
     }
 

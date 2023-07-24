@@ -1,6 +1,7 @@
 ﻿using document.lib.shared.Constants;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
+using document.lib.shared.Models.QueryDtos;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
@@ -18,17 +19,23 @@ public class CategoryCosmosRepository : ICategoryRepository
         _cosmosContainer = db.GetContainer(TableNames.Doclib);
     }
 
-    public async Task<DocLibCategory> GetCategoryByNameAsync(string categoryName)
+    public async Task<DocLibCategory> GetCategoryAsync(CategoryQueryParameters queryParameters)
     {
-        return await GetCategoryByIdAsync($"Category.{categoryName}");
-    }
-
-    public async Task<DocLibCategory> GetCategoryByIdAsync(string id)
-    {
-        var category = _cosmosContainer.GetItemLinqQueryable<DocLibCategory>(true)
-            .Where(x => x.Id == id)
-            .AsEnumerable()
-            .FirstOrDefault();
+        DocLibCategory category;
+        if (queryParameters.Id.HasValue)
+        {
+            category = _cosmosContainer.GetItemLinqQueryable<DocLibCategory>(true)
+                .Where(x => x.Id == queryParameters.Id.Value.ToString())
+                .AsEnumerable()
+                .FirstOrDefault();
+        }
+        else
+        {
+            category = _cosmosContainer.GetItemLinqQueryable<DocLibCategory>(true)
+                .Where(x => x.Id == $"Category.{queryParameters.Name}")
+                .AsEnumerable()
+                .FirstOrDefault();
+        }
         return await Task.FromResult(category);
     }
 
