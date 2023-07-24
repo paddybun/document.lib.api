@@ -1,13 +1,16 @@
-﻿using document.lib.ef;
+﻿using Azure;
+using document.lib.ef;
 using document.lib.ef.Entities;
+using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
+using document.lib.shared.Models.QueryDtos;
 using document.lib.shared.TableEntities;
 using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.shared.Repositories.Sql;
 
 // Scoped injection 
-public class TagSqlRepository : ITagRepository, IDisposable
+public class TagSqlRepository : ITagRepository
 {
     private readonly DocumentLibContext _context;
 
@@ -16,19 +19,23 @@ public class TagSqlRepository : ITagRepository, IDisposable
         _context = context;
     }
 
-    public async Task<DocLibTag> GetTagByNameAsync(string tagName)
+    public async Task<DocLibTag> GetTagAsync(TagQueryParameters queryParameters)
     {
-        var tag = await _context.Tags
-            .SingleOrDefaultAsync(x => x.Name == tagName);
-        return Map(tag);
-    }
+        if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
+        if (!queryParameters.IsValid()) throw new InvalidQueryParameterException(queryParameters.GetType());
 
-    public async Task<DocLibTag> GetTagByIdAsync(string id)
-    {
-        var parsedId = int.Parse(id);
-        var tag = await _context.Tags
-            .SingleOrDefaultAsync(x => x.Id == parsedId);
-        return Map(tag);
+        EfTag efTag;
+        if (queryParameters.Id.HasValue)
+        {
+            efTag = await _context.Tags
+                .SingleOrDefaultAsync(x => x.Id == queryParameters.Id.Value);    
+        }
+        else
+        {
+            efTag = await _context.Tags
+                .SingleOrDefaultAsync(x => x.Name == queryParameters.Name);
+        }
+        return Map(efTag);
     }
 
     public async Task<DocLibTag> CreateTagAsync(string tagName)
@@ -49,10 +56,5 @@ public class TagSqlRepository : ITagRepository, IDisposable
             Name = efTag.Name,
             DisplayName = efTag.DisplayName
         };
-    }
-
-    public void Dispose()
-    {
-        _context.Dispose();
     }
 }

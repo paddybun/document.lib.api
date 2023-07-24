@@ -1,6 +1,8 @@
 ﻿using document.lib.shared.Constants;
+using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
+using document.lib.shared.Models.QueryDtos;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
@@ -18,21 +20,21 @@ public class TagCosmosRepository : ITagRepository
         _cosmosContainer = db.GetContainer(TableNames.Doclib);
     }
 
-    public async Task<DocLibTag> GetTagByNameAsync(string tagName)
+    public async Task<DocLibTag> GetTagAsync(TagQueryParameters queryParameters)
     {
-        var tag = await GetTagByIdAsync($"Tag.{tagName}");
-        return tag;
-    }
+        if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
+        if (string.IsNullOrWhiteSpace(queryParameters.Name))
+            throw new InvalidQueryParameterException("Tag query in cosmos repository only allows searching by name. Name should look like Tag.<id>");
 
-    public async Task<DocLibTag> GetTagByIdAsync(string id)
-    {
+        var id = queryParameters.Name.Split('.').Last();
         var tag = _cosmosContainer.GetItemLinqQueryable<DocLibTag>(true)
-            .Where(x => x.Id == id)
+            .Where(x => x.Id == $"Tag.{id}")
             .AsEnumerable()
             .FirstOrDefault();
+
         return await Task.FromResult(tag);
     }
-    
+
     public async Task<DocLibTag> CreateTagAsync(string tagName)
     {
         var id = $"Tag.{tagName}";

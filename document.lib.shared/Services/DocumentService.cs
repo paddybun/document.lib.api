@@ -39,7 +39,7 @@ namespace document.lib.shared.Services
         {
             doc.Validate();
             var category = await _categoryService.CreateOrGetCategoryAsync(doc.Category);
-            var tags = await _tagService.CreateOrGetTagsAsync(doc.Tags);
+            var tags = await _tagService.GetOrCreateTagsAsync(doc.Tags);
             var folder = await _folderService.GetOrCreateFolderByIdAsync(doc.FolderId);
 
             if (doc.Unsorted)
