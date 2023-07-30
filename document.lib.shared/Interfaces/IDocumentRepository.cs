@@ -1,18 +1,16 @@
 ﻿using document.lib.shared.Models.QueryDtos;
 using document.lib.shared.Models.ViewModels;
-using document.lib.shared.TableEntities;
-using DocLibDocument = document.lib.shared.TableEntities.DocLibDocument;
 
 namespace document.lib.shared.Interfaces;
 
 public interface IDocumentRepository
 {
-    Task<DocLibDocument> CreateDocumentAsync(DocLibDocument document);
-    Task<DocLibDocument> GetDocumentAsync(DocumentQueryParameters queryParameters);
-    Task<List<DocLibDocument>> GetDocumentsAsync(int page, int count);
+    Task<DocumentModel> CreateDocumentAsync(DocumentModel document);
+    Task<DocumentModel> GetDocumentAsync(DocumentQueryParameters queryParameters);
+    Task<List<DocumentModel>> GetDocumentsAsync(int page, int count);
     Task<int> GetDocumentCountAsync();
-    Task<List<DocLibDocument>> GetDocumentsForFolderAsync(string folderName, int page, int count);
-    Task<DocLibDocument> UpdateDocumentAsync(DocLibDocument document, CategoryModel category = null, DocLibFolder folder = null, TagModel[] tags = null);
-    Task DeleteDocumentAsync(DocLibDocument doc);
+    Task<List<DocumentModel>> GetDocumentsForFolderAsync(string folderName, int page, int count);
+    Task<DocumentModel> UpdateDocumentAsync(DocumentModel document, CategoryModel category = null, FolderModel folder = null, TagModel[] tags = null);
+    Task DeleteDocumentAsync(DocumentModel doc);
     Task DeleteDocumentAsync(string documentId);
 }

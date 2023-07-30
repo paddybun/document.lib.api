@@ -1,10 +1,7 @@
-﻿using System.Net.Quic;
-using Azure.Storage.Blobs;
+﻿using Azure.Storage.Blobs;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.QueryDtos;
-using document.lib.shared.TableEntities;
-using Microsoft.Azure.Cosmos;
-using DocLibDocument = document.lib.shared.TableEntities.DocLibDocument;
+using document.lib.shared.Models.ViewModels;
 
 namespace document.lib.shared.Services
 {
@@ -25,8 +22,10 @@ namespace document.lib.shared.Services
             _blobContainerClient = blobContainerClient;
         }
 
-        public async Task DeleteDocumentAsync(DocLibDocument doc)
+        public async Task DeleteDocumentAsync(DocumentModel doc)
         {
+            // HACK: Temporary disable delete functionality
+            throw new NotImplementedException();
             if (string.IsNullOrEmpty(doc.Id))
             {
                 return;
@@ -35,10 +34,11 @@ namespace document.lib.shared.Services
             await _documentRepository.DeleteDocumentAsync(doc);
         }
 
-        public async Task<DocLibDocument> UpdateDocumentAsync(DocLibDocument doc)
+        public async Task<DocumentModel> UpdateDocumentAsync(DocumentModel doc)
         {
-            doc.Validate();
-            var category = await _categoryService.CreateOrGetCategoryAsync(doc.Category);
+            if (!IsValid(doc)) { throw new Exception("Please make sure the following fields are filled ['DisplayName, Company, DateOfDocument, Category, Tags']"); }
+
+            var category = await _categoryService.CreateOrGetCategoryAsync(doc.CategoryName);
             var tags = await _tagService.GetOrCreateTagsAsync(doc.Tags);
             var folder = await _folderService.GetOrCreateFolderByIdAsync(doc.FolderId);
 
@@ -51,16 +51,16 @@ namespace document.lib.shared.Services
             return res;
         }
 
-        public async Task<DocLibDocument> CreateNewDocumentAsync(DocLibDocument doc)
+        public async Task<DocumentModel> CreateNewDocumentAsync(DocumentModel doc)
         {
-            doc.Validate();
+            if (!IsValid(doc)) { throw new Exception("Please make sure the following fields are filled ['DisplayName, Company, DateOfDocument, Category, Tags']"); }
             var document = await _documentRepository.CreateDocumentAsync(doc);
             var folder = await _folderService.GetOrCreateActiveFolderAsync();
             if (folder != null) { folder = await _folderService.CreateNewFolderAsync(); }
             return document;
         }
 
-        public async Task<bool> MoveDocumentAsync(DocLibDocument doc)
+        public async Task<bool> MoveDocumentAsync(DocumentModel doc)
         {
             var oldPath = doc.BlobLocation;
             var queryParams = new DocumentQueryParameters();
@@ -90,14 +90,14 @@ namespace document.lib.shared.Services
             return true;
         }
 
-        private async Task MoveDocumentFromUnsorted(DocLibDocument doc)
+        private async Task MoveDocumentFromUnsorted(DocumentModel doc)
         {
             var dbFolder = await _folderService.GetFolderByNameAsync("unsorted");
             var newFolder = await _folderService.GetOrCreateActiveFolderAsync();
             await _folderService.RemoveDocumentFromFolder(dbFolder, doc);
 
             string newBlobLocation;
-            if (doc.DigitalOnly)
+            if (doc.Digital)
             {
                 doc.PhysicalName = doc.PhysicalName.Replace("unsorted/", "");
                 newBlobLocation = $"digital/{doc.PhysicalName}";
@@ -123,6 +123,16 @@ namespace document.lib.shared.Services
             }
 
             await source.DeleteAsync();
+        }
+
+        private bool IsValid(DocumentModel model)
+        {
+            return !string.IsNullOrWhiteSpace(model.DisplayName) &&
+                   !string.IsNullOrWhiteSpace(model.Company) &&
+                   model.DateOfDocument != default &&
+                   !string.IsNullOrWhiteSpace(model.CategoryName) &&
+                   model.Tags != null &&
+                   model.Tags.Any();
         }
     }
 }

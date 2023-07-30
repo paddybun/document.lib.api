@@ -13,7 +13,7 @@ public class TagService : ITagService
         _repository = repository;
     }
 
-    public async Task<List<TagModel>> GetOrCreateTagsAsync(string[] tags)
+    public async Task<List<TagModel>> GetOrCreateTagsAsync(List<string> tags)
     {
         var toReturn = new List<TagModel>();
         foreach (var tag in tags)

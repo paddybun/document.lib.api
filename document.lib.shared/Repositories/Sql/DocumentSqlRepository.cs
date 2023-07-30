@@ -1,13 +1,10 @@
-﻿using Azure;
-using document.lib.ef;
+﻿using document.lib.ef;
 using document.lib.ef.Entities;
 using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.QueryDtos;
 using document.lib.shared.Models.ViewModels;
-using document.lib.shared.TableEntities;
 using Microsoft.EntityFrameworkCore;
-using DocLibDocument = document.lib.shared.TableEntities.DocLibDocument;
 
 namespace document.lib.shared.Repositories.Sql;
 
@@ -20,7 +17,7 @@ public class DocumentSqlRepository: IDocumentRepository
         _context = context;
     }
 
-    public async Task<DocLibDocument> CreateDocumentAsync(DocLibDocument document)
+    public async Task<DocumentModel> CreateDocumentAsync(DocumentModel document)
     {
         var register = await _context.Registers.SingleOrDefaultAsync(x => x.Name == "unsorted");
         var efDocument = new EfDocument
@@ -33,7 +30,7 @@ public class DocumentSqlRepository: IDocumentRepository
             DateOfDocument = document.DateOfDocument,
             UploadDate = DateTimeOffset.UtcNow,
             Description = document.Description,
-            Digital = document.DigitalOnly,
+            Digital = document.Digital,
             PhysicalName = document.PhysicalName,
             Register = register,
             Unsorted = true
@@ -41,7 +38,7 @@ public class DocumentSqlRepository: IDocumentRepository
         return Map(efDocument);
     }
 
-    public async Task<DocLibDocument> GetDocumentAsync(DocumentQueryParameters queryParameters)
+    public async Task<DocumentModel> GetDocumentAsync(DocumentQueryParameters queryParameters)
     {
         if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
         if (!queryParameters.IsValid()) throw new InvalidQueryParameterException(queryParameters.GetType());
@@ -70,7 +67,7 @@ public class DocumentSqlRepository: IDocumentRepository
         return Map(efDocument);
     }
 
-    public async Task<List<DocLibDocument>> GetDocumentsAsync(int page, int count)
+    public async Task<List<DocumentModel>> GetDocumentsAsync(int page, int count)
     {
         var efDocuments = await _context
             .Documents
@@ -87,7 +84,7 @@ public class DocumentSqlRepository: IDocumentRepository
         return await _context.Documents.CountAsync();
     }
 
-    public async Task<List<DocLibDocument>> GetDocumentsForFolderAsync(string folderName, int page, int count)
+    public async Task<List<DocumentModel>> GetDocumentsForFolderAsync(string folderName, int page, int count)
     {
         var efDocuments = await _context
             .Documents
@@ -103,7 +100,7 @@ public class DocumentSqlRepository: IDocumentRepository
         return mapped;
     }
 
-    public async Task<DocLibDocument> UpdateDocumentAsync(DocLibDocument document, CategoryModel category = null, DocLibFolder folder = null,
+    public async Task<DocumentModel> UpdateDocumentAsync(DocumentModel document, CategoryModel category = null, FolderModel folder = null,
         TagModel[] tags = null)
     {
         var efDoc = _context
@@ -140,14 +137,14 @@ public class DocumentSqlRepository: IDocumentRepository
         efDoc.Unsorted = document.Unsorted;
         efDoc.BlobLocation = document.BlobLocation;
         efDoc.DateOfDocument = document.DateOfDocument;
-        efDoc.Digital = document.DigitalOnly;
+        efDoc.Digital = document.Digital;
 
         _context.Update(efDoc);
         await _context.SaveChangesAsync();
         return Map(efDoc);
     }
 
-    public async Task DeleteDocumentAsync(DocLibDocument doc)
+    public async Task DeleteDocumentAsync(DocumentModel doc)
     {
         var docId = int.Parse(doc.Id);
         var efDoc = await _context.Documents.SingleAsync(x => x.Id == docId);
@@ -163,26 +160,26 @@ public class DocumentSqlRepository: IDocumentRepository
         await _context.SaveChangesAsync();
     }
 
-    private DocLibDocument Map(EfDocument efDocument)
+    private DocumentModel Map(EfDocument efDocument)
     {
         if (efDocument == null) return null;
 
-        return new DocLibDocument
+        return new DocumentModel
         {
             Id = efDocument.Id.ToString(),
             Name = efDocument.Name,
             DisplayName = efDocument.DisplayName,
             Description = efDocument.Description,
-            Category = efDocument.Category?.DisplayName,
+            CategoryName = efDocument.Category?.DisplayName,
             BlobLocation = efDocument.BlobLocation,
             FolderName = efDocument.Register.Folder.Name,
             Company = efDocument.Company,
             DateOfDocument = efDocument.DateOfDocument,
-            LastUpdate = efDocument.DateModified,
+            DateModified = efDocument.DateModified,
             UploadDate = efDocument.DateCreated,
-            DigitalOnly = efDocument.Digital,
+            Digital = efDocument.Digital,
             PhysicalName = efDocument.PhysicalName,
-            Tags = efDocument.Tags?.Select(x => x.Name).ToArray(),
+            Tags = efDocument.Tags?.Select(x => x.Name).ToList(),
             RegisterName = efDocument.Register.Name,
             FolderId = efDocument.Register.Folder.Id.ToString(),
             Unsorted = efDocument.Unsorted
