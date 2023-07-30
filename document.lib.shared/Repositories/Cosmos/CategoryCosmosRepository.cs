@@ -3,6 +3,7 @@ using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
 using document.lib.shared.Models.QueryDtos;
+using document.lib.shared.Models.ViewModels;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
@@ -20,7 +21,7 @@ public class CategoryCosmosRepository : ICategoryRepository
         _cosmosContainer = db.GetContainer(TableNames.Doclib);
     }
 
-    public async Task<DocLibCategory> GetCategoryAsync(CategoryQueryParameters queryParameters)
+    public async Task<CategoryModel> GetCategoryAsync(CategoryQueryParameters queryParameters)
     {
         if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
         if (!queryParameters.IsValid()) throw new InvalidQueryParameterException(queryParameters.GetType());
@@ -40,19 +41,19 @@ public class CategoryCosmosRepository : ICategoryRepository
                 .AsEnumerable()
                 .FirstOrDefault();
         }
-        return await Task.FromResult(category);
+        return await Task.FromResult(Map(category));
     }
 
-    public async Task<List<DocLibCategory>> GetCategoriesAsync()
+    public async Task<List<CategoryModel>> GetCategoriesAsync()
     {
         var categories = _cosmosContainer.GetItemLinqQueryable<DocLibCategory>(true)
             .Where(x => x.Id == $"Category.")
             .AsEnumerable()
             .ToList();
-        return await Task.FromResult(categories);
+        return await Task.FromResult(categories.Select(Map).ToList());
     }
 
-    public async Task<DocLibCategory> CreateCategoryAsync(DocLibCategory category)
+    public async Task<CategoryModel> CreateCategoryAsync(CategoryModel category)
     {
         var id = $"Category.{category.Name}";
         var cat = new DocLibCategory
@@ -63,6 +64,22 @@ public class CategoryCosmosRepository : ICategoryRepository
             Description = ""
         };
         var response = await _cosmosContainer.CreateItemAsync(cat);
-        return response.Resource;
+        return Map(response.Resource);
+    }
+
+    private static CategoryModel Map(DocLibCategory category)
+    {
+        if (category == null)
+        {
+            return null;
+        }
+
+        return new CategoryModel
+        {
+            Name = category.Name,
+            DisplayName = category.DisplayName,
+            Description = category.Description,
+            Id = category.Id
+        };
     }
 }

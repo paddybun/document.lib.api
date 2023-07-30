@@ -1,10 +1,9 @@
-﻿using System.Net.Quic;
-using document.lib.ef;
+﻿using document.lib.ef;
 using document.lib.ef.Entities;
 using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.QueryDtos;
-using document.lib.shared.TableEntities;
+using document.lib.shared.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.shared.Repositories.Sql;
@@ -19,7 +18,7 @@ public class CategorySqlRepository: ICategoryRepository
         _context = context;
     }
 
-    public async Task<DocLibCategory> GetCategoryAsync(CategoryQueryParameters queryParameters)
+    public async Task<CategoryModel> GetCategoryAsync(CategoryQueryParameters queryParameters)
     {
         if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
         if (!queryParameters.IsValid()) throw new InvalidQueryParameterException(queryParameters.GetType());
@@ -36,13 +35,13 @@ public class CategorySqlRepository: ICategoryRepository
         return Map(efCategory);
     }
 
-    public async Task<List<DocLibCategory>> GetCategoriesAsync()
+    public async Task<List<CategoryModel>> GetCategoriesAsync()
     {
         var categories = await _context.Categories.ToListAsync();
         return categories.Select(Map).ToList();
     }
 
-    public async Task<DocLibCategory> CreateCategoryAsync(DocLibCategory category)
+    public async Task<CategoryModel> CreateCategoryAsync(CategoryModel category)
     {
         var efCategory = new EfCategory
         {
@@ -56,10 +55,10 @@ public class CategorySqlRepository: ICategoryRepository
     }
 
     // TODO: Refactor to corresponding mapper
-    private static DocLibCategory Map(EfCategory efCategory)
+    private static CategoryModel Map(EfCategory efCategory)
     {
         if (efCategory == null) return null;
-        return new DocLibCategory
+        return new CategoryModel
         {
             Name = efCategory.Name,
             Description = efCategory.Description,

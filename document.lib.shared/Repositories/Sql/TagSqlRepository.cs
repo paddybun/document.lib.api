@@ -3,7 +3,7 @@ using document.lib.ef.Entities;
 using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.QueryDtos;
-using document.lib.shared.TableEntities;
+using document.lib.shared.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.shared.Repositories.Sql;
@@ -18,7 +18,7 @@ public class TagSqlRepository : ITagRepository
         _context = context;
     }
 
-    public async Task<DocLibTag> GetTagAsync(TagQueryParameters queryParameters)
+    public async Task<TagModel> GetTagAsync(TagQueryParameters queryParameters)
     {
         if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
         if (!queryParameters.IsValid()) throw new InvalidQueryParameterException(queryParameters.GetType());
@@ -37,13 +37,13 @@ public class TagSqlRepository : ITagRepository
         return Map(efTag);
     }
 
-    public async Task<List<DocLibTag>> GetTagsAsync()
+    public async Task<List<TagModel>> GetTagsAsync()
     {
         var tags = await _context.Tags.ToListAsync();
         return tags.Select(Map).ToList();
     }
 
-    public async Task<DocLibTag> CreateTagAsync(string tagName)
+    public async Task<TagModel> CreateTagAsync(string tagName)
     {
         var tag = new EfTag {Name = tagName, DisplayName = tagName};
         await _context.AddAsync(tag);
@@ -51,10 +51,10 @@ public class TagSqlRepository : ITagRepository
         return Map(tag);
     }
 
-    private DocLibTag Map(EfTag efTag)
+    private TagModel Map(EfTag efTag)
     {
         if (efTag == null) return null;
-        return new DocLibTag
+        return new TagModel
         {
             Id = efTag.Id.ToString(),
             Name = efTag.Name,

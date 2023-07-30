@@ -1,10 +1,10 @@
-﻿using document.lib.shared.TableEntities;
+﻿using document.lib.shared.Models.ViewModels;
 
 namespace document.lib.shared.Interfaces;
 
 public interface ICategoryService
 {
-    Task<DocLibCategory> GetCategoryAsync(string name);
+    Task<CategoryModel> GetCategoryAsync(string name);
 
-    Task<DocLibCategory> CreateOrGetCategoryAsync(string category);
+    Task<CategoryModel> CreateOrGetCategoryAsync(string category);
 }

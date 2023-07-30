@@ -49,7 +49,7 @@ namespace document.lib.shared.TableEntities
         public bool Unsorted { get; set; }
 
         [JsonProperty("category")]
-        public string Category { get; set; } = "";
+        public string CategoryName { get; set; } = "";
 
         [JsonProperty("digital")]
         public bool DigitalOnly { get; set; } = false;
@@ -59,7 +59,7 @@ namespace document.lib.shared.TableEntities
             if (string.IsNullOrWhiteSpace(DisplayName) ||
                 string.IsNullOrWhiteSpace(Company) ||
                 DateOfDocument == default ||
-                string.IsNullOrWhiteSpace(Category) ||
+                string.IsNullOrWhiteSpace(CategoryName) ||
                 Tags == null ||
                 !Tags.Any())
             {

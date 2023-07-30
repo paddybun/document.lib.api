@@ -1,11 +1,11 @@
 ﻿using document.lib.shared.Models.QueryDtos;
-using document.lib.shared.TableEntities;
+using document.lib.shared.Models.ViewModels;
 
 namespace document.lib.shared.Interfaces;
 
 public interface ICategoryRepository
 {
-    Task<DocLibCategory> GetCategoryAsync(CategoryQueryParameters queryParameters);
-    Task<List<DocLibCategory>> GetCategoriesAsync();
-    Task<DocLibCategory> CreateCategoryAsync(DocLibCategory category);
+    Task<CategoryModel> GetCategoryAsync(CategoryQueryParameters queryParameters);
+    Task<List<CategoryModel>> GetCategoriesAsync();
+    Task<CategoryModel> CreateCategoryAsync(CategoryModel category);
 }

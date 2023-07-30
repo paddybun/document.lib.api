@@ -1,9 +1,9 @@
-﻿using document.lib.shared.TableEntities;
+﻿using document.lib.shared.Models.ViewModels;
 
 namespace document.lib.shared.Interfaces;
 
 public interface ITagService
 {
-    Task<List<DocLibTag>> GetOrCreateTagsAsync(string[] tags);
-    Task<DocLibTag> GetOrCreateTagAsync(string tag);
+    Task<List<TagModel>> GetOrCreateTagsAsync(List<string> tags);
+    Task<TagModel> GetOrCreateTagAsync(string tag);
 }

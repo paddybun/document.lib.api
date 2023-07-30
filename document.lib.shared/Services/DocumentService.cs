@@ -1,10 +1,10 @@
-﻿using System.Net.Quic;
-using Azure.Storage.Blobs;
+﻿using Azure.Storage.Blobs;
+using document.lib.shared.Enums;
 using document.lib.shared.Interfaces;
+using document.lib.shared.Models;
 using document.lib.shared.Models.QueryDtos;
-using document.lib.shared.TableEntities;
-using Microsoft.Azure.Cosmos;
-using DocLibDocument = document.lib.shared.TableEntities.DocLibDocument;
+using document.lib.shared.Models.ViewModels;
+using Microsoft.Extensions.Options;
 
 namespace document.lib.shared.Services
 {
@@ -15,30 +15,72 @@ namespace document.lib.shared.Services
         private readonly ITagService _tagService;
         private readonly IFolderService _folderService;
         private readonly BlobContainerClient _blobContainerClient;
+        private readonly AppConfiguration _appConfig;
 
-        public DocumentService(BlobContainerClient blobContainerClient, IDocumentRepository documentRepository, ICategoryService categoryService, ITagService tagService, IFolderService folderService)
+        public DocumentService(IOptions<AppConfiguration> options, BlobContainerClient blobContainerClient, IDocumentRepository documentRepository, ICategoryService categoryService, ITagService tagService, IFolderService folderService)
         {
             _documentRepository = documentRepository;
             _categoryService = categoryService;
             _tagService = tagService;
             _folderService = folderService;
             _blobContainerClient = blobContainerClient;
+            _appConfig = options.Value;
         }
 
-        public async Task DeleteDocumentAsync(DocLibDocument doc)
+        public async Task<List<DocumentModel>> GetUnsortedDocuments()
         {
-            if (string.IsNullOrEmpty(doc.Id))
+            return await _documentRepository.GetUnsortedDocumentsAsync();
+        }
+
+        public Task<DocumentModel> GetDocumentAsync(string id = null, string name = null)
+        {
+            if (string.IsNullOrWhiteSpace(id) && string.IsNullOrWhiteSpace(name))
             {
-                return;
+                var idNull = new ArgumentNullException(nameof(id));
+                var nameNull = new ArgumentNullException(nameof(id));
+                throw new AggregateException(idNull, nameNull);
             }
 
-            await _documentRepository.DeleteDocumentAsync(doc);
+            if (int.TryParse(id, out var parsedId))
+            {
+                return _documentRepository.GetDocumentAsync(new DocumentQueryParameters(parsedId, name));
+            }
+            return _documentRepository.GetDocumentAsync(new DocumentQueryParameters(name: id));
         }
 
-        public async Task<DocLibDocument> UpdateDocumentAsync(DocLibDocument doc)
+        public async Task<List<DocumentModel>> GetAllDocumentsAsync()
         {
-            doc.Validate();
-            var category = await _categoryService.CreateOrGetCategoryAsync(doc.Category);
+            var docs = new List<DocumentModel>();
+            switch (_appConfig.DatabaseProvider)
+            {
+                case DatabaseProvider.Sql:
+
+                    var docsAvailable = true;
+                    var lastId = 0;
+                    while (docsAvailable)
+                    {
+                        var tmpDocs = await _documentRepository.GetDocumentsAsync(lastId, 20);
+                        docsAvailable = tmpDocs.Any();
+                        docs.AddRange(tmpDocs);
+                        lastId = tmpDocs.Max(x => int.Parse(x.Id));
+                    }
+                    break;
+                case DatabaseProvider.Cosmos:
+                    // Cosmos repo ignores pagination
+                    docs.AddRange(await _documentRepository.GetDocumentsAsync(0, 0));
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            return docs;
+        }
+
+        public async Task<DocumentModel> UpdateDocumentAsync(DocumentModel doc)
+        {
+            if (!IsValid(doc)) { throw new Exception("Please make sure the following fields are filled ['DisplayName, Company, DateOfDocument, Category, Tags']"); }
+
+            var category = await _categoryService.CreateOrGetCategoryAsync(doc.CategoryName);
             var tags = await _tagService.GetOrCreateTagsAsync(doc.Tags);
             var folder = await _folderService.GetOrCreateFolderByIdAsync(doc.FolderId);
 
@@ -51,16 +93,16 @@ namespace document.lib.shared.Services
             return res;
         }
 
-        public async Task<DocLibDocument> CreateNewDocumentAsync(DocLibDocument doc)
+        public async Task<DocumentModel> CreateNewDocumentAsync(DocumentModel doc)
         {
-            doc.Validate();
+            if (!IsValid(doc)) { throw new Exception("Please make sure the following fields are filled ['DisplayName, Company, DateOfDocument, Category, Tags']"); }
             var document = await _documentRepository.CreateDocumentAsync(doc);
             var folder = await _folderService.GetOrCreateActiveFolderAsync();
             if (folder != null) { folder = await _folderService.CreateNewFolderAsync(); }
             return document;
         }
 
-        public async Task<bool> MoveDocumentAsync(DocLibDocument doc)
+        public async Task<bool> MoveDocumentAsync(DocumentModel doc)
         {
             var oldPath = doc.BlobLocation;
             var queryParams = new DocumentQueryParameters();
@@ -90,14 +132,26 @@ namespace document.lib.shared.Services
             return true;
         }
 
-        private async Task MoveDocumentFromUnsorted(DocLibDocument doc)
+        public async Task DeleteDocumentAsync(DocumentModel doc)
+        {
+            // HACK: Temporary disable delete functionality
+            throw new NotImplementedException();
+            if (string.IsNullOrEmpty(doc.Id))
+            {
+                return;
+            }
+
+            await _documentRepository.DeleteDocumentAsync(doc);
+        }
+
+        private async Task MoveDocumentFromUnsorted(DocumentModel doc)
         {
             var dbFolder = await _folderService.GetFolderByNameAsync("unsorted");
             var newFolder = await _folderService.GetOrCreateActiveFolderAsync();
             await _folderService.RemoveDocumentFromFolder(dbFolder, doc);
 
             string newBlobLocation;
-            if (doc.DigitalOnly)
+            if (doc.Digital)
             {
                 doc.PhysicalName = doc.PhysicalName.Replace("unsorted/", "");
                 newBlobLocation = $"digital/{doc.PhysicalName}";
@@ -123,6 +177,16 @@ namespace document.lib.shared.Services
             }
 
             await source.DeleteAsync();
+        }
+
+        private bool IsValid(DocumentModel model)
+        {
+            return !string.IsNullOrWhiteSpace(model.DisplayName) &&
+                   !string.IsNullOrWhiteSpace(model.Company) &&
+                   model.DateOfDocument != default &&
+                   !string.IsNullOrWhiteSpace(model.CategoryName) &&
+                   model.Tags != null &&
+                   model.Tags.Any();
         }
     }
 }

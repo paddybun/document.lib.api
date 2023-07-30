@@ -1,13 +1,15 @@
 ﻿using Azure.Storage.Blobs;
 using document.lib.shared.Constants;
 using document.lib.shared.Exceptions;
-using document.lib.shared.Helper;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
 using document.lib.shared.Models.QueryDtos;
+using document.lib.shared.Models.ViewModels;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using PartitionKey = Microsoft.Azure.Cosmos.PartitionKey;
 
 namespace document.lib.shared.Repositories.Cosmos;
 
@@ -24,23 +26,27 @@ public class DocumentCosmosRepository : IDocumentRepository
         _cosmosContainer = db.GetContainer(TableNames.Doclib);
     }
 
-    public async Task DeleteDocumentAsync(DocLibDocument doc)
+    public async Task<List<DocumentModel>> GetUnsortedDocumentsAsync()
     {
-        await DeleteDocumentAsync(doc.Id);
+        var docs = _cosmosContainer.GetItemLinqQueryable<DocLibDocument>(true)
+            .Where(x => x.Unsorted == true)
+            .AsAsyncEnumerable();
+        var result = new List<DocumentModel>();
+        await foreach (var doc in docs)
+        {
+            result.Add(Map(doc));
+        }
+        return result;
     }
 
-    public async Task DeleteDocumentAsync(string documentId)
+    public Task DeleteDocumentAsync(DocumentModel doc)
     {
-        var query = new QueryDefinition("SELECT * FROM doclib dl WHERE dl.id = @id").WithParameter("@id", documentId);
-        var entity = (await CosmosQueryHelper.ExecuteQueryAsync<DocLibDocument>(query, _cosmosContainer)).SingleOrDefault();
-        if (entity != null)
-        {
-            var storagePath = entity.BlobLocation;
-            await _cosmosContainer.DeleteItemAsync<DocLibDocument>(documentId, new PartitionKey(documentId));
+        throw new NotImplementedException();
+    }
 
-            var source = _bcc.GetBlobClient(storagePath);
-            await source.DeleteAsync();
-        }
+    public Task DeleteDocumentAsync(string documentId)
+    {
+        throw new NotImplementedException();
     }
 
     public async Task UpdateFolderReferenceAsync(string folderId, string folderDisplayName)
@@ -63,12 +69,12 @@ public class DocumentCosmosRepository : IDocumentRepository
         }
     }
 
-    public Task<DocLibDocument> CreateDocumentAsync(DocLibDocument document)
+    public Task<DocumentModel> CreateDocumentAsync(DocumentModel document)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<DocLibDocument> GetDocumentAsync(DocumentQueryParameters queryParameters)
+    public async Task<DocumentModel> GetDocumentAsync(DocumentQueryParameters queryParameters)
     {
         if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
         if (string.IsNullOrWhiteSpace(queryParameters.Name)) 
@@ -80,17 +86,19 @@ public class DocumentCosmosRepository : IDocumentRepository
             .AsEnumerable()
             .FirstOrDefault();
 
-        return await Task.FromResult(document);
+        return Map(document);
     }
 
-    public async Task<List<DocLibDocument>> GetDocumentsAsync(int page, int count)
+    public async Task<List<DocumentModel>> GetDocumentsAsync(int page, int count)
     {
         var documents = _cosmosContainer.GetItemLinqQueryable<DocLibDocument>(true)
             .Where(x => x.Id.StartsWith("Document."))
             .AsEnumerable()
             .ToList();
 
-        return await Task.FromResult(documents);
+        var result = documents.Select(Map).ToList();
+
+        return await Task.FromResult(result);
     }
 
     public Task<int> GetDocumentCountAsync()
@@ -98,13 +106,39 @@ public class DocumentCosmosRepository : IDocumentRepository
         throw new NotImplementedException();
     }
 
-    public Task<List<DocLibDocument>> GetDocumentsForFolderAsync(string folderName, int page, int count)
+    public Task<List<DocumentModel>> GetDocumentsForFolderAsync(string folderName, int page, int count)
     {
         throw new NotImplementedException();
     }
 
-    public Task<DocLibDocument> UpdateDocumentAsync(DocLibDocument document, DocLibCategory category, DocLibFolder folder, DocLibTag[] tags)
+    public Task<DocumentModel> UpdateDocumentAsync(DocumentModel document, CategoryModel category, FolderModel folder, TagModel[] tags)
     {
         throw new NotImplementedException();
+    }
+
+    private static DocumentModel Map(DocLibDocument document)
+    {
+        if (document == null) return null;
+        return new DocumentModel
+        {
+            Id = document.Id,
+            Name = document.Name,
+            DisplayName = document.DisplayName,
+            PhysicalName = document.PhysicalName,
+            BlobLocation = document.BlobLocation,
+            Company = document.Company,
+            DateOfDocument = document.DateOfDocument,
+            UploadDate = document.UploadDate,
+            Description = document.Description,
+            RegisterName = document.RegisterName,
+            Tags = document.Tags.ToList(),
+            Unsorted = document.Unsorted,
+            CategoryId = "",
+            CategoryName = document.CategoryName,
+            Digital = document.DigitalOnly,
+            FolderId = document.FolderId,
+            FolderName = document.FolderName,
+            DateModified = document.LastUpdate
+        };
     }
 }

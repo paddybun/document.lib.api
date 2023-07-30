@@ -15,7 +15,7 @@ public class DocumentQueryParameters
     public bool IsValid()
     {
         return
-            Id != null ||
+            Id.HasValue ||
             !string.IsNullOrWhiteSpace(Name);
     }
 }

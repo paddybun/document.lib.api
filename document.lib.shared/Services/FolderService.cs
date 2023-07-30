@@ -1,6 +1,6 @@
 ﻿using document.lib.shared.Interfaces;
 using document.lib.shared.Models.QueryDtos;
-using document.lib.shared.TableEntities;
+using document.lib.shared.Models.ViewModels;
 
 namespace document.lib.shared.Services;
 
@@ -15,26 +15,26 @@ public class FolderService : IFolderService
         _documentRepository = documentRepository;
     }
 
-    public async Task<DocLibFolder> GetFolderByNameAsync(string name)
+    public async Task<FolderModel> GetFolderByNameAsync(string name)
     {
         return await _repository.GetFolderAsync(new FolderQueryParameters(name: name));
     }
 
-    public async Task<DocLibFolder> GetOrCreateActiveFolderAsync()
+    public async Task<FolderModel> GetOrCreateActiveFolderAsync()
     {
         return await _repository.GetFolderAsync(new FolderQueryParameters(activeFolder: true)) ?? await CreateNewFolderAsync();
     }
 
-    public async Task<DocLibFolder> CreateNewFolderAsync(int maxFolderSize = 200, int maxRegisterSize = 10)
+    public async Task<FolderModel> CreateNewFolderAsync(int maxFolderSize = 200, int maxRegisterSize = 10)
     {
-        return await _repository.CreateFolderAsync(new DocLibFolder { Name = $"New Folder {DateTimeOffset.UtcNow:yyyy-MM-dd}", DocumentsPerFolder = maxFolderSize, DocumentsPerRegister = maxRegisterSize});
+        return await _repository.CreateFolderAsync(new FolderModel { Name = $"New Folder {DateTimeOffset.UtcNow:yyyy-MM-dd}", DocumentsFolder = maxFolderSize, DocumentsRegister = maxRegisterSize});
     }
 
-    public async Task<DocLibFolder> GetOrCreateFolderByIdAsync(string id, int maxFolderSize = 200, int maxRegisterSize = 10)
+    public async Task<FolderModel> GetOrCreateFolderByIdAsync(string id, int maxFolderSize = 200, int maxRegisterSize = 10)
     {
         if (id == null) throw new ArgumentNullException(nameof(id));
 
-        DocLibFolder folder = null;
+        FolderModel folder;
         if (int.TryParse(id, out var parsedId))
         {
             folder = await _repository.GetFolderAsync(new FolderQueryParameters(id: parsedId)) ?? await CreateNewFolderAsync(maxFolderSize, maxRegisterSize);
@@ -48,26 +48,31 @@ public class FolderService : IFolderService
         return folder;
     }
 
-    public async Task<List<DocLibFolder>> GetAllAsync()
+    public async Task<List<FolderModel>> GetAllAsync()
     {
         var folders = await _repository.GetAllFoldersAsync();
         return folders;
     }
 
-    public async Task UpdateFolderAsync(DocLibFolder folder)
+    public Task<FolderModel> UpdateFolderAsync(FolderModel folder)
     {
         throw new NotImplementedException();
+        // TODO: Reimplement update logic so it works for cosmos and sql
         // await _repository.UpdateFolderAsync(folder);
         // await _documentRepository.UpdateFolderReferenceAsync(folder.Id, folder.DisplayName);
     }
 
-    public async Task AddDocumentToFolderAsync(DocLibFolder folder, DocLibDocument doc)
+    public async Task AddDocumentToFolderAsync(FolderModel folder, DocumentModel doc)
     {
-        await _repository.AddDocumentToFolderAsync(folder, doc);
+        throw new NotImplementedException();
+        // TODO: Reimplement update logic so it works for cosmos and sql, move repo logic to here
+        // await _repository.AddDocumentToFolderAsync(folder, doc);
     }
 
-    public async Task RemoveDocumentFromFolder(DocLibFolder folder, DocLibDocument doc)
+    public async Task RemoveDocumentFromFolder(FolderModel folder, DocumentModel doc)
     {
-        await _repository.RemoveDocFromFolderAsync(folder, doc);
+        throw new NotImplementedException();
+        // TODO: Reimplement removal logic so it works for cosmos and sql, move repo logic to here
+        // await _repository.RemoveDocFromFolderAsync(folder, doc);
     }
 }

@@ -1,11 +1,12 @@
 ﻿@page "/documentoverview"
 @using document.lib.shared.Services
-@using document.lib.shared.TableEntities
-@using Microsoft.AspNetCore.Http.Extensions
 @using System.Web
+@using document.lib.shared.Interfaces
+@using document.lib.shared.Models.ViewModels
 
 @inject CosmosQueryService _cosmosQueryService
 @inject NavigationManager NavigationManager
+@inject IDocumentService _documentService
 
 <h3>DocumentOverview</h3>
 
@@ -25,7 +26,7 @@
                                     <RadzenText TextStyle="TextStyle.Body1"><b>@(doc.DisplayName)</b></RadzenText>
                                     <RadzenText TextStyle="TextStyle.Overline">Date</RadzenText>
                                     <RadzenText TextStyle="TextStyle.Body1"><b>@(doc.DateOfDocument?.ToString("yyyy-MM-dd") ?? "")</b></RadzenText>
-                                    @if (!doc.DigitalOnly)
+                                    @if (!doc.Digital)
                                     {
                                         <RadzenText TextStyle="TextStyle.Overline">Folder</RadzenText>
                                         <RadzenText TextStyle="TextStyle.Body1"><b>@(doc.FolderName)</b></RadzenText>
@@ -40,8 +41,8 @@
                                     <RadzenText TextStyle="TextStyle.Overline">Company</RadzenText>
                                     <RadzenText TextStyle="TextStyle.Body1"><b>@(doc.Company)</b></RadzenText>
                                     <RadzenText TextStyle="TextStyle.Overline">Category</RadzenText>
-                                    <RadzenText TextStyle="TextStyle.Body1"><b>@(doc.Category)</b></RadzenText>
-                                    @if (!doc.DigitalOnly)
+                                    <RadzenText TextStyle="TextStyle.Body1"><b>@(doc.CategoryName)</b></RadzenText>
+                                    @if (!doc.Digital)
                                     {
                                         <RadzenText TextStyle="TextStyle.Overline">Register</RadzenText>
                                         <RadzenText TextStyle="TextStyle.Body1"><b>@(doc.RegisterName)</b></RadzenText>
@@ -62,11 +63,11 @@
 
 @code {
 
-    List<DocLibDocument> _documents = new List<DocLibDocument>();
+    List<DocumentModel> _documents = new List<DocumentModel>();
 
     protected override async Task OnInitializedAsync()
     {
-        _documents = (await _cosmosQueryService.ExecuteQueryAsync(new DocumentQuery())).ToList();
+        _documents = await _documentService.GetAllDocumentsAsync();
     }
 
     private void Edit(MouseEventArgs args, string physicalName)

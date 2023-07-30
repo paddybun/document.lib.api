@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "document.lib.functions.v4",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "document.lib.test", "document.lib.test\document.lib.test.csproj", "{E2DB1E21-E514-4B52-B6E4-AF440646D5A1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "document.lib.ef", "document.lib.ef\document.lib.ef.csproj", "{7F789F93-7718-45AE-8AA0-FF5FB7A9D745}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "document.lib.ef", "document.lib.ef\document.lib.ef.csproj", "{7F789F93-7718-45AE-8AA0-FF5FB7A9D745}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

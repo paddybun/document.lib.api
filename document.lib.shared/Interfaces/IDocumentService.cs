@@ -1,11 +1,14 @@
-﻿using document.lib.shared.TableEntities;
+﻿using document.lib.shared.Models.ViewModels;
 
 namespace document.lib.shared.Interfaces;
 
 public interface IDocumentService
 {
-    Task DeleteDocumentAsync(DocLibDocument doc);
-    Task<DocLibDocument> UpdateDocumentAsync(DocLibDocument doc);
-    Task<DocLibDocument> CreateNewDocumentAsync(DocLibDocument doc);
-    Task<bool> MoveDocumentAsync(DocLibDocument doc);
+    Task<DocumentModel> GetDocumentAsync(string id = null, string name = null);
+    Task<List<DocumentModel>> GetAllDocumentsAsync();
+    Task<List<DocumentModel>> GetUnsortedDocuments();
+    Task DeleteDocumentAsync(DocumentModel doc);
+    Task<DocumentModel> UpdateDocumentAsync(DocumentModel doc);
+    Task<DocumentModel> CreateNewDocumentAsync(DocumentModel doc);
+    Task<bool> MoveDocumentAsync(DocumentModel doc);
 }

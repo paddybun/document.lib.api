@@ -3,7 +3,9 @@ using document.lib.ef.Entities;
 using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.QueryDtos;
+using document.lib.shared.Models.ViewModels;
 using document.lib.shared.TableEntities;
+using Microsoft.Azure.Cosmos.Serialization.HybridRow.RecordIO;
 using Microsoft.EntityFrameworkCore;
 using DocLibDocument = document.lib.shared.TableEntities.DocLibDocument;
 
@@ -18,7 +20,7 @@ public class FolderSqlRepository: IFolderRepository
         _context = context;
     }
 
-    public async Task<DocLibFolder> GetFolderAsync(FolderQueryParameters queryParameters)
+    public async Task<FolderModel> GetFolderAsync(FolderQueryParameters queryParameters)
     {
         if (!queryParameters.IsValid())
         {
@@ -47,14 +49,16 @@ public class FolderSqlRepository: IFolderRepository
         return Map(efFolder);
     }
 
-    public async Task<List<DocLibFolder>> GetAllFoldersAsync()
+    public async Task<List<FolderModel>> GetAllFoldersAsync()
     {
-        var efFolders = await _context.Folders.ToListAsync();
+        var efFolders = await _context.Folders
+            .Include(x => x.Registers)
+            .ToListAsync();
         var mapped = efFolders.Select(Map).ToList();
         return mapped;
     }
 
-    public async Task<DocLibFolder> CreateFolderAsync(DocLibFolder folder)
+    public async Task<FolderModel> CreateFolderAsync(FolderModel folder)
     {
         var efRegister = new EfRegister
         {
@@ -68,8 +72,8 @@ public class FolderSqlRepository: IFolderRepository
             DisplayName = folder.DisplayName,
             CurrentRegister = efRegister,
             IsFull = false,
-            MaxDocumentsFolder = folder.DocumentsPerFolder,
-            MaxDocumentsRegister = folder.DocumentsPerRegister,
+            MaxDocumentsFolder = folder.DocumentsFolder,
+            MaxDocumentsRegister = folder.DocumentsRegister,
             TotalDocuments = 0
         };
         
@@ -78,21 +82,22 @@ public class FolderSqlRepository: IFolderRepository
         return Map(efFolder);
     }
 
-    public async Task UpdateFolderAsync(DocLibFolder folder)
+    public async Task<FolderModel> UpdateFolderAsync(FolderModel folder)
     {
         var parsedId = int.Parse(folder.Id);
         var efFolder = await _context.Folders.SingleAsync(x => x.Id == parsedId);
         efFolder.Name = folder.Name;
         efFolder.DisplayName = folder.DisplayName;
-        efFolder.MaxDocumentsFolder = folder.DocumentsPerFolder;
-        efFolder.MaxDocumentsRegister = folder.DocumentsPerRegister;
+        efFolder.MaxDocumentsFolder = folder.DocumentsFolder;
+        efFolder.MaxDocumentsRegister = folder.DocumentsRegister;
         efFolder.TotalDocuments = folder.TotalDocuments;
         efFolder.IsFull = folder.IsFull;
         _context.Update(efFolder);
         await _context.SaveChangesAsync();
+        return Map(efFolder);
     }
 
-    public async Task AddDocumentToFolderAsync(DocLibFolder folder, DocLibDocument document)
+    public async Task AddDocumentToFolderAsync(FolderModel folder, DocumentModel document)
     {
         var efDocument = await _context.Documents.SingleOrDefaultAsync(x => x.Id == int.Parse(document.Id));
         var efFolder = await _context.Folders
@@ -127,7 +132,7 @@ public class FolderSqlRepository: IFolderRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task RemoveDocFromFolderAsync(DocLibFolder folder, DocLibDocument document)
+    public async Task RemoveDocFromFolderAsync(FolderModel folder, DocumentModel document)
     {
         var efFolder = await _context.Folders
             .Include(x => x.Registers)
@@ -145,20 +150,32 @@ public class FolderSqlRepository: IFolderRepository
         await _context.SaveChangesAsync();
     }
 
-    private DocLibFolder Map(EfFolder efFolder)
+    private static FolderModel Map(EfFolder efFolder)
     {
         if (efFolder == null) return null;
-        return new DocLibFolder
+        return new FolderModel
         {
             Name = efFolder.Name,
             DisplayName = efFolder.DisplayName,
             CreatedAt = efFolder.DateCreated,
-            CurrentRegister = efFolder.CurrentRegister.Name,
-            DocumentsPerFolder = efFolder.MaxDocumentsFolder,
-            DocumentsPerRegister = efFolder.MaxDocumentsRegister,
+            CurrentRegisterName = efFolder.CurrentRegister.Name,
+            DocumentsFolder = efFolder.MaxDocumentsFolder,
+            DocumentsRegister = efFolder.MaxDocumentsRegister,
             Id = efFolder.Id.ToString(),
             IsFull = efFolder.IsFull,
-            Registers = efFolder.Registers.ToDictionary(x => x.Name, x => x.DocumentCount)
+            Registers = efFolder.Registers.Select(Map).ToList()
+        };
+    }
+
+    private static RegisterModel Map(EfRegister efRegister)
+    {
+        if (efRegister == null) return null;
+        return new RegisterModel
+        {
+            Name = efRegister.Name,
+            DisplayName = efRegister.DisplayName,
+            DocumentCount = efRegister.DocumentCount,
+            Id = efRegister.Id.ToString()
         };
     }
 }
