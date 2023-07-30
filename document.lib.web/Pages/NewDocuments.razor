@@ -1,11 +1,13 @@
 ﻿@page "/newdocuments"
 @using document.lib.shared.Services
-@using document.lib.shared.TableEntities
 @using System.Web
 @using document.lib.shared.Interfaces
+@using document.lib.shared.Models.ViewModels
+
 <h3>New Documents</h3>
 
 @inject CosmosQueryService _cosmosQueryService
+@inject IDocumentService _documentService
 @inject BlobClientHelper BlobClientHelper
 @inject ILogger<NewDocuments> Logger
 @inject NavigationManager NavigationManager
@@ -39,19 +41,19 @@
         <div class="row">
             <div class="col-md-6">
                 <RadzenFieldset Text="New documents">
-                    <RadzenDataGrid @ref="_dataGrid" Data="_documents" TItem="DocLibDocument">
+                    <RadzenDataGrid @ref="_dataGrid" Data="_documents" TItem="DocumentModel">
                         <Columns>
-                            <RadzenDataGridColumn TItem="DocLibDocument">
+                            <RadzenDataGridColumn TItem="DocumentModel">
                                 <Template Context="data">
                                     @data.Name
                                 </Template>
                             </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="DocLibDocument">
+                            <RadzenDataGridColumn TItem="DocumentModel">
                                 <Template Context="data">
                                     @data.BlobLocation
                                 </Template>
                             </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="DocLibDocument">
+                            <RadzenDataGridColumn TItem="DocumentModel">
                                 <Template Context="data">
                                     <RadzenButton ButtonStyle="ButtonStyle.Info"  Click=@(async args => await DownloadAsync(data.BlobLocation)) Text="Show Document" />
                                     <RadzenButton ButtonStyle="ButtonStyle.Success" Text="Edit" Click=@(args => Edit(args, data.PhysicalName))></RadzenButton>
@@ -73,14 +75,14 @@
 
 
 @code {
-    List<DocLibDocument> _documents = new List<DocLibDocument>();
+    List<DocumentModel> _documents = new();
     private readonly List<string> _loadedFiles = new();
     private string _pdfContent = "";
-    RadzenDataGrid<DocLibDocument> _dataGrid;
+    RadzenDataGrid<DocumentModel> _dataGrid;
 
     protected override async Task OnInitializedAsync()
     {
-        _documents = (await _cosmosQueryService.ExecuteQueryAsync(new DocumentQuery{ Unsorted = true })).ToList();
+        _documents = await _documentService.GetUnsortedDocuments();
     }
 
     private async Task LoadFilesAsync(InputFileChangeEventArgs e)
@@ -121,7 +123,7 @@
         NavigationManager.NavigateTo($"/edit/{HttpUtility.UrlEncode(physicalName)}");
     }
 
-    private async Task DeleteAsync(DocLibDocument doc)
+    private async Task DeleteAsync(DocumentModel doc)
     {
         await DocumentService.DeleteDocumentAsync(doc);
         _documents.RemoveAll(x => x.Id == doc.Id);

@@ -17,6 +17,7 @@
     <Folder Include="Interfaces\" />
     <Folder Include="Exceptions\" />
     <Folder Include="Models\ViewModels\" />
+    <Folder Include="Enums\" />
   </ItemGroup>
 
   <ItemGroup>

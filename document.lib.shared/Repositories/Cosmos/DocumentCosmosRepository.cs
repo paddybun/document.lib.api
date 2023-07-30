@@ -1,15 +1,13 @@
-﻿using System.ComponentModel.Design;
-using Azure.Storage.Blobs;
+﻿using Azure.Storage.Blobs;
 using document.lib.shared.Constants;
 using document.lib.shared.Exceptions;
-using document.lib.shared.Helper;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
 using document.lib.shared.Models.QueryDtos;
 using document.lib.shared.Models.ViewModels;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Serialization.HybridRow.Schemas;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using PartitionKey = Microsoft.Azure.Cosmos.PartitionKey;
 
@@ -26,6 +24,19 @@ public class DocumentCosmosRepository : IDocumentRepository
         var cosmosClient = new CosmosClient(config.Value.CosmosDbConnection);
         var db = cosmosClient.GetDatabase(TableNames.Doclib);
         _cosmosContainer = db.GetContainer(TableNames.Doclib);
+    }
+
+    public async Task<List<DocumentModel>> GetUnsortedDocumentsAsync()
+    {
+        var docs = _cosmosContainer.GetItemLinqQueryable<DocLibDocument>(true)
+            .Where(x => x.Unsorted == true)
+            .AsAsyncEnumerable();
+        var result = new List<DocumentModel>();
+        await foreach (var doc in docs)
+        {
+            result.Add(Map(doc));
+        }
+        return result;
     }
 
     public Task DeleteDocumentAsync(DocumentModel doc)

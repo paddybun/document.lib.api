@@ -67,16 +67,26 @@ public class DocumentSqlRepository: IDocumentRepository
         return Map(efDocument);
     }
 
-    public async Task<List<DocumentModel>> GetDocumentsAsync(int page, int count)
+    public async Task<List<DocumentModel>> GetDocumentsAsync(int lastId = 0, int count = 20)
     {
         var efDocuments = await _context
             .Documents
             .Include(x => x.Tags)
-            .Skip(page).Take(count)
+            .OrderBy(x => x.Id)
+            .Where(x => x.Id > lastId)
+            .Take(count)                                       
             .ToListAsync();
+        return efDocuments.Select(Map).ToList();
+    }
 
-        var mapped = efDocuments.Select(Map).ToList();
-        return mapped;
+    public async Task<List<DocumentModel>> GetUnsortedDocumentsAsync()
+    {
+        var efDocuments = await _context
+            .Documents
+            .Where(x => x.Unsorted)
+            .OrderBy(x => x.Id)
+            .ToListAsync();
+        return efDocuments.Select(Map).ToList();
     }
 
     public async Task<int> GetDocumentCountAsync()

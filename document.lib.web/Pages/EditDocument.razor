@@ -5,6 +5,7 @@
 @using document.lib.shared.TableEntities
 @using document.lib.shared.Models
 @using document.lib.shared.Interfaces
+@using document.lib.shared.Models.ViewModels
 
 @inject CosmosQueryService _cosmosQueryService
 @inject CosmosMetadataService _cosmosMetadataService
@@ -65,7 +66,7 @@ else
                             <RadzenLabel Text="Last update"/>
                         </div>
                         <div class="col-md-8">
-                            <RadzenDatePicker DateFormat="dd.MM.yyyy" style="width: 100%;" Disabled="true" @bind-Value=@Doc.LastUpdate />
+                            <RadzenDatePicker DateFormat="dd.MM.yyyy" style="width: 100%;" Disabled="true" @bind-Value=@Doc.DateModified />
                         </div>
                     </div>
                     <div class="row">
@@ -101,7 +102,7 @@ else
                             <RadzenLabel Text="Digital only?"/>
                         </div>
                         <div class="col-md-8">
-                            <RadzenCheckBox @bind-Value=Doc.DigitalOnly TriState="false" />
+                            <RadzenCheckBox @bind-Value=Doc.Digital TriState="false" />
                         </div>
                     </div>
                     <div class="row">
@@ -201,7 +202,7 @@ else
 
     public string TempCategory { get; set; }
 
-    public DocLibDocument Doc { get; set; } = new();
+    public DocumentModel Doc { get; set; } = new();
 
     public MetadataResponse Metadata { get; set; } = new();
 
@@ -218,8 +219,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var doc = await _cosmosQueryService.ExecuteQueryAsync(new DocumentQuery {PhysicalName = Name});
-        Doc = doc.FirstOrDefault();
+        Doc = await _documentService.GetDocumentAsync(Name);
         _documentTags.AddRange(Doc?.Tags.ToList() ?? new List<string>());
         await DownloadAsync();
         Metadata = await _cosmosMetadataService.GetMetadataAsync();
@@ -284,10 +284,10 @@ else
         _tag = "";
     }
 
-    private async Task SaveAsync(DocLibDocument doc)
+    private async Task SaveAsync(DocumentModel doc)
     {
-        Doc.Tags = _documentTags.ToArray();
-        DocLibDocument updatedDoc;
+        Doc.Tags = _documentTags;
+        DocumentModel updatedDoc;
         if (Doc.Unsorted)
         {
             updatedDoc = await _documentService.CreateNewDocumentAsync(doc);
