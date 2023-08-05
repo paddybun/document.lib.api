@@ -1,10 +1,14 @@
-﻿namespace document.lib.ef.Entities;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace document.lib.ef.Entities;
 
 public class EfFolder: EfBaseFields
 {
     public int Id { get; set; }
     public string Name { get; set; }
     public string DisplayName { get; set; }
+
+    [NotMapped]
     public EfRegister CurrentRegister { get; set; }
     public ICollection<EfRegister> Registers { get; set; }
     public int TotalDocuments { get; set; }

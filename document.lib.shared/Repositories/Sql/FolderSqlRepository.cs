@@ -60,23 +60,16 @@ public class FolderSqlRepository: IFolderRepository
 
     public async Task<FolderModel> CreateFolderAsync(FolderModel folder)
     {
-        var efRegister = new EfRegister
-        {
-            Name = "1",
-            DisplayName = "1",
-            DocumentCount = 0
-        };
         var efFolder = new EfFolder
         {
             Name = folder.Name,
             DisplayName = folder.DisplayName,
-            CurrentRegister = efRegister,
             IsFull = false,
             MaxDocumentsFolder = folder.DocumentsFolder,
             MaxDocumentsRegister = folder.DocumentsRegister,
             TotalDocuments = 0
         };
-        
+
         await _context.AddAsync(efFolder);
         await _context.SaveChangesAsync();
         return Map(efFolder);
@@ -158,7 +151,7 @@ public class FolderSqlRepository: IFolderRepository
             Name = efFolder.Name,
             DisplayName = efFolder.DisplayName,
             CreatedAt = efFolder.DateCreated,
-            CurrentRegisterName = efFolder.CurrentRegister.Name,
+            CurrentRegisterName = efFolder.CurrentRegister?.Name ?? string.Empty,
             DocumentsFolder = efFolder.MaxDocumentsFolder,
             DocumentsRegister = efFolder.MaxDocumentsRegister,
             Id = efFolder.Id.ToString(),

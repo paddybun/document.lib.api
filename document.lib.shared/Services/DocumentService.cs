@@ -98,7 +98,7 @@ namespace document.lib.shared.Services
             if (!IsValid(doc)) { throw new Exception("Please make sure the following fields are filled ['DisplayName, Company, DateOfDocument, Category, Tags']"); }
             var document = await _documentRepository.CreateDocumentAsync(doc);
             var folder = await _folderService.GetOrCreateActiveFolderAsync();
-            if (folder != null) { folder = await _folderService.CreateNewFolderAsync(); }
+            if (folder != null) { folder = await _folderService.SaveAsync(folder); }
             return document;
         }
 

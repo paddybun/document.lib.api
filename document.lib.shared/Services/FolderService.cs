@@ -6,51 +6,58 @@ namespace document.lib.shared.Services;
 
 public class FolderService : IFolderService
 {
-    private readonly IFolderRepository _repository;
+    private readonly IFolderRepository _folderRepository;
     private readonly IDocumentRepository _documentRepository;
 
-    public FolderService(IFolderRepository repository, IDocumentRepository documentRepository)
+    public FolderService(IFolderRepository folderRepository, IDocumentRepository documentRepository)
     {
-        _repository = repository;
+        _folderRepository = folderRepository;
         _documentRepository = documentRepository;
     }
 
     public async Task<FolderModel> GetFolderByNameAsync(string name)
     {
-        return await _repository.GetFolderAsync(new FolderQueryParameters(name: name));
+        return await _folderRepository.GetFolderAsync(new FolderQueryParameters(name: name));
     }
 
     public async Task<FolderModel> GetOrCreateActiveFolderAsync()
     {
-        return await _repository.GetFolderAsync(new FolderQueryParameters(activeFolder: true)) ?? await CreateNewFolderAsync();
+        return await _folderRepository.GetFolderAsync(new FolderQueryParameters(activeFolder: true)) ??
+               await SaveAsync(CreateDefaultFolderModel(), true);
     }
 
-    public async Task<FolderModel> CreateNewFolderAsync(int maxFolderSize = 200, int maxRegisterSize = 10)
+    public async Task<FolderModel> SaveAsync(FolderModel folderModel, bool createNew = false)
     {
-        return await _repository.CreateFolderAsync(new FolderModel { Name = $"New Folder {DateTimeOffset.UtcNow:yyyy-MM-dd}", DocumentsFolder = maxFolderSize, DocumentsRegister = maxRegisterSize});
+        if (createNew)
+        {
+            return await _folderRepository.CreateFolderAsync(folderModel);
+        }
+        return await _folderRepository.UpdateFolderAsync(folderModel);
     }
 
-    public async Task<FolderModel> GetOrCreateFolderByIdAsync(string id, int maxFolderSize = 200, int maxRegisterSize = 10)
+    public async Task<FolderModel> GetOrCreateFolderByIdAsync(string id)
     {
         if (id == null) throw new ArgumentNullException(nameof(id));
 
         FolderModel folder;
         if (int.TryParse(id, out var parsedId))
         {
-            folder = await _repository.GetFolderAsync(new FolderQueryParameters(id: parsedId)) ?? await CreateNewFolderAsync(maxFolderSize, maxRegisterSize);
+            folder = await _folderRepository.GetFolderAsync(new FolderQueryParameters(id: parsedId)) ??
+                     await SaveAsync(CreateDefaultFolderModel(), true);
         }
         else
         {
             // If id could not be parsed as int, it is assumed that a cosmos id is used in the format: 'Folder.f9c900c2-aaa4-41c9-a7d2-d4ad928ffc95'
             var cosmosId = id.Split('.').Last();
-            folder = await _repository.GetFolderAsync(new FolderQueryParameters(name: cosmosId)) ?? await CreateNewFolderAsync(maxFolderSize, maxRegisterSize);
+            folder = await _folderRepository.GetFolderAsync(new FolderQueryParameters(name: cosmosId)) ??
+                     await SaveAsync(CreateDefaultFolderModel(), true);
         }
         return folder;
     }
 
     public async Task<List<FolderModel>> GetAllAsync()
     {
-        var folders = await _repository.GetAllFoldersAsync();
+        var folders = await _folderRepository.GetAllFoldersAsync();
         return folders;
     }
 
@@ -74,5 +81,19 @@ public class FolderService : IFolderService
         throw new NotImplementedException();
         // TODO: Reimplement removal logic so it works for cosmos and sql, move repo logic to here
         // await _repository.RemoveDocFromFolderAsync(folder, doc);
+    }
+
+    private FolderModel CreateDefaultFolderModel()
+    {
+        var name = $"New Folder {DateTimeOffset.UtcNow:yyyy-MM-dd}";
+        return new FolderModel
+        {
+            Name = name,
+            DisplayName = name,
+            TotalDocuments = 0,
+            DocumentsRegister = 10,
+            DocumentsFolder = 100,
+            IsFull = false
+        };
     }
 }

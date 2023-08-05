@@ -41,16 +41,16 @@ public class CategoryCosmosRepository : ICategoryRepository
                 .AsEnumerable()
                 .FirstOrDefault();
         }
-        return await Task.FromResult(Map(category));
+        return await Task.FromResult(MapToModel(category));
     }
 
     public async Task<List<CategoryModel>> GetCategoriesAsync()
     {
         var categories = _cosmosContainer.GetItemLinqQueryable<DocLibCategory>(true)
-            .Where(x => x.Id == $"Category.")
+            .Where(x => x.Id.StartsWith("Category."))
             .AsEnumerable()
             .ToList();
-        return await Task.FromResult(categories.Select(Map).ToList());
+        return await Task.FromResult(categories.Select(MapToModel).ToList());
     }
 
     public async Task<CategoryModel> CreateCategoryAsync(CategoryModel category)
@@ -63,11 +63,29 @@ public class CategoryCosmosRepository : ICategoryRepository
             DisplayName = category.DisplayName,
             Description = ""
         };
-        var response = await _cosmosContainer.CreateItemAsync(cat);
-        return Map(response.Resource);
+        var response = await _cosmosContainer.CreateItemAsync(cat, new PartitionKey(cat.Id));
+        return MapToModel(response.Resource);
     }
 
-    private static CategoryModel Map(DocLibCategory category)
+    public async Task<CategoryModel> UpdateCategoryAsync(CategoryModel category)
+    {
+        var entity = MapToEntity(category);
+        await _cosmosContainer.UpsertItemAsync(entity, new PartitionKey(entity.Id));
+        return MapToModel(entity);
+    }
+
+    private static DocLibCategory MapToEntity(CategoryModel categoryModel)
+    {
+        return new DocLibCategory
+        {
+            Id = categoryModel.Id,
+            Name = categoryModel.Name,
+            DisplayName = categoryModel.DisplayName,
+            Description = categoryModel.Description
+        };
+    }
+
+    private static CategoryModel MapToModel(DocLibCategory category)
     {
         if (category == null)
         {

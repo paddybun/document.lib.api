@@ -54,6 +54,17 @@ public class CategorySqlRepository: ICategoryRepository
         return Map(efCategory);
     }
 
+    public async Task<CategoryModel> UpdateCategoryAsync(CategoryModel category)
+    {
+        await _context
+            .Categories
+            .Where(x => x.Id == int.Parse(category.Id))
+            .ExecuteUpdateAsync(x => x
+                .SetProperty(p => p.DisplayName, category.DisplayName)
+                .SetProperty(p => p.Description, category.Description));
+        return category;
+    }
+
     // TODO: Refactor to corresponding mapper
     private static CategoryModel Map(EfCategory efCategory)
     {
@@ -62,7 +73,10 @@ public class CategorySqlRepository: ICategoryRepository
         {
             Name = efCategory.Name,
             Description = efCategory.Description,
-            Id = efCategory.Id.ToString()
+            Id = efCategory.Id.ToString(),
+            DateCreated = efCategory.DateCreated,
+            DateModified = efCategory.DateModified,
+            DisplayName = efCategory.DisplayName
         };
     }
 }

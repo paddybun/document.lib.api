@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using document.lib.ef;
 
@@ -11,9 +12,11 @@ using document.lib.ef;
 namespace document.lib.ef.Migrations
 {
     [DbContext(typeof(DocumentLibContext))]
-    partial class DocumentLibContextModelSnapshot : ModelSnapshot
+    [Migration("20230731083219_AddUniqueIXOnCategoryName")]
+    partial class AddUniqueIXOnCategoryName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

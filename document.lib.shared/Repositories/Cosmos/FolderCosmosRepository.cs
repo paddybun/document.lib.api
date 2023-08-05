@@ -59,12 +59,9 @@ public class FolderCosmosRepository : IFolderRepository
     {
         var folders = _cosmosContainer.GetItemLinqQueryable<DocLibFolder>(true)
             .Where(x => x.Id.StartsWith("Folder."))
-            .AsAsyncEnumerable();
-        var result = new List<FolderModel>();
-        await foreach (var folderEntity in folders)
-        {
-            result.Add(MapToModel(folderEntity));
-        }
+            .AsEnumerable();
+
+        var result = folders.Select(MapToModel).ToList();
         return await Task.FromResult(result);
     }
 
