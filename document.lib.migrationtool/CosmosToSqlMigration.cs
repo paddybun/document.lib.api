@@ -18,6 +18,7 @@ public class CosmosToSqlMigration: IHostedService
     private readonly IFolderService _cosmosFolderService;
     private readonly IDocumentService _cosmosDocumentService;
     private readonly ICategoryService _cosmosCategoryService;
+    private readonly ITagService _cosmosTagService;
     private readonly DocumentLibContext _sqlContext;
 
     public CosmosToSqlMigration(IHostApplicationLifetime lifetime,
@@ -25,6 +26,7 @@ public class CosmosToSqlMigration: IHostedService
         IFolderService cosmosFolderService,
         IDocumentService cosmosDocumentService,
         ICategoryService cosmosCategoryService,
+        ITagService cosmosTagService,
         DocumentLibContext sqlContext)
     {
         _lifetime = lifetime;
@@ -32,6 +34,7 @@ public class CosmosToSqlMigration: IHostedService
         _cosmosFolderService = cosmosFolderService;
         _cosmosDocumentService = cosmosDocumentService;
         _cosmosCategoryService = cosmosCategoryService;
+        _cosmosTagService = cosmosTagService;
         _sqlContext = sqlContext;
     }
 
@@ -42,6 +45,7 @@ public class CosmosToSqlMigration: IHostedService
         _logger.LogInformation("Started cosmos to sql migration");
         var sqlCategoryService = new CategoryService(new CategorySqlRepository(_sqlContext));
         var sqlFolderService = new FolderService(new FolderSqlRepository(_sqlContext), new DocumentSqlRepository(_sqlContext));
+        var tagService = new TagService(new TagSqlRepository(_sqlContext));
 
         _logger.LogInformation("Synchronizing categories from Cosmos to Sql ...");
         sw.Start();
@@ -55,6 +59,12 @@ public class CosmosToSqlMigration: IHostedService
         sw.Stop();
         _logger.LogInformation("Synchronizing folders done. {count} entities inserted in {time} ms", folders.Count, sw.ElapsedMilliseconds);
 
+        _logger.LogInformation("Synchronizing folders from Cosmos to Sql ...");
+        sw.Start();
+        var tags = await SyncTagsAsync(tagService);
+        sw.Stop();
+        _logger.LogInformation("Synchronizing tags done. {count} entities inserted in {time} ms", tags.Count, sw.ElapsedMilliseconds);
+
         //var folders = await _folderService.GetAllAsync();
         //var docs = await _documentService.GetAllDocumentsAsync();
         //var docsGroupedByRegister = docs.GroupBy(x => x.RegisterName);
@@ -62,6 +72,13 @@ public class CosmosToSqlMigration: IHostedService
 
 
         _logger.LogInformation("Cosmos to sql migration successful");
+    }
+
+    private async Task<List<TagModel>> SyncTagsAsync(TagService tagService)
+    {
+        var tags = await _cosmosTagService.GetTagsAsync();
+        var newTags = await tagService.GetOrCreateTagsAsync(tags.Select(x => x.Name).ToList());
+        return newTags;
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)

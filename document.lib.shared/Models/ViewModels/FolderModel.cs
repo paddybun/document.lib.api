@@ -4,12 +4,12 @@ namespace document.lib.shared.Models.ViewModels;
 
 public class FolderModel
 {
-    public string Id { get; set; }
-    public string Name { get; set; }
-    public string DisplayName { get; set; }
-    public RegisterModel CurrentRegister { get; set; }
-    public string CurrentRegisterName { get; set; }
-    public List<RegisterModel> Registers { get; set; }
+    public string Id { get; set; } = null!;
+    public string Name { get; set; } = null!;
+    public string DisplayName { get; set; } = null!;
+    public RegisterModel CurrentRegister { get; set; } = null!;
+    public string CurrentRegisterName { get; set; } = null!;
+    public List<RegisterModel> Registers { get; set; } = [];
     public int TotalDocuments { get; set; }
     public int DocumentsRegister { get; set; }
     public int DocumentsFolder { get; set; }

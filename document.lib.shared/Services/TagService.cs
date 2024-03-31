@@ -4,13 +4,11 @@ using document.lib.shared.Models.ViewModels;
 
 namespace document.lib.shared.Services;
 
-public class TagService : ITagService
+public class TagService(ITagRepository repository) : ITagService
 {
-    private readonly ITagRepository _repository;
-
-    public TagService(ITagRepository repository)
+    public async Task<List<TagModel>> GetTagsAsync()
     {
-        _repository = repository;
+        return await repository.GetTagsAsync();
     }
 
     public async Task<List<TagModel>> GetOrCreateTagsAsync(List<string> tags)
@@ -26,10 +24,10 @@ public class TagService : ITagService
 
     public async Task<TagModel> GetOrCreateTagAsync(string tag)
     {
-        var tagEntity = await _repository.GetTagAsync(new TagQueryParameters(name: tag));
+        var tagEntity = await repository.GetTagAsync(new TagQueryParameters(name: tag));
         if (tagEntity == null)
         {
-            return await _repository.CreateTagAsync(tag);
+            return await repository.CreateTagAsync(tag);
         }
 
         return tagEntity;

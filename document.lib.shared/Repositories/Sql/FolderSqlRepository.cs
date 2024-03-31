@@ -145,7 +145,6 @@ public class FolderSqlRepository: IFolderRepository
 
     private static FolderModel Map(EfFolder efFolder)
     {
-        if (efFolder == null) return null;
         return new FolderModel
         {
             Name = efFolder.Name,
@@ -156,13 +155,12 @@ public class FolderSqlRepository: IFolderRepository
             DocumentsRegister = efFolder.MaxDocumentsRegister,
             Id = efFolder.Id.ToString(),
             IsFull = efFolder.IsFull,
-            Registers = efFolder.Registers.Select(Map).ToList()
+            Registers = efFolder.Registers?.Select(Map).ToList() ?? []
         };
     }
 
     private static RegisterModel Map(EfRegister efRegister)
     {
-        if (efRegister == null) return null;
         return new RegisterModel
         {
             Name = efRegister.Name,
