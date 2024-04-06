@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
+using Azure.Storage.Blobs;
 using document.lib.ef;
 using document.lib.ef.Entities;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.ViewModels;
-using document.lib.shared.Repositories.Cosmos;
 using document.lib.shared.Repositories.Sql;
 using document.lib.shared.Services;
 using Microsoft.Extensions.Hosting;
@@ -11,103 +11,108 @@ using Microsoft.Extensions.Logging;
 
 namespace document.lib.migrationtool;
 
-public class CosmosToSqlMigration: IHostedService
+public class CosmosToSqlMigration(
+    IHostApplicationLifetime lifetime,
+    ILogger<CosmosToSqlMigration> logger,
+    IFolderService cosmosFolderService,
+    IDocumentService cosmosDocumentService,
+    ICategoryService cosmosCategoryService,
+    ITagService cosmosTagService,
+    BlobContainerClient blobContainerClient,
+    DocumentLibContext sqlContext)
+    : IHostedService
 {
-    private readonly IHostApplicationLifetime _lifetime;
-    private readonly ILogger<CosmosToSqlMigration> _logger;
-    private readonly IFolderService _cosmosFolderService;
-    private readonly IDocumentService _cosmosDocumentService;
-    private readonly ICategoryService _cosmosCategoryService;
-    private readonly ITagService _cosmosTagService;
-    private readonly DocumentLibContext _sqlContext;
-
-    public CosmosToSqlMigration(IHostApplicationLifetime lifetime,
-        ILogger<CosmosToSqlMigration> logger,
-        IFolderService cosmosFolderService,
-        IDocumentService cosmosDocumentService,
-        ICategoryService cosmosCategoryService,
-        ITagService cosmosTagService,
-        DocumentLibContext sqlContext)
-    {
-        _lifetime = lifetime;
-        _logger = logger;
-        _cosmosFolderService = cosmosFolderService;
-        _cosmosDocumentService = cosmosDocumentService;
-        _cosmosCategoryService = cosmosCategoryService;
-        _cosmosTagService = cosmosTagService;
-        _sqlContext = sqlContext;
-    }
+    private readonly IHostApplicationLifetime _lifetime = lifetime;
+    private readonly IDocumentService _cosmosDocumentService = cosmosDocumentService;
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         // allow generic host to log lifetime logs first
-        var sw = new Stopwatch();
-        _logger.LogInformation("Started cosmos to sql migration");
-        var sqlCategoryService = new CategoryService(new CategorySqlRepository(_sqlContext));
-        var sqlFolderService = new FolderService(new FolderSqlRepository(_sqlContext), new DocumentSqlRepository(_sqlContext));
-        var tagService = new TagService(new TagSqlRepository(_sqlContext));
+        logger.LogInformation("Started cosmos to sql migration");
+        var sqlCategoryService = new CategoryService(new CategorySqlRepository(sqlContext));
+        var sqlFolderService = new FolderService(new FolderSqlRepository(sqlContext), new DocumentSqlRepository(sqlContext));
+        var sqlTagService = new TagService(new TagSqlRepository(sqlContext));
+        var sqlRegisterRepo = new RegisterSqlRepository(sqlContext);
+        var sqlDocumentService = new DocumentService(blobContainerClient, new DocumentSqlRepository(sqlContext), sqlCategoryService, sqlTagService, sqlFolderService);
 
-        _logger.LogInformation("Synchronizing categories from Cosmos to Sql ...");
-        sw.Start();
-        var categories = await SyncCategoriesAsync(sqlCategoryService);
-        sw.Stop();
-        _logger.LogInformation("Synchronizing categories done. {count} entities inserted in {time} ms", categories.Count, sw.ElapsedMilliseconds);
+        //await SyncCategoriesAsync(sqlCategoryService);
+        //await SyncFoldersAsync(sqlFolderService);
+        //await SyncTagsAsync(sqlTagService);
+        //await SyncRegistersAsync(sqlRegisterRepo);
+        await SyncDocumentsAsync(sqlDocumentService);
 
-        _logger.LogInformation("Synchronizing folders from Cosmos to Sql ...");
-        sw.Start();
-        var folders = await SyncFoldersAsync(sqlFolderService);
-        sw.Stop();
-        _logger.LogInformation("Synchronizing folders done. {count} entities inserted in {time} ms", folders.Count, sw.ElapsedMilliseconds);
-
-        _logger.LogInformation("Synchronizing folders from Cosmos to Sql ...");
-        sw.Start();
-        var tags = await SyncTagsAsync(tagService);
-        sw.Stop();
-        _logger.LogInformation("Synchronizing tags done. {count} entities inserted in {time} ms", tags.Count, sw.ElapsedMilliseconds);
-
-        //var folders = await _folderService.GetAllAsync();
-        //var docs = await _documentService.GetAllDocumentsAsync();
-        //var docsGroupedByRegister = docs.GroupBy(x => x.RegisterName);
-        //var efRegister = new EfRegister();
-
-
-        _logger.LogInformation("Cosmos to sql migration successful");
+        logger.LogInformation("Cosmos to sql migration successful");
     }
 
-    private async Task<List<TagModel>> SyncTagsAsync(TagService tagService)
+    private async Task SyncDocumentsAsync(DocumentService sqlDocumentService)
     {
-        var tags = await _cosmosTagService.GetTagsAsync();
+        var docs = await cosmosDocumentService.GetAllDocumentsAsync();
+        foreach (var doc in docs)
+        {
+            await sqlDocumentService.CreateNewDocumentAsync(doc);
+        }
+    }
+
+    private async Task SyncRegistersAsync(RegisterSqlRepository registerRepo)
+    {
+        logger.LogInformation("Synchronizing registers from Cosmos to Sql ...");
+        var sw = Stopwatch.StartNew();
+        var folders = await cosmosFolderService.GetAllAsync();
+        var toReturn = new List<RegisterModel>();
+
+        foreach (var folder in folders)
+        {
+            foreach (var register in folder.Registers)
+            {
+                toReturn.Add(await registerRepo.CreateRegistersAsync(register));
+            }
+        }
+        sw.Stop();
+        logger.LogInformation("Synchronizing registers done. {count} entities inserted in {time} ms", toReturn.Count, sw.ElapsedMilliseconds);
+    }
+
+    private async Task SyncTagsAsync(TagService tagService)
+    {
+        logger.LogInformation("Synchronizing tags from Cosmos to Sql ...");
+        var sw = Stopwatch.StartNew();
+        var tags = await cosmosTagService.GetTagsAsync();
         var newTags = await tagService.GetOrCreateTagsAsync(tags.Select(x => x.Name).ToList());
-        return newTags;
+        sw.Stop();
+        logger.LogInformation("Synchronizing tags done. {count} entities inserted in {time} ms", tags.Count, sw.ElapsedMilliseconds);
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Hosted service will be stopped now");
+        logger.LogInformation("Hosted service will be stopped now");
         await Task.CompletedTask;
     }
 
-    private async Task<List<CategoryModel>> SyncCategoriesAsync(ICategoryService service)
+    private async Task SyncCategoriesAsync(ICategoryService service)
     {
-        var categories = await _cosmosCategoryService.GetAllAsync();
+        var sw = Stopwatch.StartNew();
+        logger.LogInformation("Synchronizing categories from Cosmos to Sql ...");
+        var categories = await cosmosCategoryService.GetAllAsync();
         var newCategories = new List<CategoryModel>();
         foreach (var efCategory in categories)
         {
             newCategories.Add(await service.SaveAsync(efCategory, true));
         }
-        return newCategories;
+        sw.Stop();
+        logger.LogInformation("Synchronizing categories done. {count} entities inserted in {time} ms", categories.Count, sw.ElapsedMilliseconds);
     }
 
-    private async Task<List<FolderModel>> SyncFoldersAsync(IFolderService service)
+    private async Task SyncFoldersAsync(IFolderService service)
     {
-        var folders = await _cosmosFolderService.GetAllAsync();
+        var sw = Stopwatch.StartNew();
+        logger.LogInformation("Synchronizing folders from Cosmos to Sql ...");
+        var folders = await cosmosFolderService.GetAllAsync();
         var newFolders = new List<FolderModel>();
         foreach (var folder in folders)
         {
             newFolders.Add(await service.SaveAsync(folder, true));
         }
-
-        return newFolders;
+        sw.Stop();
+        logger.LogInformation("Synchronizing folders done. {count} entities inserted in {time} ms", folders.Count, sw.ElapsedMilliseconds);
     }
 
     private EfDocument CreateDocument(DocumentModel documentModel)

@@ -8,28 +8,17 @@ using Microsoft.Extensions.Options;
 
 namespace document.lib.shared.Services
 {
-    public class DocumentService : IDocumentService
+    public class DocumentService(
+        BlobContainerClient blobContainerClient,
+        IDocumentRepository documentRepository,
+        ICategoryService categoryService,
+        ITagService tagService,
+        IFolderService folderService)
+        : IDocumentService
     {
-        private readonly IDocumentRepository _documentRepository;
-        private readonly ICategoryService _categoryService;
-        private readonly ITagService _tagService;
-        private readonly IFolderService _folderService;
-        private readonly BlobContainerClient _blobContainerClient;
-        private readonly AppConfiguration _appConfig;
-
-        public DocumentService(IOptions<AppConfiguration> options, BlobContainerClient blobContainerClient, IDocumentRepository documentRepository, ICategoryService categoryService, ITagService tagService, IFolderService folderService)
-        {
-            _documentRepository = documentRepository;
-            _categoryService = categoryService;
-            _tagService = tagService;
-            _folderService = folderService;
-            _blobContainerClient = blobContainerClient;
-            _appConfig = options.Value;
-        }
-
         public async Task<List<DocumentModel>> GetUnsortedDocuments()
         {
-            return await _documentRepository.GetUnsortedDocumentsAsync();
+            return await documentRepository.GetUnsortedDocumentsAsync();
         }
 
         public Task<DocumentModel> GetDocumentAsync(string id = null, string name = null)
@@ -43,62 +32,39 @@ namespace document.lib.shared.Services
 
             if (int.TryParse(id, out var parsedId))
             {
-                return _documentRepository.GetDocumentAsync(new DocumentQueryParameters(parsedId, name));
+                return documentRepository.GetDocumentAsync(new DocumentQueryParameters(parsedId, name));
             }
-            return _documentRepository.GetDocumentAsync(new DocumentQueryParameters(name: id));
+            return documentRepository.GetDocumentAsync(new DocumentQueryParameters(name: id));
         }
 
         public async Task<List<DocumentModel>> GetAllDocumentsAsync()
         {
-            var docs = new List<DocumentModel>();
-            switch (_appConfig.DatabaseProvider)
-            {
-                case DatabaseProvider.Sql:
-
-                    var docsAvailable = true;
-                    var lastId = 0;
-                    while (docsAvailable)
-                    {
-                        var tmpDocs = await _documentRepository.GetDocumentsAsync(lastId, 20);
-                        docsAvailable = tmpDocs.Any();
-                        docs.AddRange(tmpDocs);
-                        lastId = tmpDocs.Max(x => int.Parse(x.Id));
-                    }
-                    break;
-                case DatabaseProvider.Cosmos:
-                    // Cosmos repo ignores pagination
-                    docs.AddRange(await _documentRepository.GetDocumentsAsync(0, 0));
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
-            return docs;
+            return await documentRepository.GetAllDocumentsAsync();
         }
 
         public async Task<DocumentModel> UpdateDocumentAsync(DocumentModel doc)
         {
             if (!IsValid(doc)) { throw new Exception("Please make sure the following fields are filled ['DisplayName, Company, DateOfDocument, Category, Tags']"); }
 
-            var category = await _categoryService.CreateOrGetCategoryAsync(doc.CategoryName);
-            var tags = await _tagService.GetOrCreateTagsAsync(doc.Tags);
-            var folder = await _folderService.GetOrCreateFolderByIdAsync(doc.FolderId);
+            var category = await categoryService.CreateOrGetCategoryAsync(doc.CategoryName);
+            var tags = await tagService.GetOrCreateTagsAsync(doc.Tags);
+            var folder = await folderService.GetOrCreateFolderByIdAsync(doc.FolderId);
 
             if (doc.Unsorted)
             {
                 await MoveDocumentFromUnsorted(doc);
             }
 
-            var res = await _documentRepository.UpdateDocumentAsync(doc, category, folder, tags.ToArray());
+            var res = await documentRepository.UpdateDocumentAsync(doc, category, folder, tags.ToArray());
             return res;
         }
 
         public async Task<DocumentModel> CreateNewDocumentAsync(DocumentModel doc)
         {
             if (!IsValid(doc)) { throw new Exception("Please make sure the following fields are filled ['DisplayName, Company, DateOfDocument, Category, Tags']"); }
-            var document = await _documentRepository.CreateDocumentAsync(doc);
-            var folder = await _folderService.GetOrCreateActiveFolderAsync();
-            if (folder != null) { folder = await _folderService.SaveAsync(folder); }
+            var document = await documentRepository.CreateDocumentAsync(doc);
+            var folder = await folderService.GetOrCreateActiveFolderAsync();
+            if (folder != null) { folder = await folderService.SaveAsync(folder); }
             return document;
         }
 
@@ -113,21 +79,21 @@ namespace document.lib.shared.Services
                 queryParams.Name = doc.Id;
 
 
-            var dbDoc = await _documentRepository.GetDocumentAsync(queryParams);
+            var dbDoc = await documentRepository.GetDocumentAsync(queryParams);
             if (dbDoc == null || doc.FolderName == dbDoc.FolderName) return false;
 
-            var oldFolder = await _folderService.GetFolderByNameAsync(dbDoc.FolderName);
-            var newFolder = await _folderService.GetFolderByNameAsync(doc.FolderName);
+            var oldFolder = await folderService.GetFolderByNameAsync(dbDoc.FolderName);
+            var newFolder = await folderService.GetFolderByNameAsync(doc.FolderName);
 
             if (oldFolder == null || newFolder == null) return false;
-            await _folderService.RemoveDocumentFromFolder(oldFolder, dbDoc);
-            await _folderService.AddDocumentToFolderAsync(newFolder, dbDoc);
+            await folderService.RemoveDocumentFromFolder(oldFolder, dbDoc);
+            await folderService.AddDocumentToFolderAsync(newFolder, dbDoc);
 
-            var relocatedDoc = await _documentRepository.GetDocumentAsync(queryParams);
+            var relocatedDoc = await documentRepository.GetDocumentAsync(queryParams);
             dbDoc.BlobLocation = $"{newFolder.Name}/{relocatedDoc.RegisterName}/{dbDoc.PhysicalName}";
             
             await MoveBlob(oldPath, dbDoc.BlobLocation);
-            await _documentRepository.UpdateDocumentAsync(dbDoc);
+            await documentRepository.UpdateDocumentAsync(dbDoc);
 
             return true;
         }
@@ -141,14 +107,14 @@ namespace document.lib.shared.Services
                 return;
             }
 
-            await _documentRepository.DeleteDocumentAsync(doc);
+            await documentRepository.DeleteDocumentAsync(doc);
         }
 
         private async Task MoveDocumentFromUnsorted(DocumentModel doc)
         {
-            var dbFolder = await _folderService.GetFolderByNameAsync("unsorted");
-            var newFolder = await _folderService.GetOrCreateActiveFolderAsync();
-            await _folderService.RemoveDocumentFromFolder(dbFolder, doc);
+            var dbFolder = await folderService.GetFolderByNameAsync("unsorted");
+            var newFolder = await folderService.GetOrCreateActiveFolderAsync();
+            await folderService.RemoveDocumentFromFolder(dbFolder, doc);
 
             string newBlobLocation;
             if (doc.Digital)
@@ -169,10 +135,10 @@ namespace document.lib.shared.Services
 
         private async Task MoveBlob(string from, string to)
         {
-            var source = _blobContainerClient.GetBlobClient(from);
+            var source = blobContainerClient.GetBlobClient(from);
             if (await source.ExistsAsync())
             {
-                var destBlob = _blobContainerClient.GetBlobClient(to);
+                var destBlob = blobContainerClient.GetBlobClient(to);
                 await destBlob.StartCopyFromUriAsync(source.Uri);
             }
 
