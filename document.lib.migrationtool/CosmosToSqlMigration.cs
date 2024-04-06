@@ -35,10 +35,10 @@ public class CosmosToSqlMigration(
         var sqlRegisterRepo = new RegisterSqlRepository(sqlContext);
         var sqlDocumentService = new DocumentService(blobContainerClient, new DocumentSqlRepository(sqlContext), sqlCategoryService, sqlTagService, sqlFolderService);
 
-        //await SyncCategoriesAsync(sqlCategoryService);
-        //await SyncFoldersAsync(sqlFolderService);
-        //await SyncTagsAsync(sqlTagService);
-        //await SyncRegistersAsync(sqlRegisterRepo);
+        await SyncCategoriesAsync(sqlCategoryService);
+        await SyncFoldersAsync(sqlFolderService);
+        await SyncTagsAsync(sqlTagService);
+        await SyncRegistersAsync(sqlRegisterRepo);
         await SyncDocumentsAsync(sqlDocumentService);
 
         logger.LogInformation("Cosmos to sql migration successful");
@@ -67,6 +67,23 @@ public class CosmosToSqlMigration(
                 toReturn.Add(await registerRepo.CreateRegistersAsync(register));
             }
         }
+        
+        var unsortedRegister = new RegisterModel
+        {
+            Name = "unsorted",
+            DisplayName = "unsorted",
+            DocumentCount = 0
+        };
+        var digitalRegister = new RegisterModel
+        {
+            Name = "digital",
+            DisplayName = "digital",
+            DocumentCount = 0
+        };
+
+        await registerRepo.CreateRegistersAsync(unsortedRegister);
+        await registerRepo.CreateRegistersAsync(digitalRegister);
+
         sw.Stop();
         logger.LogInformation("Synchronizing registers done. {count} entities inserted in {time} ms", toReturn.Count, sw.ElapsedMilliseconds);
     }
@@ -97,6 +114,13 @@ public class CosmosToSqlMigration(
         {
             newCategories.Add(await service.SaveAsync(efCategory, true));
         }
+        var uncategorized = new CategoryModel
+        {
+            Name = "uncategorized",
+            DisplayName = "uncategorized",
+            Description = "uncategorized"
+        };
+        await service.SaveAsync(uncategorized, true);
         sw.Stop();
         logger.LogInformation("Synchronizing categories done. {count} entities inserted in {time} ms", categories.Count, sw.ElapsedMilliseconds);
     }
@@ -113,24 +137,5 @@ public class CosmosToSqlMigration(
         }
         sw.Stop();
         logger.LogInformation("Synchronizing folders done. {count} entities inserted in {time} ms", folders.Count, sw.ElapsedMilliseconds);
-    }
-
-    private EfDocument CreateDocument(DocumentModel documentModel)
-    {
-        return new EfDocument
-        {
-            DateCreated = DateTimeOffset.Now,
-            DateModified = documentModel.DateModified,
-            Name = documentModel.Name,
-            DisplayName = documentModel.DisplayName,
-            PhysicalName = documentModel.PhysicalName,
-            BlobLocation = documentModel.BlobLocation,
-            Company = documentModel.Company,
-            DateOfDocument = documentModel.DateOfDocument,
-            UploadDate = documentModel.UploadDate,
-            Description = documentModel.Description,
-            Unsorted = documentModel.Unsorted,
-            Digital = documentModel.Digital
-        };
     }
 }

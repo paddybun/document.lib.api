@@ -10,6 +10,7 @@ public class DocumentLibContext : DbContext
     public DbSet<EfFolder> Folders { get; set; }
     public DbSet<EfRegister> Registers { get; set; }
     public DbSet<EfTag> Tags { get; set; }
+    public DbSet<EfTagAssignment> TagAssignments { get; set; }
 
     public DocumentLibContext()
     {

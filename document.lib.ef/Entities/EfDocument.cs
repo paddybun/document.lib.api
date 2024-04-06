@@ -12,7 +12,7 @@ public class EfDocument: EfBaseFields
     public DateTimeOffset UploadDate { get; set; }
     public string Description { get; set; }
     public EfRegister Register { get; set; }
-    public ICollection<EfTag> Tags { get; set; }
+    public List<EfTagAssignment> Tags { get; set; }
     public bool Unsorted { get; set; }
     public EfCategory Category { get; set; }
     public bool Digital { get; set; }

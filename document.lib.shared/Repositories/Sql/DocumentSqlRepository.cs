@@ -12,22 +12,38 @@ public class DocumentSqlRepository(DocumentLibContext context) : IDocumentReposi
 {
     public async Task<DocumentModel> CreateDocumentAsync(DocumentModel document)
     {
-        var register = await context.Registers.SingleOrDefaultAsync(x => x.Name == "unsorted");
+        var registerName = document.Digital ? "digital" : document.RegisterName;
+        var register = await context
+            .Registers
+            .SingleOrDefaultAsync(x => x.Name == registerName);
+        var category = await context
+            .Categories
+            .SingleOrDefaultAsync(x => x.Name == document.CategoryName);
+        var tags = await context
+            .Tags
+            .Where(x => document.Tags.Contains(x.Name))
+            .ToListAsync();
+
         var efDocument = new EfDocument
         {
             Name = document.Name,
             DisplayName = document.DisplayName,
             BlobLocation = document.BlobLocation,
-            Category = context.Categories.Single(x => x.Name == "uncategorized"),
+            Category = category,
             Company = document.Company,
             DateOfDocument = document.DateOfDocument,
-            UploadDate = DateTimeOffset.UtcNow,
+            UploadDate = document.UploadDate,
             Description = document.Description,
             Digital = document.Digital,
             PhysicalName = document.PhysicalName,
             Register = register,
-            Unsorted = true
+            Unsorted = document.Unsorted,
+            // Tags = tags
         };
+
+        await context.Documents.AddAsync(efDocument);
+        await context.SaveChangesAsync();
+
         return Map(efDocument);
     }
 
@@ -130,8 +146,8 @@ public class DocumentSqlRepository(DocumentLibContext context) : IDocumentReposi
         }
         if (tags != null)
         {
-            var efTags = await context.Tags.Where(x => tags.Select(x => int.Parse(x.Id)).Contains(x.Id)).ToArrayAsync();
-            efDoc.Tags = efTags;
+            var efTags = await context.Tags.Where(x => tags.Select(x => int.Parse(x.Id)).Contains(x.Id)).ToListAsync();
+            // efDoc.Tags = efTags;
         }
         if (folder != null)
         {
@@ -182,16 +198,16 @@ public class DocumentSqlRepository(DocumentLibContext context) : IDocumentReposi
             Description = efDocument.Description,
             CategoryName = efDocument.Category?.DisplayName ?? string.Empty,
             BlobLocation = efDocument.BlobLocation,
-            FolderName = efDocument.Register.Folder.Name,
+            FolderName = efDocument.Register.Folder?.Name ?? string.Empty,
             Company = efDocument.Company,
             DateOfDocument = efDocument.DateOfDocument,
             DateModified = efDocument.DateModified,
             UploadDate = efDocument.DateCreated,
             Digital = efDocument.Digital,
             PhysicalName = efDocument.PhysicalName,
-            Tags = efDocument.Tags?.Select(x => x.Name).ToList() ?? [],
+            // Tags = efDocument.Tags?.Select(x => x.Name).ToList() ?? [],
             RegisterName = efDocument.Register.Name,
-            FolderId = efDocument.Register.Folder.Id.ToString(),
+            FolderId = efDocument.Register.Folder?.Id.ToString() ?? string.Empty,
             Unsorted = efDocument.Unsorted
         };
     }
