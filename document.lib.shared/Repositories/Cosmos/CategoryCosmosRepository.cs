@@ -21,12 +21,12 @@ public class CategoryCosmosRepository : ICategoryRepository
         _cosmosContainer = db.GetContainer(TableNames.Doclib);
     }
 
-    public async Task<CategoryModel> GetCategoryAsync(CategoryQueryParameters queryParameters)
+    public async Task<CategoryModel?> GetCategoryAsync(CategoryQueryParameters queryParameters)
     {
         if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
         if (!queryParameters.IsValid()) throw new InvalidQueryParameterException(queryParameters.GetType());
 
-        DocLibCategory category;
+        DocLibCategory? category;
         if (queryParameters.Id.HasValue)
         {
             category = _cosmosContainer.GetItemLinqQueryable<DocLibCategory>(true)
@@ -41,6 +41,12 @@ public class CategoryCosmosRepository : ICategoryRepository
                 .AsEnumerable()
                 .FirstOrDefault();
         }
+
+        if (category == null)
+        {
+            return null;
+        }
+
         return await Task.FromResult(MapToModel(category));
     }
 
@@ -87,17 +93,12 @@ public class CategoryCosmosRepository : ICategoryRepository
 
     private static CategoryModel MapToModel(DocLibCategory category)
     {
-        if (category == null)
-        {
-            return null;
-        }
-
         return new CategoryModel
         {
+            Id = category.Id,
             Name = category.Name,
             DisplayName = category.DisplayName,
-            Description = category.Description,
-            Id = category.Id
+            Description = category.Description
         };
     }
 }

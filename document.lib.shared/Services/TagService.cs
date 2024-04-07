@@ -27,7 +27,8 @@ public class TagService(ITagRepository repository) : ITagService
         var tagEntity = await repository.GetTagAsync(new TagQueryParameters(name: tag));
         if (tagEntity == null)
         {
-            return await repository.CreateTagAsync(tag);
+            var model = new TagModel { Name = tag, DisplayName = tag};
+            return await repository.CreateTagAsync(model);
         }
 
         return tagEntity;

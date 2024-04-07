@@ -1,10 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace document.lib.ef.Entities;
 
 public class EfTagAssignment: EfBaseFields
 {
     public int Id { get; set; }
-    public EfDocument Document { get; set; }
-    public EfTag Tag { get; set; }
+
+    [Required]
+    public EfDocument Document { get; set; } = null!;
+
+    [Required]
+    public EfTag Tag { get; set; } = null!;
 }

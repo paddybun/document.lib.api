@@ -9,14 +9,14 @@ using Microsoft.EntityFrameworkCore;
 namespace document.lib.shared.Repositories.Sql;
 
 // Scoped injection 
-public class TagSqlRepository(DocumentLibContext context) : ITagRepository
+public sealed class TagSqlRepository(DocumentLibContext context) : ITagRepository
 {
-    public async Task<TagModel> GetTagAsync(TagQueryParameters queryParameters)
+    public async Task<TagModel?> GetTagAsync(TagQueryParameters queryParameters)
     {
         if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
         if (!queryParameters.IsValid()) throw new InvalidQueryParameterException(queryParameters.GetType());
 
-        EfTag efTag;
+        EfTag? efTag;
         if (queryParameters.Id.HasValue)
         {
             efTag = await context.Tags
@@ -27,7 +27,8 @@ public class TagSqlRepository(DocumentLibContext context) : ITagRepository
             efTag = await context.Tags
                 .SingleOrDefaultAsync(x => x.Name == queryParameters.Name);
         }
-        return Map(efTag);
+
+        return efTag == null ? null : Map(efTag);
     }
 
     public async Task<List<TagModel>> GetTagsAsync()
@@ -36,17 +37,16 @@ public class TagSqlRepository(DocumentLibContext context) : ITagRepository
         return tags.Select(Map).ToList();
     }
 
-    public async Task<TagModel> CreateTagAsync(string tagName)
+    public async Task<TagModel> CreateTagAsync(TagModel tagModel)
     {
-        var tag = new EfTag {Name = tagName, DisplayName = tagName};
+        var tag = new EfTag {Name = tagModel.Name, DisplayName = tagModel.DisplayName};
         await context.AddAsync(tag);
         await context.SaveChangesAsync();
         return Map(tag);
     }
 
-    private TagModel Map(EfTag efTag)
+    private static TagModel Map(EfTag efTag)
     {
-        if (efTag == null) return null;
         return new TagModel
         {
             Id = efTag.Id.ToString(),

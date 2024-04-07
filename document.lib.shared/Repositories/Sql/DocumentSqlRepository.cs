@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.shared.Repositories.Sql;
 
-public class DocumentSqlRepository(DocumentLibContext context) : IDocumentRepository
+public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumentRepository
 {
     public async Task<DocumentModel> CreateDocumentAsync(DocumentModel document)
     {
