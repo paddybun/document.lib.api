@@ -225,14 +225,14 @@ namespace document.lib.ef.Migrations
                     b.Property<int?>("DocumentId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("EfTagId")
+                    b.Property<int?>("TagId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("DocumentId");
 
-                    b.HasIndex("EfTagId");
+                    b.HasIndex("TagId");
 
                     b.ToTable("TagAssignments");
                 });
@@ -267,13 +267,13 @@ namespace document.lib.ef.Migrations
                         .WithMany("Tags")
                         .HasForeignKey("DocumentId");
 
-                    b.HasOne("document.lib.ef.Entities.EfTag", "EfTag")
+                    b.HasOne("document.lib.ef.Entities.EfTag", "Tag")
                         .WithMany()
-                        .HasForeignKey("EfTagId");
+                        .HasForeignKey("TagId");
 
                     b.Navigation("Document");
 
-                    b.Navigation("EfTag");
+                    b.Navigation("Tag");
                 });
 
             modelBuilder.Entity("document.lib.ef.Entities.EfDocument", b =>

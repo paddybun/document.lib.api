@@ -24,6 +24,11 @@ public class DocumentSqlRepository(DocumentLibContext context) : IDocumentReposi
             .Where(x => document.Tags.Contains(x.Name))
             .ToListAsync();
 
+        var assignments = tags.Select(x => new EfTagAssignment
+        {
+            Tag = x
+        }).ToList();
+
         var efDocument = new EfDocument
         {
             Name = document.Name,
@@ -38,7 +43,7 @@ public class DocumentSqlRepository(DocumentLibContext context) : IDocumentReposi
             PhysicalName = document.PhysicalName,
             Register = register,
             Unsorted = document.Unsorted,
-            // Tags = tags
+            Tags = assignments
         };
 
         await context.Documents.AddAsync(efDocument);
@@ -147,7 +152,11 @@ public class DocumentSqlRepository(DocumentLibContext context) : IDocumentReposi
         if (tags != null)
         {
             var efTags = await context.Tags.Where(x => tags.Select(x => int.Parse(x.Id)).Contains(x.Id)).ToListAsync();
-            // efDoc.Tags = efTags;
+            var efTagAssignments = efTags.Select(x => new EfTagAssignment
+            {
+                Tag = x
+            }).ToList();
+            efDoc.Tags = efTagAssignments;
         }
         if (folder != null)
         {
@@ -190,6 +199,8 @@ public class DocumentSqlRepository(DocumentLibContext context) : IDocumentReposi
 
     private DocumentModel Map(EfDocument efDocument)
     {
+        var tags = efDocument.Tags?.Select(x => x.Tag?.Name ?? "").ToList() ?? [];
+
         return new DocumentModel
         {
             Id = efDocument.Id.ToString(),
@@ -205,7 +216,7 @@ public class DocumentSqlRepository(DocumentLibContext context) : IDocumentReposi
             UploadDate = efDocument.DateCreated,
             Digital = efDocument.Digital,
             PhysicalName = efDocument.PhysicalName,
-            // Tags = efDocument.Tags?.Select(x => x.Name).ToList() ?? [],
+            Tags = tags,
             RegisterName = efDocument.Register.Name,
             FolderId = efDocument.Register.Folder?.Id.ToString() ?? string.Empty,
             Unsorted = efDocument.Unsorted

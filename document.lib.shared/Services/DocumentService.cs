@@ -1,10 +1,7 @@
 ﻿using Azure.Storage.Blobs;
-using document.lib.shared.Enums;
 using document.lib.shared.Interfaces;
-using document.lib.shared.Models;
 using document.lib.shared.Models.QueryDtos;
 using document.lib.shared.Models.ViewModels;
-using Microsoft.Extensions.Options;
 
 namespace document.lib.shared.Services
 {
@@ -16,6 +13,9 @@ namespace document.lib.shared.Services
         IFolderService folderService)
         : IDocumentService
     {
+        const string NewDocumentCategory = "uncategorized";
+        const string NewDocumentRegister = "unsorted";
+
         public async Task<List<DocumentModel>> GetUnsortedDocuments()
         {
             return await documentRepository.GetUnsortedDocumentsAsync();
@@ -62,6 +62,11 @@ namespace document.lib.shared.Services
         public async Task<DocumentModel> CreateNewDocumentAsync(DocumentModel doc)
         {
             if (!IsValid(doc)) { throw new Exception("Please make sure the following fields are filled ['DisplayName, Company, DateOfDocument, Category, Tags']"); }
+
+            // overwrite what ever the user has set for a new document
+            doc.CategoryName = NewDocumentCategory;
+            doc.RegisterName = NewDocumentRegister;
+
             var document = await documentRepository.CreateDocumentAsync(doc);
             var folder = await folderService.GetOrCreateActiveFolderAsync();
             if (folder != null) { folder = await folderService.SaveAsync(folder); }

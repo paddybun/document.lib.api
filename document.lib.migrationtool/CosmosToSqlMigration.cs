@@ -22,9 +22,6 @@ public class CosmosToSqlMigration(
     DocumentLibContext sqlContext)
     : IHostedService
 {
-    private readonly IHostApplicationLifetime _lifetime = lifetime;
-    private readonly IDocumentService _cosmosDocumentService = cosmosDocumentService;
-
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         // allow generic host to log lifetime logs first
@@ -46,11 +43,15 @@ public class CosmosToSqlMigration(
 
     private async Task SyncDocumentsAsync(DocumentService sqlDocumentService)
     {
+        logger.LogInformation("Synchronizing documents from Cosmos to Sql ...");
+        var sw = Stopwatch.StartNew();
         var docs = await cosmosDocumentService.GetAllDocumentsAsync();
         foreach (var doc in docs)
         {
             await sqlDocumentService.CreateNewDocumentAsync(doc);
         }
+        sw.Stop();
+        logger.LogInformation("Synchronizing documents done. {count} entities inserted in {time} ms", docs.Count, sw.ElapsedMilliseconds);
     }
 
     private async Task SyncRegistersAsync(RegisterSqlRepository registerRepo)
