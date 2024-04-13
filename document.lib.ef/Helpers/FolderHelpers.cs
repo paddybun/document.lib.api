@@ -8,7 +8,7 @@ public static class FolderHelpers
     {
         if (!(folder?.Registers?.Count > 0)) return folder;
 
-        var register = folder.Registers.SingleOrDefault(x => x.DocumentCount <= folder.MaxDocumentsRegister);
+        var register = folder.Registers.FirstOrDefault(x => x.DocumentCount <= folder.MaxDocumentsRegister);
         folder.CurrentRegister = register;
 
         return folder;

@@ -78,9 +78,12 @@ namespace document.lib.shared.Services
         {
             if (!IsValid(doc)) { throw new Exception("Please make sure the following fields are filled ['DisplayName, Company, DateOfDocument, Category, Tags']"); }
 
-            // overwrite what ever the user has set for a new document
-            doc.CategoryName = NewDocumentCategory;
-            doc.RegisterName = NewDocumentRegister;
+            if (doc.Unsorted)
+            {
+                // overwrite what ever the user has set for a new document
+                doc.CategoryName = NewDocumentCategory;
+                doc.RegisterName = NewDocumentRegister;
+            }
 
             var document = await documentRepository.CreateDocumentAsync(doc);
             var folder = await folderService.GetOrCreateActiveFolderAsync();
