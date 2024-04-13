@@ -1,9 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.ef.Entities;
 
-[Index(nameof(Name), nameof(Folder), IsUnique = true)]
 public class EfRegister: EfBaseFields
 {
     public int Id { get; set; }
