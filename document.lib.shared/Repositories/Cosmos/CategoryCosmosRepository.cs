@@ -2,8 +2,7 @@
 using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
-using document.lib.shared.Models.QueryDtos;
-using document.lib.shared.Models.ViewModels;
+using document.lib.shared.Models.Models;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
@@ -21,36 +20,46 @@ public class CategoryCosmosRepository : ICategoryRepository
         _cosmosContainer = db.GetContainer(TableNames.Doclib);
     }
 
-    public async Task<CategoryModel> GetCategoryAsync(CategoryQueryParameters queryParameters)
+    public async Task<CategoryModel?> GetCategoryAsync(CategoryModel categoryModel)
     {
-        if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
-        if (!queryParameters.IsValid()) throw new InvalidQueryParameterException(queryParameters.GetType());
+        if (categoryModel == null) throw new ArgumentNullException(nameof(categoryModel));
 
-        DocLibCategory category;
-        if (queryParameters.Id.HasValue)
+        if (string.IsNullOrWhiteSpace(categoryModel.Id) && string.IsNullOrWhiteSpace(categoryModel.Name))
+        {
+            throw new InvalidParameterException(categoryModel.GetType());
+        }
+
+        DocLibCategory? category;
+        if (!string.IsNullOrWhiteSpace(categoryModel.Id))
         {
             category = _cosmosContainer.GetItemLinqQueryable<DocLibCategory>(true)
-                .Where(x => x.Id == queryParameters.Id.Value.ToString())
+                .Where(x => x.Id == categoryModel.Id)
                 .AsEnumerable()
                 .FirstOrDefault();
         }
         else
         {
             category = _cosmosContainer.GetItemLinqQueryable<DocLibCategory>(true)
-                .Where(x => x.Id == $"Category.{queryParameters.Name}")
+                .Where(x => x.Id == $"Category.{categoryModel.Name}")
                 .AsEnumerable()
                 .FirstOrDefault();
         }
-        return await Task.FromResult(Map(category));
+
+        if (category == null)
+        {
+            return null;
+        }
+
+        return await Task.FromResult(MapToModel(category));
     }
 
     public async Task<List<CategoryModel>> GetCategoriesAsync()
     {
         var categories = _cosmosContainer.GetItemLinqQueryable<DocLibCategory>(true)
-            .Where(x => x.Id == $"Category.")
+            .Where(x => x.Id.StartsWith("Category."))
             .AsEnumerable()
             .ToList();
-        return await Task.FromResult(categories.Select(Map).ToList());
+        return await Task.FromResult(categories.Select(MapToModel).ToList());
     }
 
     public async Task<CategoryModel> CreateCategoryAsync(CategoryModel category)
@@ -63,23 +72,36 @@ public class CategoryCosmosRepository : ICategoryRepository
             DisplayName = category.DisplayName,
             Description = ""
         };
-        var response = await _cosmosContainer.CreateItemAsync(cat);
-        return Map(response.Resource);
+        var response = await _cosmosContainer.CreateItemAsync(cat, new PartitionKey(cat.Id));
+        return MapToModel(response.Resource);
     }
 
-    private static CategoryModel Map(DocLibCategory category)
+    public async Task<CategoryModel> UpdateCategoryAsync(CategoryModel category)
     {
-        if (category == null)
-        {
-            return null;
-        }
+        var entity = MapToEntity(category);
+        await _cosmosContainer.UpsertItemAsync(entity, new PartitionKey(entity.Id));
+        return MapToModel(entity);
+    }
 
+    private static DocLibCategory MapToEntity(CategoryModel categoryModel)
+    {
+        return new DocLibCategory
+        {
+            Id = categoryModel.Id ?? string.Empty,
+            Name = categoryModel.Name,
+            DisplayName = categoryModel.DisplayName,
+            Description = categoryModel.Description
+        };
+    }
+
+    private static CategoryModel MapToModel(DocLibCategory category)
+    {
         return new CategoryModel
         {
+            Id = category.Id,
             Name = category.Name,
             DisplayName = category.DisplayName,
-            Description = category.Description,
-            Id = category.Id
+            Description = category.Description
         };
     }
 }

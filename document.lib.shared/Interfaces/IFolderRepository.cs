@@ -1,11 +1,10 @@
-﻿using document.lib.shared.Models.QueryDtos;
-using document.lib.shared.Models.ViewModels;
+﻿using document.lib.shared.Models.Models;
 
 namespace document.lib.shared.Interfaces;
 
 public interface IFolderRepository
 {
-    Task<FolderModel> GetFolderAsync(FolderQueryParameters queryParameters);
+    Task<FolderModel?> GetFolderAsync(FolderModel folderModel);
     Task<List<FolderModel>> GetAllFoldersAsync();
     Task<FolderModel> CreateFolderAsync(FolderModel folder);
     Task<FolderModel> UpdateFolderAsync(FolderModel folder);

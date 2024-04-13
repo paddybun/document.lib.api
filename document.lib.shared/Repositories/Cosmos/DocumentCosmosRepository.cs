@@ -3,8 +3,7 @@ using document.lib.shared.Constants;
 using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
-using document.lib.shared.Models.QueryDtos;
-using document.lib.shared.Models.ViewModels;
+using document.lib.shared.Models.Models;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
@@ -74,22 +73,30 @@ public class DocumentCosmosRepository : IDocumentRepository
         throw new NotImplementedException();
     }
 
-    public async Task<DocumentModel> GetDocumentAsync(DocumentQueryParameters queryParameters)
+    public async Task<DocumentModel?> GetDocumentAsync(DocumentModel model)
     {
-        if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
-        if (string.IsNullOrWhiteSpace(queryParameters.Name)) 
-            throw new InvalidQueryParameterException("Document query in cosmos repository only allows searching by name. Name should look like xyz.<Id as guid>");
+        if (model == null) throw new ArgumentNullException(nameof(model));
 
-        var id = queryParameters.Name.Split('.').Last();
+        if (string.IsNullOrWhiteSpace(model.Name)) 
+            throw new InvalidParameterException("Document query in cosmos repository only allows searching by name. Name should look like xyz.<Id as guid>");
+
+        var id = model.Name.Split('.').Last();
         var document = _cosmosContainer.GetItemLinqQueryable<DocLibDocument>(true)
             .Where(x => x.Id.EndsWith(id))
             .AsEnumerable()
             .FirstOrDefault();
 
-        return Map(document);
+        if (document == null) return null;
+
+        return await Task.FromResult(Map(document));
     }
 
-    public async Task<List<DocumentModel>> GetDocumentsAsync(int page, int count)
+    public async Task<List<DocumentModel>> GetAllDocumentsAsync()
+    {
+        return await GetDocumentsPagedAsync(0, 0);
+    }
+
+    public async Task<List<DocumentModel>> GetDocumentsPagedAsync(int page, int count)
     {
         var documents = _cosmosContainer.GetItemLinqQueryable<DocLibDocument>(true)
             .Where(x => x.Id.StartsWith("Document."))
@@ -111,14 +118,13 @@ public class DocumentCosmosRepository : IDocumentRepository
         throw new NotImplementedException();
     }
 
-    public Task<DocumentModel> UpdateDocumentAsync(DocumentModel document, CategoryModel category, FolderModel folder, TagModel[] tags)
+    public Task<DocumentModel> UpdateDocumentAsync(DocumentModel document, CategoryModel? category, FolderModel? folder, TagModel[]? tags)
     {
         throw new NotImplementedException();
     }
 
     private static DocumentModel Map(DocLibDocument document)
     {
-        if (document == null) return null;
         return new DocumentModel
         {
             Id = document.Id,

@@ -1,11 +1,10 @@
-﻿using document.lib.shared.Models.QueryDtos;
-using document.lib.shared.Models.ViewModels;
+﻿using document.lib.shared.Models.Models;
 
 namespace document.lib.shared.Interfaces;
 
 public interface ITagRepository
 {
-    Task<TagModel> GetTagAsync(TagQueryParameters queryParameters);
+    Task<TagModel?> GetTagAsync(TagModel model);
     Task<List<TagModel>> GetTagsAsync();
-    Task<TagModel> CreateTagAsync(string tagName);
+    Task<TagModel> CreateTagAsync(TagModel tagName);
 }

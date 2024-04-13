@@ -1,4 +1,5 @@
 ﻿using document.lib.shared.Interfaces;
+using document.lib.shared.Models.Models;
 
 namespace document.lib.shared.Services;
 
@@ -15,8 +16,30 @@ public class OneTimeSetup
 
     public async Task CreateDefaultsAsync()
     {
-        await _categoryService.CreateOrGetCategoryAsync("uncategorized");
-        await _folderService.GetOrCreateFolderByIdAsync("unsorted", int.MaxValue, int.MaxValue);
-        await _folderService.GetOrCreateFolderByIdAsync("digital", int.MaxValue, int.MaxValue);
+        await _categoryService.SaveAsync(new CategoryModel
+        {
+            Name = "uncategorized",
+            DisplayName = "uncategorized",
+            Description = "Category for uncategorized documents",
+            
+        }, true);
+
+        await _folderService.SaveAsync(new FolderModel
+        {
+            Name = "unsorted",
+            DisplayName = "unsorted",
+            DocumentsRegister = int.MaxValue,
+            DocumentsFolder = int.MaxValue,
+            IsFull = false,
+        }, true);
+        
+        await _folderService.SaveAsync(new FolderModel
+        {
+            Name = "digital",
+            DisplayName = "digital",
+            DocumentsRegister = int.MaxValue,
+            DocumentsFolder = int.MaxValue,
+            IsFull = false,
+        }, true);
     }
 }

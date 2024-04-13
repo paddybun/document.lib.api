@@ -1,13 +1,13 @@
-﻿using document.lib.shared.Models.ViewModels;
+﻿using document.lib.shared.Models.Models;
 
 namespace document.lib.shared.Interfaces;
 
 public interface IFolderService
 {
-    Task<FolderModel> GetFolderByNameAsync(string name);
+    Task<FolderModel?> GetFolderByNameAsync(string name);
     Task<FolderModel> GetOrCreateActiveFolderAsync();
-    Task<FolderModel> CreateNewFolderAsync(int maxFolderSize = 200, int maxRegisterSize = 10);
-    Task<FolderModel> GetOrCreateFolderByIdAsync(string name, int maxFolderSize = 200, int maxRegisterSize = 10);
+    Task<FolderModel> SaveAsync(FolderModel folderModel, bool createNew = false);
+    Task<FolderModel> GetOrCreateFolderByIdAsync(string name);
     Task <List<FolderModel>> GetAllAsync();
     Task<FolderModel> UpdateFolderAsync(FolderModel folder);
     Task AddDocumentToFolderAsync(FolderModel folder, DocumentModel doc);

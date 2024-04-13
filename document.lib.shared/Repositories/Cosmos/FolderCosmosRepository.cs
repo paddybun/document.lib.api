@@ -2,8 +2,8 @@
 using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
-using document.lib.shared.Models.QueryDtos;
-using document.lib.shared.Models.ViewModels;
+using document.lib.shared.Models.Interfaces;
+using document.lib.shared.Models.Models;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
@@ -22,30 +22,33 @@ public class FolderCosmosRepository : IFolderRepository
         _cosmosContainer = db.GetContainer(TableNames.Doclib);
     }
     
-    public async Task<FolderModel> GetFolderAsync(FolderQueryParameters queryParameters)
+    public async Task<FolderModel?> GetFolderAsync(FolderModel folderModel)
     {
-        if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
-        if (!queryParameters.IsValid()) throw new InvalidQueryParameterException(queryParameters.GetType());
-        IAsyncEnumerable<DocLibFolder> folders = null;
-        if (queryParameters.Id.HasValue)
+        if (folderModel == null) throw new ArgumentNullException(nameof(folderModel));
+        if (!IsValid(folderModel)) throw new InvalidParameterException(folderModel.GetType());
+        IAsyncEnumerable<DocLibFolder>? folders = null;
+
+        if (!string.IsNullOrWhiteSpace(folderModel.Id))
         {
             folders = _cosmosContainer.GetItemLinqQueryable<DocLibFolder>(true)
-                .Where(x => x.Id == queryParameters.Id.Value.ToString())
+                .Where(x => x.Id == folderModel.Id)
                 .AsAsyncEnumerable();
         }
-        else if (!string.IsNullOrWhiteSpace(queryParameters.Name))
+        else if (!string.IsNullOrWhiteSpace(folderModel.Name))
         {
             folders = _cosmosContainer.GetItemLinqQueryable<DocLibFolder>(true)
-                .Where(x => x.Name == queryParameters.Name)
+                .Where(x => x.Name == folderModel.Name)
                 .AsAsyncEnumerable();
         }
-        else if (queryParameters.ActiveFolder.HasValue && queryParameters.ActiveFolder.Value)
+        else if (folderModel.IsActive)
         {
             folders = _cosmosContainer.GetItemLinqQueryable<DocLibFolder>(true)
                 .Where(x => x.IsFull == false)
                 .AsAsyncEnumerable();
         }
         
+        if (folders == null) return null;
+
         var tmpFolders = new List<FolderModel>();
         await foreach (var folder in folders)
         {
@@ -59,12 +62,9 @@ public class FolderCosmosRepository : IFolderRepository
     {
         var folders = _cosmosContainer.GetItemLinqQueryable<DocLibFolder>(true)
             .Where(x => x.Id.StartsWith("Folder."))
-            .AsAsyncEnumerable();
-        var result = new List<FolderModel>();
-        await foreach (var folderEntity in folders)
-        {
-            result.Add(MapToModel(folderEntity));
-        }
+            .AsEnumerable();
+
+        var result = folders.Select(MapToModel).ToList();
         return await Task.FromResult(result);
     }
 
@@ -72,15 +72,25 @@ public class FolderCosmosRepository : IFolderRepository
     {
         var folderEntity = MapToEntity(folder);
         await _cosmosContainer.UpsertItemAsync(folderEntity, new PartitionKey(folder.Id));
-        var newFolderEntity = await GetFolderAsync(new FolderQueryParameters(name: folder.Name));
-        return newFolderEntity;
+
+        var folderModel = new FolderModel
+        {
+            Name = folder.Name
+        };
+        var newFolderEntity = await GetFolderAsync(folderModel);
+        return newFolderEntity!;
     }
 
     public async Task<FolderModel> UpdateFolderAsync(FolderModel folder)
     {
         await _cosmosContainer.UpsertItemAsync(folder, new PartitionKey(folder.Id));
-        var updatedFolderEntity = await GetFolderAsync(new FolderQueryParameters(name: folder.Name));
-        return updatedFolderEntity;
+        var folderModel = new FolderModel
+        {
+            Name = folder.Name
+        };
+
+        var updatedFolderEntity = await GetFolderAsync(folderModel);
+        return updatedFolderEntity!;
     }
 
     public Task AddDocumentToFolderAsync(FolderModel folder, DocumentModel document)
@@ -97,10 +107,10 @@ public class FolderCosmosRepository : IFolderRepository
     {
         return new DocLibFolder
         {
-            Id = folderModel.Id,
+            Id = folderModel.Id ?? string.Empty,
             Name = folderModel.Name,
-            DisplayName = folderModel.DisplayName,
-            CurrentRegister = folderModel.CurrentRegisterName,
+            DisplayName = folderModel.DisplayName ?? string.Empty,
+            CurrentRegister = folderModel.CurrentRegisterName ?? string.Empty,
             Registers = folderModel.Registers.ToDictionary(x => x.Name, y => y.DocumentCount),
             TotalDocuments = folderModel.TotalDocuments,
             DocumentsPerRegister = folderModel.DocumentsRegister,
@@ -112,7 +122,6 @@ public class FolderCosmosRepository : IFolderRepository
 
     private static FolderModel MapToModel(DocLibFolder doclibFolder)
     {
-        if (doclibFolder == null) return null;
         return new FolderModel
         {
             Name = doclibFolder.Name,
@@ -135,10 +144,17 @@ public class FolderCosmosRepository : IFolderRepository
             Id = "",
             Name = registerKey,
             DisplayName = registerKey,
-            Documents = null,
+            Documents = [],
             FolderId = folderId,
             FolderName = folderName,
             DocumentCount = registerValue
         };
+    }
+
+    private static bool IsValid(IFolderModel model)
+    {
+        return
+            model.Id != null ||
+            !string.IsNullOrWhiteSpace(model.Name);
     }
 }

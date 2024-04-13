@@ -1,57 +1,51 @@
 ﻿using document.lib.ef;
 using document.lib.ef.Entities;
-using document.lib.shared.Exceptions;
+using document.lib.ef.Helpers;
 using document.lib.shared.Interfaces;
-using document.lib.shared.Models.QueryDtos;
-using document.lib.shared.Models.ViewModels;
-using document.lib.shared.TableEntities;
-using Microsoft.Azure.Cosmos.Serialization.HybridRow.RecordIO;
+using document.lib.shared.Models.Models;
 using Microsoft.EntityFrameworkCore;
-using DocLibDocument = document.lib.shared.TableEntities.DocLibDocument;
 
 namespace document.lib.shared.Repositories.Sql;
 
-public class FolderSqlRepository: IFolderRepository
+public sealed class FolderSqlRepository(DocumentLibContext context) : IFolderRepository
 {
-    private readonly DocumentLibContext _context;
-
-    public FolderSqlRepository(DocumentLibContext context)
+    public async Task<FolderModel?> GetFolderAsync(FolderModel folderModel)
     {
-        _context = context;
-    }
+        EfFolder? efFolder = null;
+        if (!string.IsNullOrWhiteSpace(folderModel.Id))
+        {
+            // Check if the id is a valid integer, if not a different id was used (e.g. cosmos)
+            if (!int.TryParse(folderModel.Id, out var parsedId))
+            {
+                return null;
+            }
 
-    public async Task<FolderModel> GetFolderAsync(FolderQueryParameters queryParameters)
-    {
-        if (!queryParameters.IsValid())
-        {
-            throw new InvalidQueryParameterException(queryParameters.GetType());
-        }
-
-        EfFolder efFolder = null;
-        if (queryParameters.Id.HasValue)
-        {
-            efFolder = await _context.Folders
+            efFolder = await context.Folders
                 .Include(x => x.Registers)
-                .SingleOrDefaultAsync(x => x.Id == queryParameters.Id.Value);
+                .SingleOrDefaultAsync(x => x.Id == parsedId);
         }
-        else if (!string.IsNullOrWhiteSpace(queryParameters.Name))
+        else if (!string.IsNullOrWhiteSpace(folderModel.Name))
         {
-            efFolder = await _context.Folders
+            efFolder = await context.Folders
                 .Include(x => x.Registers)
-                .SingleOrDefaultAsync(x => x.Name == queryParameters.Name);
+                .SingleOrDefaultAsync(x => x.Name == folderModel.Name);
         }
-        else if (queryParameters.ActiveFolder.HasValue)
+        else if (folderModel.IsActive)
         {
-            efFolder = await _context.Folders
+            efFolder = await context.Folders
                 .Include(x => x.Registers)
                 .FirstOrDefaultAsync(x => !x.IsFull && (x.Name != "unsorted" || x.Name != "digital"));
         }
-        return Map(efFolder);
+
+        // Assign current register, if all registers are full, then current register will be null and must be created via the service
+        efFolder = FolderHelpers.AssignCurrentRegister(efFolder);
+
+        return efFolder == null ? null : Map(efFolder);
     }
 
     public async Task<List<FolderModel>> GetAllFoldersAsync()
     {
-        var efFolders = await _context.Folders
+        var efFolders = await context.Folders
             .Include(x => x.Registers)
             .ToListAsync();
         var mapped = efFolders.Select(Map).ToList();
@@ -60,50 +54,46 @@ public class FolderSqlRepository: IFolderRepository
 
     public async Task<FolderModel> CreateFolderAsync(FolderModel folder)
     {
-        var efRegister = new EfRegister
-        {
-            Name = "1",
-            DisplayName = "1",
-            DocumentCount = 0
-        };
         var efFolder = new EfFolder
         {
             Name = folder.Name,
             DisplayName = folder.DisplayName,
-            CurrentRegister = efRegister,
             IsFull = false,
             MaxDocumentsFolder = folder.DocumentsFolder,
             MaxDocumentsRegister = folder.DocumentsRegister,
             TotalDocuments = 0
         };
-        
-        await _context.AddAsync(efFolder);
-        await _context.SaveChangesAsync();
+
+        await context.AddAsync(efFolder);
+        await context.SaveChangesAsync();
         return Map(efFolder);
     }
 
     public async Task<FolderModel> UpdateFolderAsync(FolderModel folder)
     {
         var parsedId = int.Parse(folder.Id);
-        var efFolder = await _context.Folders.SingleAsync(x => x.Id == parsedId);
+        var efFolder = await context.Folders.SingleAsync(x => x.Id == parsedId);
         efFolder.Name = folder.Name;
         efFolder.DisplayName = folder.DisplayName;
         efFolder.MaxDocumentsFolder = folder.DocumentsFolder;
         efFolder.MaxDocumentsRegister = folder.DocumentsRegister;
         efFolder.TotalDocuments = folder.TotalDocuments;
         efFolder.IsFull = folder.IsFull;
-        _context.Update(efFolder);
-        await _context.SaveChangesAsync();
+        context.Update(efFolder);
+        await context.SaveChangesAsync();
         return Map(efFolder);
     }
 
     public async Task AddDocumentToFolderAsync(FolderModel folder, DocumentModel document)
     {
-        var efDocument = await _context.Documents.SingleOrDefaultAsync(x => x.Id == int.Parse(document.Id));
-        var efFolder = await _context.Folders
+        var efDocument = await context.Documents.SingleAsync(x => x.Id == int.Parse(document.Id));
+        
+        int.TryParse(document.FolderId, out var id);
+
+        var efFolder = await context.Folders
             .Include(x => x.Registers)
                 .ThenInclude(x => x.Documents)
-            .SingleAsync(x => x.Id == int.Parse(document.FolderId));
+            .SingleAsync(x => x.Id == id);
 
         var efRegister = efFolder.Registers.SingleOrDefault(x => x.DocumentCount <= efFolder.MaxDocumentsRegister);
         if (efRegister == null)
@@ -112,7 +102,7 @@ public class FolderSqlRepository: IFolderRepository
             efRegister = new EfRegister
             {
                 Name = (++newIx).ToString(),
-                Documents = new List<ef.Entities.EfDocument> {efDocument},
+                Documents = [efDocument],
                 DisplayName = "",
                 DocumentCount = 1,
                 Folder = efFolder
@@ -127,14 +117,14 @@ public class FolderSqlRepository: IFolderRepository
         efFolder.TotalDocuments++;
         efFolder.IsFull = efFolder.TotalDocuments >= efFolder.MaxDocumentsFolder;
         efFolder.CurrentRegister = efRegister;
-        _context.Update(efRegister);
-        _context.Update(efFolder);
-        await _context.SaveChangesAsync();
+        context.Update(efRegister);
+        context.Update(efFolder);
+        await context.SaveChangesAsync();
     }
 
     public async Task RemoveDocFromFolderAsync(FolderModel folder, DocumentModel document)
     {
-        var efFolder = await _context.Folders
+        var efFolder = await context.Folders
             .Include(x => x.Registers)
                 .ThenInclude(x => x.Documents)
             .SingleAsync(x => x.Id == int.Parse(document.FolderId));
@@ -145,31 +135,29 @@ public class FolderSqlRepository: IFolderRepository
         efRegister.Documents = newList;
         efRegister.DocumentCount--;
         efFolder.TotalDocuments--;
-        _context.Update(efRegister);
-        _context.Update(efFolder);
-        await _context.SaveChangesAsync();
+        context.Update(efRegister);
+        context.Update(efFolder);
+        await context.SaveChangesAsync();
     }
 
     private static FolderModel Map(EfFolder efFolder)
     {
-        if (efFolder == null) return null;
         return new FolderModel
         {
             Name = efFolder.Name,
             DisplayName = efFolder.DisplayName,
             CreatedAt = efFolder.DateCreated,
-            CurrentRegisterName = efFolder.CurrentRegister.Name,
+            CurrentRegisterName = efFolder.CurrentRegister?.Name ?? string.Empty,
             DocumentsFolder = efFolder.MaxDocumentsFolder,
             DocumentsRegister = efFolder.MaxDocumentsRegister,
             Id = efFolder.Id.ToString(),
             IsFull = efFolder.IsFull,
-            Registers = efFolder.Registers.Select(Map).ToList()
+            Registers = efFolder.Registers?.Select(Map).ToList() ?? []
         };
     }
 
     private static RegisterModel Map(EfRegister efRegister)
     {
-        if (efRegister == null) return null;
         return new RegisterModel
         {
             Name = efRegister.Name,

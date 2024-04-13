@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "document.lib.test", "docume
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "document.lib.ef", "document.lib.ef\document.lib.ef.csproj", "{7F789F93-7718-45AE-8AA0-FF5FB7A9D745}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "document.lib.migrationtool", "document.lib.migrationtool\document.lib.migrationtool.csproj", "{C8CE9DEE-33F8-4E1C-BF21-CF0921D9E968}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{7F789F93-7718-45AE-8AA0-FF5FB7A9D745}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F789F93-7718-45AE-8AA0-FF5FB7A9D745}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F789F93-7718-45AE-8AA0-FF5FB7A9D745}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8CE9DEE-33F8-4E1C-BF21-CF0921D9E968}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8CE9DEE-33F8-4E1C-BF21-CF0921D9E968}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8CE9DEE-33F8-4E1C-BF21-CF0921D9E968}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8CE9DEE-33F8-4E1C-BF21-CF0921D9E968}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

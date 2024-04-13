@@ -1,16 +1,13 @@
 ﻿using document.lib.shared.Interfaces;
-using document.lib.shared.Models.QueryDtos;
-using document.lib.shared.Models.ViewModels;
+using document.lib.shared.Models.Models;
 
 namespace document.lib.shared.Services;
 
-public class TagService : ITagService
+public class TagService(ITagRepository repository) : ITagService
 {
-    private readonly ITagRepository _repository;
-
-    public TagService(ITagRepository repository)
+    public async Task<List<TagModel>> GetTagsAsync()
     {
-        _repository = repository;
+        return await repository.GetTagsAsync();
     }
 
     public async Task<List<TagModel>> GetOrCreateTagsAsync(List<string> tags)
@@ -26,10 +23,12 @@ public class TagService : ITagService
 
     public async Task<TagModel> GetOrCreateTagAsync(string tag)
     {
-        var tagEntity = await _repository.GetTagAsync(new TagQueryParameters(name: tag));
+        var model = new TagModel { Name = tag, DisplayName = tag};
+        var tagEntity = await repository.GetTagAsync(model);
+
         if (tagEntity == null)
         {
-            return await _repository.CreateTagAsync(tag);
+            return await repository.CreateTagAsync(model);
         }
 
         return tagEntity;

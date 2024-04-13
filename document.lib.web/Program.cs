@@ -1,6 +1,7 @@
 using System.Globalization;
 using Azure.Storage.Blobs;
 using document.lib.ef;
+using document.lib.shared.Extensions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
 using document.lib.shared.Repositories.Cosmos;
@@ -35,46 +36,26 @@ builder.Services.AddServerSideBlazor().AddMicrosoftIdentityConsentHandler();
 var config = builder.Configuration.GetSection("Config");
 builder.Services.Configure<AppConfiguration>(config);
 
-// Repositories
-var provider = config["Provider"];
+builder.Services.ConfigureDocumentLibShared(
+    config["DatabaseProvider"],
+    config["CosmosDbConnection"],
+    config["BlobServiceConnectionString"],
+    config["BlobContainer"]);
+
+var provider = config["DatabaseProvider"];
 switch (provider)
 {
-    case "sql":
+    case "Sql":
         builder.Services.AddDbContext<DocumentLibContext>(opts =>
         {
             opts.UseSqlServer(config["DbConnectionString"], x => x.MigrationsAssembly("document.lib.ef"));
         });
-        builder.Services.AddScoped<IDocumentRepository, DocumentSqlRepository>();
-        builder.Services.AddScoped<ICategoryRepository, CategorySqlRepository>();
-        builder.Services.AddScoped<ITagRepository, TagSqlRepository>();
-        builder.Services.AddScoped<IFolderRepository, FolderSqlRepository>();
-        break;
-    case "cosmos":
-        builder.Services.AddSingleton(new CosmosClient(config["CosmosDbConnection"]));
-        builder.Services.AddScoped<IDocumentRepository, DocumentCosmosRepository>();
-        builder.Services.AddScoped<ICategoryRepository, CategoryCosmosRepository>();
-        builder.Services.AddScoped<ITagRepository, TagCosmosRepository>();
-        builder.Services.AddScoped<IFolderRepository, FolderCosmosRepository>();
-        builder.Services.AddScoped(typeof(CosmosQueryService));
-        builder.Services.AddScoped(typeof(CosmosMetadataService));
         break;
 }
 
-// Services
-builder.Services.AddScoped<ICategoryService, CategoryService>();
-builder.Services.AddScoped<IDocumentService, DocumentService>();
-builder.Services.AddScoped<ITagService, TagService>();
-builder.Services.AddScoped<IFolderService,FolderService>();
-builder.Services.AddTransient<OneTimeSetup>();
 
-builder.Services.AddSingleton<IndexerService>();
-builder.Services.AddSingleton(typeof(BlobClientHelper));
-
-var blobContainerClient = new BlobContainerClient(config["BlobServiceConnectionString"], config["BlobContainer"]);
-builder.Services.AddSingleton(blobContainerClient);
 
 var app = builder.Build();
-
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -84,14 +65,10 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");

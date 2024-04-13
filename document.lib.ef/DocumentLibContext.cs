@@ -10,6 +10,7 @@ public class DocumentLibContext : DbContext
     public DbSet<EfFolder> Folders { get; set; }
     public DbSet<EfRegister> Registers { get; set; }
     public DbSet<EfTag> Tags { get; set; }
+    public DbSet<EfTagAssignment> TagAssignments { get; set; }
 
     public DocumentLibContext()
     {
@@ -27,11 +28,31 @@ public class DocumentLibContext : DbContext
         return base.SaveChanges();
     }
 
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        UpdateNewEntities();
+        UpdateExistingEntites();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
     {
         UpdateNewEntities();
         UpdateExistingEntites();
         return await base.SaveChangesAsync(cancellationToken);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = new CancellationToken())
+    {
+        UpdateNewEntities();
+        UpdateExistingEntites();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<EfCategory>().HasIndex(x => x.Name).IsUnique();
     }
 
     private void UpdateNewEntities()
@@ -40,12 +61,15 @@ public class DocumentLibContext : DbContext
             .Where(x => x.State == EntityState.Added)
             .Select(x => x.Entity);
 
+        var now = DateTimeOffset.Now;
         foreach (var insertedEntry in insertedEntries)
         {
             //If the inserted object is an BaseField. 
+            
             if (insertedEntry is EfBaseFields bf)
             {
-                bf.DateCreated = DateTimeOffset.UtcNow;
+                bf.DateCreated = now;
+                bf.DateModified = now;
             }
         }
     }
@@ -60,7 +84,7 @@ public class DocumentLibContext : DbContext
             //If the inserted object is an BaseField. 
             if (modifiedEntry is EfBaseFields bf)
             {
-                bf.DateModified = DateTimeOffset.UtcNow;
+                bf.DateModified = DateTimeOffset.Now;
             }
         }
     }

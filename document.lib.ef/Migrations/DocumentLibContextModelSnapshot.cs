@@ -17,12 +17,12 @@ namespace document.lib.ef.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.5")
+                .HasAnnotation("ProductVersion", "8.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("document.lib.ef.Entities.Category", b =>
+            modelBuilder.Entity("document.lib.ef.Entities.EfCategory", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -37,17 +37,27 @@ namespace document.lib.ef.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("DisplayName")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("document.lib.ef.Entities.DocLibDocument", b =>
+            modelBuilder.Entity("document.lib.ef.Entities.EfDocument", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -56,13 +66,16 @@ namespace document.lib.ef.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("BlobLocation")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
-                    b.Property<int?>("CategoryId")
+                    b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
                     b.Property<string>("Company")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<DateTimeOffset>("DateCreated")
                         .HasColumnType("datetimeoffset");
@@ -70,25 +83,31 @@ namespace document.lib.ef.Migrations
                     b.Property<DateTimeOffset>("DateModified")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<DateTimeOffset>("DateOfDocument")
+                    b.Property<DateTimeOffset?>("DateOfDocument")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<bool>("Digital")
                         .HasColumnType("bit");
 
                     b.Property<string>("DisplayName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("PhysicalName")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
-                    b.Property<int?>("RegisterId")
+                    b.Property<int>("RegisterId")
                         .HasColumnType("int");
 
                     b.Property<bool>("Unsorted")
@@ -106,16 +125,13 @@ namespace document.lib.ef.Migrations
                     b.ToTable("Documents");
                 });
 
-            modelBuilder.Entity("document.lib.ef.Entities.Folder", b =>
+            modelBuilder.Entity("document.lib.ef.Entities.EfFolder", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("CurrentRegisterId")
-                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("DateCreated")
                         .HasColumnType("datetimeoffset");
@@ -124,7 +140,11 @@ namespace document.lib.ef.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("DisplayName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("IsFull")
+                        .HasColumnType("bit");
 
                     b.Property<int>("MaxDocumentsFolder")
                         .HasColumnType("int");
@@ -133,19 +153,19 @@ namespace document.lib.ef.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<int>("TotalDocuments")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CurrentRegisterId");
-
                     b.ToTable("Folders");
                 });
 
-            modelBuilder.Entity("document.lib.ef.Entities.Register", b =>
+            modelBuilder.Entity("document.lib.ef.Entities.EfRegister", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -160,13 +180,19 @@ namespace document.lib.ef.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("DisplayName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("DocumentCount")
+                        .HasColumnType("int");
 
                     b.Property<int?>("FolderId")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
                     b.HasKey("Id");
 
@@ -175,7 +201,7 @@ namespace document.lib.ef.Migrations
                     b.ToTable("Registers");
                 });
 
-            modelBuilder.Entity("document.lib.ef.Entities.Tag", b =>
+            modelBuilder.Entity("document.lib.ef.Entities.EfTag", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -190,70 +216,106 @@ namespace document.lib.ef.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("DisplayName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("DocLibDocumentId")
-                        .HasColumnType("int");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("DocLibDocumentId");
 
                     b.ToTable("Tags");
                 });
 
-            modelBuilder.Entity("document.lib.ef.Entities.DocLibDocument", b =>
+            modelBuilder.Entity("document.lib.ef.Entities.EfTagAssignment", b =>
                 {
-                    b.HasOne("document.lib.ef.Entities.Category", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
 
-                    b.HasOne("document.lib.ef.Entities.Register", "Register")
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("DateCreated")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("DateModified")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("TagAssignments");
+                });
+
+            modelBuilder.Entity("document.lib.ef.Entities.EfDocument", b =>
+                {
+                    b.HasOne("document.lib.ef.Entities.EfCategory", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("document.lib.ef.Entities.EfRegister", "Register")
                         .WithMany("Documents")
-                        .HasForeignKey("RegisterId");
+                        .HasForeignKey("RegisterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Category");
 
                     b.Navigation("Register");
                 });
 
-            modelBuilder.Entity("document.lib.ef.Entities.Folder", b =>
+            modelBuilder.Entity("document.lib.ef.Entities.EfRegister", b =>
                 {
-                    b.HasOne("document.lib.ef.Entities.Register", "CurrentRegister")
-                        .WithMany()
-                        .HasForeignKey("CurrentRegisterId");
-
-                    b.Navigation("CurrentRegister");
-                });
-
-            modelBuilder.Entity("document.lib.ef.Entities.Register", b =>
-                {
-                    b.HasOne("document.lib.ef.Entities.Folder", null)
+                    b.HasOne("document.lib.ef.Entities.EfFolder", "Folder")
                         .WithMany("Registers")
                         .HasForeignKey("FolderId");
+
+                    b.Navigation("Folder");
                 });
 
-            modelBuilder.Entity("document.lib.ef.Entities.Tag", b =>
+            modelBuilder.Entity("document.lib.ef.Entities.EfTagAssignment", b =>
                 {
-                    b.HasOne("document.lib.ef.Entities.DocLibDocument", null)
+                    b.HasOne("document.lib.ef.Entities.EfDocument", "Document")
                         .WithMany("Tags")
-                        .HasForeignKey("DocLibDocumentId");
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("document.lib.ef.Entities.EfTag", "Tag")
+                        .WithMany()
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Document");
+
+                    b.Navigation("Tag");
                 });
 
-            modelBuilder.Entity("document.lib.ef.Entities.DocLibDocument", b =>
+            modelBuilder.Entity("document.lib.ef.Entities.EfDocument", b =>
                 {
                     b.Navigation("Tags");
                 });
 
-            modelBuilder.Entity("document.lib.ef.Entities.Folder", b =>
+            modelBuilder.Entity("document.lib.ef.Entities.EfFolder", b =>
                 {
                     b.Navigation("Registers");
                 });
 
-            modelBuilder.Entity("document.lib.ef.Entities.Register", b =>
+            modelBuilder.Entity("document.lib.ef.Entities.EfRegister", b =>
                 {
                     b.Navigation("Documents");
                 });

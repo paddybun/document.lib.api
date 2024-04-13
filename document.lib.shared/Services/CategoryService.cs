@@ -1,34 +1,40 @@
 ﻿using document.lib.shared.Interfaces;
-using document.lib.shared.Models.QueryDtos;
-using document.lib.shared.Models.ViewModels;
-using document.lib.shared.TableEntities;
+using document.lib.shared.Models.Models;
 
 namespace document.lib.shared.Services;
 
-public class CategoryService : ICategoryService
+public class CategoryService(ICategoryRepository categoryRepository) : ICategoryService
 {
-    private readonly ICategoryRepository _categoryRepository;
-
-    public CategoryService(ICategoryRepository categoryRepository)
+    public async Task<CategoryModel?> GetCategoryAsync(string name)
     {
-        _categoryRepository = categoryRepository;
+        var categoryModel = new CategoryModel { Name = name };
+        return await categoryRepository.GetCategoryAsync(categoryModel);
     }
 
-    public async Task<CategoryModel> GetCategoryAsync(string name)
+    public async Task<List<CategoryModel>> GetAllAsync()
     {
-        return await _categoryRepository.GetCategoryAsync(new CategoryQueryParameters(name: name));
+        return await categoryRepository.GetCategoriesAsync();
     }
 
     public async Task<CategoryModel> CreateOrGetCategoryAsync(string category)
     {
-        var categoryEntity = await _categoryRepository.GetCategoryAsync(new CategoryQueryParameters(name: category));
         var model = new CategoryModel { Name = category };
+        var categoryEntity = await categoryRepository.GetCategoryAsync(model);
 
         if (categoryEntity == null)
         {
-            return await _categoryRepository.CreateCategoryAsync(model);
+            return await categoryRepository.CreateCategoryAsync(model);
         }
 
         return categoryEntity;
+    }
+
+    public async Task<CategoryModel> SaveAsync(CategoryModel category, bool createNew = false)
+    {
+        if (!createNew) 
+            return await categoryRepository.UpdateCategoryAsync(category);
+        
+        category.DisplayName = string.IsNullOrWhiteSpace(category.DisplayName) ? category.Name : category.DisplayName;
+        return await categoryRepository.CreateCategoryAsync(category);
     }
 }
