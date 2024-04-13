@@ -1,7 +1,7 @@
 ﻿using document.lib.ef;
 using document.lib.ef.Entities;
 using document.lib.shared.Interfaces;
-using document.lib.shared.Models.ViewModels;
+using document.lib.shared.Models.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.shared.Repositories.Sql;

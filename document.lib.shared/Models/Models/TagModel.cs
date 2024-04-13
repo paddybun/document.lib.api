@@ -1,4 +1,4 @@
-﻿namespace document.lib.shared.Models.ViewModels;
+﻿namespace document.lib.shared.Models.Models;
 
 public class TagModel
 {

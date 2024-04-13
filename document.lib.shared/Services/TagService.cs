@@ -1,6 +1,6 @@
 ﻿using document.lib.shared.Interfaces;
+using document.lib.shared.Models.Models;
 using document.lib.shared.Models.QueryDtos;
-using document.lib.shared.Models.ViewModels;
 
 namespace document.lib.shared.Services;
 

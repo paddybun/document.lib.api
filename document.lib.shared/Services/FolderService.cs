@@ -1,28 +1,35 @@
 ﻿using document.lib.shared.Interfaces;
+using document.lib.shared.Models.Models;
 using document.lib.shared.Models.QueryDtos;
-using document.lib.shared.Models.ViewModels;
 
 namespace document.lib.shared.Services;
 
-public class FolderService : IFolderService
+public class FolderService(IFolderRepository folderRepository)
+    : IFolderService
 {
-    private readonly IFolderRepository _folderRepository;
-    private readonly IDocumentRepository _documentRepository;
-
-    public FolderService(IFolderRepository folderRepository, IDocumentRepository documentRepository)
+    public async Task<FolderModel?> GetFolderByNameAsync(string name)
     {
-        _folderRepository = folderRepository;
-        _documentRepository = documentRepository;
-    }
+        var folder = await folderRepository.GetFolderAsync(new FolderModel{ Name = name});
+        if (folder == null) return null;
 
-    public async Task<FolderModel> GetFolderByNameAsync(string name)
-    {
-        return await _folderRepository.GetFolderAsync(new FolderQueryParameters(name: name));
+        if (folder.CurrentRegister == null)
+        {
+            var lastRegisterNumber = folder.GetLastRegisterNumber();
+            var newRegisterNumber = lastRegisterNumber + 1 ?? 1;
+
+            var newRegister = new RegisterModel
+            {
+                Name = newRegisterNumber.ToString(),
+                DisplayName = "New Register",
+                DocumentCount = 0,
+                Documents = new List<DocumentModel>()
+            };
+        }
     }
 
     public async Task<FolderModel> GetOrCreateActiveFolderAsync()
     {
-        return await _folderRepository.GetFolderAsync(new FolderQueryParameters(activeFolder: true)) ??
+        return await folderRepository.GetFolderAsync(new FolderQueryParameters(activeFolder: true)) ??
                await SaveAsync(CreateDefaultFolderModel(), true);
     }
 
@@ -30,9 +37,9 @@ public class FolderService : IFolderService
     {
         if (createNew)
         {
-            return await _folderRepository.CreateFolderAsync(folderModel);
+            return await folderRepository.CreateFolderAsync(folderModel);
         }
-        return await _folderRepository.UpdateFolderAsync(folderModel);
+        return await folderRepository.UpdateFolderAsync(folderModel);
     }
 
     public async Task<FolderModel> GetOrCreateFolderByIdAsync(string id)
@@ -42,14 +49,14 @@ public class FolderService : IFolderService
         FolderModel folder;
         if (int.TryParse(id, out var parsedId))
         {
-            folder = await _folderRepository.GetFolderAsync(new FolderQueryParameters(id: parsedId)) ??
+            folder = await folderRepository.GetFolderAsync(new FolderQueryParameters(id: parsedId)) ??
                      await SaveAsync(CreateDefaultFolderModel(), true);
         }
         else
         {
             // If id could not be parsed as int, it is assumed that a cosmos id is used in the format: 'Folder.f9c900c2-aaa4-41c9-a7d2-d4ad928ffc95'
             var cosmosId = id.Split('.').Last();
-            folder = await _folderRepository.GetFolderAsync(new FolderQueryParameters(name: cosmosId)) ??
+            folder = await folderRepository.GetFolderAsync(new FolderQueryParameters(name: cosmosId)) ??
                      await SaveAsync(CreateDefaultFolderModel(), true);
         }
         return folder;
@@ -57,7 +64,7 @@ public class FolderService : IFolderService
 
     public async Task<List<FolderModel>> GetAllAsync()
     {
-        var folders = await _folderRepository.GetAllFoldersAsync();
+        var folders = await folderRepository.GetAllFoldersAsync();
         return folders;
     }
 

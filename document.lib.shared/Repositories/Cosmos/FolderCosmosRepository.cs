@@ -2,8 +2,8 @@
 using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
+using document.lib.shared.Models.Models;
 using document.lib.shared.Models.QueryDtos;
-using document.lib.shared.Models.ViewModels;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;

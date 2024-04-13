@@ -1,5 +1,5 @@
-﻿using document.lib.shared.Models.QueryDtos;
-using document.lib.shared.Models.ViewModels;
+﻿using document.lib.shared.Models.Models;
+using document.lib.shared.Models.QueryDtos;
 
 namespace document.lib.shared.Interfaces;
 

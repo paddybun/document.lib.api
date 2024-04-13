@@ -2,8 +2,8 @@
 using document.lib.ef.Entities;
 using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
+using document.lib.shared.Models.Models;
 using document.lib.shared.Models.QueryDtos;
-using document.lib.shared.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.shared.Repositories.Sql;
