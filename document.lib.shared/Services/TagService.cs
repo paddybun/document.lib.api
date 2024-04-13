@@ -1,6 +1,5 @@
 ﻿using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Models;
-using document.lib.shared.Models.QueryDtos;
 
 namespace document.lib.shared.Services;
 
@@ -24,10 +23,11 @@ public class TagService(ITagRepository repository) : ITagService
 
     public async Task<TagModel> GetOrCreateTagAsync(string tag)
     {
-        var tagEntity = await repository.GetTagAsync(new TagQueryParameters(name: tag));
+        var model = new TagModel { Name = tag, DisplayName = tag};
+        var tagEntity = await repository.GetTagAsync(model);
+
         if (tagEntity == null)
         {
-            var model = new TagModel { Name = tag, DisplayName = tag};
             return await repository.CreateTagAsync(model);
         }
 

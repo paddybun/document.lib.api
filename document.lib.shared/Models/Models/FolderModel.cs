@@ -10,7 +10,7 @@ public class FolderModel : IFolderModel, IFolderModelExtensions
     public string? DisplayName { get; set; } = null!;
     public RegisterModel? CurrentRegister { get; set; }
     public string? CurrentRegisterName { get; set; }
-    public List<RegisterModel>? Registers { get; set; }
+    public List<RegisterModel> Registers { get; set; } = [];
     public int TotalDocuments { get; set; }
     public int DocumentsRegister { get; set; }
     public int DocumentsFolder { get; set; }
@@ -22,7 +22,7 @@ public class FolderModel : IFolderModel, IFolderModelExtensions
     public int? GetLastRegisterNumber()
     {
         var lastRegister = Registers?.MaxBy(x => x.Name);
-        if (int.TryParse(lastRegister?.Name, out int parsedNumber))
+        if (int.TryParse(lastRegister?.Name, out var parsedNumber))
         {
             return parsedNumber;
         }

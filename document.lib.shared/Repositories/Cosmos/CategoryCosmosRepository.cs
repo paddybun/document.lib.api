@@ -3,7 +3,6 @@ using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
 using document.lib.shared.Models.Models;
-using document.lib.shared.Models.QueryDtos;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
@@ -21,23 +20,27 @@ public class CategoryCosmosRepository : ICategoryRepository
         _cosmosContainer = db.GetContainer(TableNames.Doclib);
     }
 
-    public async Task<CategoryModel?> GetCategoryAsync(CategoryQueryParameters queryParameters)
+    public async Task<CategoryModel?> GetCategoryAsync(CategoryModel categoryModel)
     {
-        if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
-        if (!queryParameters.IsValid()) throw new InvalidQueryParameterException(queryParameters.GetType());
+        if (categoryModel == null) throw new ArgumentNullException(nameof(categoryModel));
+
+        if (string.IsNullOrWhiteSpace(categoryModel.Id) && string.IsNullOrWhiteSpace(categoryModel.Name))
+        {
+            throw new InvalidParameterException(categoryModel.GetType());
+        }
 
         DocLibCategory? category;
-        if (queryParameters.Id.HasValue)
+        if (!string.IsNullOrWhiteSpace(categoryModel.Id))
         {
             category = _cosmosContainer.GetItemLinqQueryable<DocLibCategory>(true)
-                .Where(x => x.Id == queryParameters.Id.Value.ToString())
+                .Where(x => x.Id == categoryModel.Id)
                 .AsEnumerable()
                 .FirstOrDefault();
         }
         else
         {
             category = _cosmosContainer.GetItemLinqQueryable<DocLibCategory>(true)
-                .Where(x => x.Id == $"Category.{queryParameters.Name}")
+                .Where(x => x.Id == $"Category.{categoryModel.Name}")
                 .AsEnumerable()
                 .FirstOrDefault();
         }
@@ -84,7 +87,7 @@ public class CategoryCosmosRepository : ICategoryRepository
     {
         return new DocLibCategory
         {
-            Id = categoryModel.Id,
+            Id = categoryModel.Id ?? string.Empty,
             Name = categoryModel.Name,
             DisplayName = categoryModel.DisplayName,
             Description = categoryModel.Description

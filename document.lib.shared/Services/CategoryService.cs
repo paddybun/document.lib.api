@@ -1,6 +1,5 @@
 ﻿using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Models;
-using document.lib.shared.Models.QueryDtos;
 
 namespace document.lib.shared.Services;
 
@@ -8,7 +7,8 @@ public class CategoryService(ICategoryRepository categoryRepository) : ICategory
 {
     public async Task<CategoryModel?> GetCategoryAsync(string name)
     {
-        return await categoryRepository.GetCategoryAsync(new CategoryQueryParameters(name: name));
+        var categoryModel = new CategoryModel { Name = name };
+        return await categoryRepository.GetCategoryAsync(categoryModel);
     }
 
     public async Task<List<CategoryModel>> GetAllAsync()
@@ -18,8 +18,8 @@ public class CategoryService(ICategoryRepository categoryRepository) : ICategory
 
     public async Task<CategoryModel> CreateOrGetCategoryAsync(string category)
     {
-        var categoryEntity = await categoryRepository.GetCategoryAsync(new CategoryQueryParameters(name: category));
         var model = new CategoryModel { Name = category };
+        var categoryEntity = await categoryRepository.GetCategoryAsync(model);
 
         if (categoryEntity == null)
         {

@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using Azure.Storage.Blobs;
 using document.lib.ef;
-using document.lib.ef.Entities;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Models;
 using document.lib.shared.Repositories.Sql;
@@ -12,7 +11,6 @@ using Microsoft.Extensions.Logging;
 namespace document.lib.migrationtool;
 
 public class CosmosToSqlMigration(
-    IHostApplicationLifetime lifetime,
     ILogger<CosmosToSqlMigration> logger,
     IFolderService cosmosFolderService,
     IDocumentService cosmosDocumentService,
@@ -27,7 +25,7 @@ public class CosmosToSqlMigration(
         // allow generic host to log lifetime logs first
         logger.LogInformation("Started cosmos to sql migration");
         var sqlCategoryService = new CategoryService(new CategorySqlRepository(sqlContext));
-        var sqlFolderService = new FolderService(new FolderSqlRepository(sqlContext), new DocumentSqlRepository(sqlContext));
+        var sqlFolderService = new FolderService(new FolderSqlRepository(sqlContext));
         var sqlTagService = new TagService(new TagSqlRepository(sqlContext));
         var sqlRegisterRepo = new RegisterSqlRepository(sqlContext);
         var sqlDocumentService = new DocumentService(blobContainerClient, new DocumentSqlRepository(sqlContext), sqlCategoryService, sqlTagService, sqlFolderService);

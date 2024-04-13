@@ -15,7 +15,7 @@ public class EfRegister: EfBaseFields
     [MaxLength(500)]
     public string? DisplayName { get; set; }
 
-    public List<EfDocument>? Documents { get; set; }
+    public List<EfDocument> Documents { get; set; } = [];
 
     public EfFolder? Folder { get; set; }
 

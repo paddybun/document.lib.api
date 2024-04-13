@@ -1,6 +1,5 @@
 ﻿using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Models;
-using document.lib.shared.Models.QueryDtos;
 
 namespace document.lib.shared.Services;
 
@@ -22,14 +21,20 @@ public class FolderService(IFolderRepository folderRepository)
                 Name = newRegisterNumber.ToString(),
                 DisplayName = "New Register",
                 DocumentCount = 0,
-                Documents = new List<DocumentModel>()
+                Documents = []
             };
+
+            folder.Registers.Add(newRegister);
+            folder.CurrentRegister = newRegister;
         }
+
+        return folder;
     }
 
     public async Task<FolderModel> GetOrCreateActiveFolderAsync()
     {
-        return await folderRepository.GetFolderAsync(new FolderQueryParameters(activeFolder: true)) ??
+        var model = new FolderModel { IsActive = true };
+        return await folderRepository.GetFolderAsync(model) ??
                await SaveAsync(CreateDefaultFolderModel(), true);
     }
 
@@ -46,19 +51,15 @@ public class FolderService(IFolderRepository folderRepository)
     {
         if (id == null) throw new ArgumentNullException(nameof(id));
 
-        FolderModel folder;
-        if (int.TryParse(id, out var parsedId))
+        var model = new FolderModel
         {
-            folder = await folderRepository.GetFolderAsync(new FolderQueryParameters(id: parsedId)) ??
+            Id = id,
+            Name = id.Split('.').Last()
+        };
+
+        var folder = await folderRepository.GetFolderAsync(model) ??
                      await SaveAsync(CreateDefaultFolderModel(), true);
-        }
-        else
-        {
-            // If id could not be parsed as int, it is assumed that a cosmos id is used in the format: 'Folder.f9c900c2-aaa4-41c9-a7d2-d4ad928ffc95'
-            var cosmosId = id.Split('.').Last();
-            folder = await folderRepository.GetFolderAsync(new FolderQueryParameters(name: cosmosId)) ??
-                     await SaveAsync(CreateDefaultFolderModel(), true);
-        }
+
         return folder;
     }
 

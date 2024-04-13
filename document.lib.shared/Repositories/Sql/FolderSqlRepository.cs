@@ -1,9 +1,8 @@
 ﻿using document.lib.ef;
 using document.lib.ef.Entities;
-using document.lib.shared.Exceptions;
+using document.lib.ef.Helpers;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Models;
-using document.lib.shared.Models.QueryDtos;
 using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.shared.Repositories.Sql;
@@ -39,7 +38,7 @@ public sealed class FolderSqlRepository(DocumentLibContext context) : IFolderRep
         }
 
         // Assign current register, if all registers are full, then current register will be null and must be created via the service
-        efFolder = AssignCurrentRegister(efFolder);
+        efFolder = FolderHelpers.AssignCurrentRegister(efFolder);
 
         return efFolder == null ? null : Map(efFolder);
     }
@@ -87,11 +86,14 @@ public sealed class FolderSqlRepository(DocumentLibContext context) : IFolderRep
 
     public async Task AddDocumentToFolderAsync(FolderModel folder, DocumentModel document)
     {
-        var efDocument = await context.Documents.SingleOrDefaultAsync(x => x.Id == int.Parse(document.Id));
+        var efDocument = await context.Documents.SingleAsync(x => x.Id == int.Parse(document.Id));
+        
+        int.TryParse(document.FolderId, out var id);
+
         var efFolder = await context.Folders
             .Include(x => x.Registers)
                 .ThenInclude(x => x.Documents)
-            .SingleAsync(x => x.Id == int.Parse(document.FolderId));
+            .SingleAsync(x => x.Id == id);
 
         var efRegister = efFolder.Registers.SingleOrDefault(x => x.DocumentCount <= efFolder.MaxDocumentsRegister);
         if (efRegister == null)
@@ -100,7 +102,7 @@ public sealed class FolderSqlRepository(DocumentLibContext context) : IFolderRep
             efRegister = new EfRegister
             {
                 Name = (++newIx).ToString(),
-                Documents = new List<ef.Entities.EfDocument> {efDocument},
+                Documents = [efDocument],
                 DisplayName = "",
                 DocumentCount = 1,
                 Folder = efFolder
@@ -136,16 +138,6 @@ public sealed class FolderSqlRepository(DocumentLibContext context) : IFolderRep
         context.Update(efRegister);
         context.Update(efFolder);
         await context.SaveChangesAsync();
-    }
-
-    private static EfFolder? AssignCurrentRegister(EfFolder? folder)
-    {
-        if (!(folder?.Registers?.Count > 0)) return folder;
-
-        var register = folder.Registers.SingleOrDefault(x => x.DocumentCount <= folder.MaxDocumentsRegister);
-        folder.CurrentRegister = register;
-
-        return folder;
     }
 
     private static FolderModel Map(EfFolder efFolder)

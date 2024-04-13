@@ -15,9 +15,9 @@ public class EfFolder: EfBaseFields
     public string? DisplayName { get; set; }
 
     [NotMapped]
-    public EfRegister? CurrentRegister { get; set; }
+    public EfRegister CurrentRegister { get; set; } = null!;
 
-    public ICollection<EfRegister>? Registers { get; set; }
+    public ICollection<EfRegister> Registers { get; set; } = [];
     
     public int TotalDocuments { get; set; }
 

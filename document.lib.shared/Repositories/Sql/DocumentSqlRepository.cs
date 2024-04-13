@@ -1,9 +1,9 @@
 ﻿using document.lib.ef;
 using document.lib.ef.Entities;
+using document.lib.ef.Helpers;
 using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Models;
-using document.lib.shared.Models.QueryDtos;
 using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.shared.Repositories.Sql;
@@ -15,13 +15,14 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
         var registerName = document.Digital ? "digital" : document.RegisterName;
         var register = await context
             .Registers
-            .SingleOrDefaultAsync(x => x.Name == registerName);
+            .SingleAsync(x => x.Name == registerName);
         var category = await context
             .Categories
-            .SingleOrDefaultAsync(x => x.Name == document.CategoryName);
+            .SingleAsync(x => x.Name == document.CategoryName);
+        var t = document.Tags?.Select(x => x) ?? [];
         var tags = await context
             .Tags
-            .Where(x => document.Tags.Contains(x.Name))
+            .Where(x => t.Contains(x.Name))
             .ToListAsync();
 
         var assignments = tags.Select(x => new EfTagAssignment
@@ -52,21 +53,24 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
         return Map(efDocument);
     }
 
-    public async Task<DocumentModel> GetDocumentAsync(DocumentQueryParameters queryParameters)
+    public async Task<DocumentModel?> GetDocumentAsync(DocumentModel model)
     {
-        if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
-        if (!queryParameters.IsValid()) throw new InvalidQueryParameterException(queryParameters.GetType());
+        if (model == null) throw new ArgumentNullException(nameof(model));
 
-        EfDocument efDocument;
-        if (queryParameters.Id.HasValue)
+        if (string.IsNullOrWhiteSpace(model.Id) || string.IsNullOrWhiteSpace(model.Name))
+            throw new InvalidParameterException(model.GetType());
+
+        EfDocument? efDocument;
+        if (!string.IsNullOrWhiteSpace(model.Id))
         {
+            var id = int.Parse(model.Id);
             efDocument = await context
                 .Documents
                 .Include(x => x.Register)
                 .ThenInclude(x => x.Folder)
                 .Include(x => x.Category)
                 .Include(x => x.Tags)
-                .SingleOrDefaultAsync(x => x.Id == queryParameters.Id.Value);
+                .SingleOrDefaultAsync(x => x.Id == id);
         }
         else
         {
@@ -76,8 +80,11 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
                 .ThenInclude(x => x.Folder)
                 .Include(x => x.Category)
                 .Include(x => x.Tags)
-                .SingleOrDefaultAsync(x => x.Name == queryParameters.Name);
+                .SingleOrDefaultAsync(x => x.Name == model.Name);
         }
+
+        if (efDocument == null) return null;
+
         return Map(efDocument);
     }
 
@@ -125,7 +132,7 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
             .ThenInclude(x => x.Folder)
             .Include(x => x.Category)
             .Include(x => x.Tags)
-            .Where(x => x.Register.Folder.Name == folderName)
+            .Where(x => x.Register.Folder!.Name == folderName)
             .Skip(page).Take(count)
             .ToListAsync();
 
@@ -133,8 +140,8 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
         return mapped;
     }
 
-    public async Task<DocumentModel> UpdateDocumentAsync(DocumentModel document, CategoryModel category = null, FolderModel folder = null,
-        TagModel[] tags = null)
+    public async Task<DocumentModel> UpdateDocumentAsync(DocumentModel document, CategoryModel? category = null, FolderModel? folder = null,
+        TagModel[]? tags = null)
     {
         var efDoc = context
             .Documents
@@ -160,10 +167,14 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
         }
         if (folder != null)
         {
+            int.TryParse(folder.Id, out var folderId);
             var efFolder = await context
                 .Folders
-                .Include(x => x.CurrentRegister)
-                .SingleAsync(x => x.Id == int.Parse(category.Id));
+                .Include(x => x.Registers)
+                .SingleAsync(x => x.Id == folderId);
+
+            FolderHelpers.AssignCurrentRegister(efFolder);
+
             efDoc.Register = efFolder.CurrentRegister;
         }
 

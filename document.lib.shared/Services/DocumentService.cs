@@ -1,7 +1,6 @@
 ﻿using Azure.Storage.Blobs;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Models;
-using document.lib.shared.Models.QueryDtos;
 
 namespace document.lib.shared.Services
 {
@@ -21,20 +20,36 @@ namespace document.lib.shared.Services
             return await documentRepository.GetUnsortedDocumentsAsync();
         }
 
-        public Task<DocumentModel> GetDocumentAsync(string id = null, string name = null)
+        public async Task<DocumentModel?> GetDocumentAsync(string? id = null, string? name = null)
         {
             if (string.IsNullOrWhiteSpace(id) && string.IsNullOrWhiteSpace(name))
             {
                 var idNull = new ArgumentNullException(nameof(id));
-                var nameNull = new ArgumentNullException(nameof(id));
+                var nameNull = new ArgumentNullException(nameof(name));
                 throw new AggregateException(idNull, nameNull);
             }
 
+            DocumentModel model;
             if (int.TryParse(id, out var parsedId))
             {
-                return documentRepository.GetDocumentAsync(new DocumentQueryParameters(parsedId, name));
+                 model = new DocumentModel
+                {
+                    Id = parsedId.ToString()
+                };
             }
-            return documentRepository.GetDocumentAsync(new DocumentQueryParameters(name: id));
+            else if (!string.IsNullOrWhiteSpace(name))
+            {
+                model = new DocumentModel
+                {
+                    Name = name
+                };
+            }
+            else
+            {
+                return null;
+            }
+
+            return await documentRepository.GetDocumentAsync(model);
         }
 
         public async Task<List<DocumentModel>> GetAllDocumentsAsync()
@@ -76,15 +91,15 @@ namespace document.lib.shared.Services
         public async Task<bool> MoveDocumentAsync(DocumentModel doc)
         {
             var oldPath = doc.BlobLocation;
-            var queryParams = new DocumentQueryParameters();
             
+            var model = new DocumentModel { };
+
             if (int.TryParse(doc.Id, out var id))
-                queryParams.Id = id;
+                model.Id = id.ToString();
             else
-                queryParams.Name = doc.Id;
+                model.Name = doc.Id;
 
-
-            var dbDoc = await documentRepository.GetDocumentAsync(queryParams);
+            var dbDoc = await documentRepository.GetDocumentAsync(model);
             if (dbDoc == null || doc.FolderName == dbDoc.FolderName) return false;
 
             var oldFolder = await folderService.GetFolderByNameAsync(dbDoc.FolderName);
@@ -94,7 +109,7 @@ namespace document.lib.shared.Services
             await folderService.RemoveDocumentFromFolder(oldFolder, dbDoc);
             await folderService.AddDocumentToFolderAsync(newFolder, dbDoc);
 
-            var relocatedDoc = await documentRepository.GetDocumentAsync(queryParams);
+            var relocatedDoc = await documentRepository.GetDocumentAsync(model);
             dbDoc.BlobLocation = $"{newFolder.Name}/{relocatedDoc.RegisterName}/{dbDoc.PhysicalName}";
             
             await MoveBlob(oldPath, dbDoc.BlobLocation);
@@ -103,16 +118,9 @@ namespace document.lib.shared.Services
             return true;
         }
 
-        public async Task DeleteDocumentAsync(DocumentModel doc)
+        public Task DeleteDocumentAsync(DocumentModel doc)
         {
-            // HACK: Temporary disable delete functionality
             throw new NotImplementedException();
-            if (string.IsNullOrEmpty(doc.Id))
-            {
-                return;
-            }
-
-            await documentRepository.DeleteDocumentAsync(doc);
         }
 
         private async Task MoveDocumentFromUnsorted(DocumentModel doc)

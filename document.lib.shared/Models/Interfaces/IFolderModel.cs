@@ -10,7 +10,7 @@ public interface IFolderModel
     string? DisplayName { get; set; }
     RegisterModel? CurrentRegister { get; set; }
     string? CurrentRegisterName { get; set; }
-    List<RegisterModel>? Registers { get; set; }
+    List<RegisterModel> Registers { get; set; }
     int TotalDocuments { get; set; }
     int DocumentsRegister { get; set; }
     int DocumentsFolder { get; set; }

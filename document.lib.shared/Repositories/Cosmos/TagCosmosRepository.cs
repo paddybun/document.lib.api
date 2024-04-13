@@ -3,7 +3,6 @@ using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
 using document.lib.shared.Models.Models;
-using document.lib.shared.Models.QueryDtos;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
@@ -21,13 +20,12 @@ public class TagCosmosRepository : ITagRepository
         _cosmosContainer = db.GetContainer(TableNames.Doclib);
     }
 
-    public async Task<TagModel> GetTagAsync(TagQueryParameters queryParameters)
+    public async Task<TagModel?> GetTagAsync(TagModel model)
     {
-        if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
-        if (string.IsNullOrWhiteSpace(queryParameters.Name))
-            throw new InvalidQueryParameterException("Tag query in cosmos repository only allows searching by name. Name should look like Tag.<id>");
+        if (string.IsNullOrWhiteSpace(model.Name))
+            throw new InvalidParameterException("Tag query in cosmos repository only allows searching by name. Name should look like Tag.<id>");
 
-        var id = queryParameters.Name.Split('.').Last();
+        var id = model.Name.Split('.').Last();
         var tag = _cosmosContainer.GetItemLinqQueryable<DocLibTag>(true)
             .Where(x => x.Id == $"Tag.{id}")
             .AsEnumerable()
@@ -46,10 +44,10 @@ public class TagCosmosRepository : ITagRepository
         return await Task.FromResult(tags.Select(Map).ToList());
     }
 
-    public async Task<TagModel> CreateTagAsync(string tagName)
+    public async Task<TagModel> CreateTagAsync(TagModel model)
     {
-        var id = $"Tag.{tagName}";
-        var lowercased = tagName;
+        var id = $"Tag.{model.Name}";
+        var lowercased = model.Name;
         var response = await _cosmosContainer.CreateItemAsync(new DocLibTag
         {
             Id = id,
@@ -61,8 +59,6 @@ public class TagCosmosRepository : ITagRepository
 
     private static TagModel Map(DocLibTag tag)
     {
-        if (tag == null) return null;
-
         return new TagModel
         {
             Name = tag.Name,

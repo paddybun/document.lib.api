@@ -3,27 +3,28 @@ using document.lib.ef.Entities;
 using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Models;
-using document.lib.shared.Models.QueryDtos;
 using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.shared.Repositories.Sql;
 
-// Scoped injection
 public sealed class CategorySqlRepository(DocumentLibContext context) : ICategoryRepository
 {
-    public async Task<CategoryModel?> GetCategoryAsync(CategoryQueryParameters queryParameters)
+    public async Task<CategoryModel?> GetCategoryAsync(CategoryModel categoryModel)
     {
-        if (queryParameters == null) throw new ArgumentNullException(nameof(queryParameters));
-        if (!queryParameters.IsValid()) throw new InvalidQueryParameterException(queryParameters.GetType());
+        if (categoryModel == null) throw new ArgumentNullException(nameof(categoryModel));
+
+        if (string.IsNullOrWhiteSpace(categoryModel.Id) && string.IsNullOrWhiteSpace(categoryModel.Name))
+            throw new InvalidParameterException(categoryModel.GetType());
 
         EfCategory? efCategory;
-        if (queryParameters.Id.HasValue)
+        if (!string.IsNullOrWhiteSpace(categoryModel.Id))
         {
-            efCategory = await context.Categories.SingleOrDefaultAsync(x => x.Id == queryParameters.Id.Value);
+            var id = int.Parse(categoryModel.Id);
+            efCategory = await context.Categories.SingleOrDefaultAsync(x => x.Id == id);
         }
         else
         {
-            efCategory = await context.Categories.SingleOrDefaultAsync(x => x.Name == queryParameters.Name);
+            efCategory = await context.Categories.SingleOrDefaultAsync(x => x.Name == categoryModel.Name);
         }
 
         return efCategory == null ? null : Map(efCategory);
