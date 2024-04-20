@@ -1,6 +1,8 @@
-﻿using document.lib.rest.Parameters;
+﻿using System.Linq.Expressions;
+using document.lib.rest.Parameters;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Models;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace document.lib.rest.ApiServices;
 
@@ -15,12 +17,17 @@ internal class FolderApiService(IFolderService folderService)
     {
         try
         {
-            if (folderGetQueryParameters is { Page: not null, PageSize: not null })
+            if (CheckForNull(folderGetQueryParameters, 
+                    x => x.Page, 
+                    x => x.PageSize))
             {
-                var (count, folders) = await folderService.GetFoldersPaged(folderGetQueryParameters.Page.Value, folderGetQueryParameters.PageSize.Value);
+                var (count, folders) = await folderService.GetFoldersPaged(folderGetQueryParameters.Page!.Value, folderGetQueryParameters.PageSize!.Value);
                 http.Response.Headers.Append("total-results", count.ToString());
                 return Results.Ok(folders);
             }
+
+            
+            
 
             FolderModel? folder = null;
             if (!string.IsNullOrWhiteSpace(folderGetQueryParameters.Id?.ToString()))
@@ -39,6 +46,21 @@ internal class FolderApiService(IFolderService folderService)
             // TODO: logging
             return Results.StatusCode(500);
         }
+    }
+
+    private bool CheckForNull(FolderGetQueryParameters parameters, params Expression<Func<FolderGetQueryParameters, int?>>[] expressions)
+    {
+        List<bool> results = [];
+        foreach (var expression in expressions)
+        {
+            if (expression.Body is MemberExpression body)
+            {
+                var propValue = expression.Compile()(parameters);
+                results.Add(propValue.HasValue);
+            }
+        }
+        
+        return results.All(x => x);
     }
 
     public async Task<IResult> CreateFolder(FolderPutParameters folderPutParameters)
