@@ -6,29 +6,38 @@ namespace document.lib.shared.Services;
 public class FolderService(IFolderRepository folderRepository)
     : IFolderService
 {
+    public async Task<(int, FolderModel[])> GetFoldersPaged(int page, int pageSize)
+    {
+        return await folderRepository.GetFolders(page, pageSize);
+    }
+
     public async Task<FolderModel?> GetFolderByNameAsync(string name)
     {
         var folder = await folderRepository.GetFolderAsync(new FolderModel{ Name = name});
         if (folder == null) return null;
 
-        if (folder.CurrentRegister == null)
-        {
-            var lastRegisterNumber = folder.GetLastRegisterNumber();
-            var newRegisterNumber = lastRegisterNumber + 1 ?? 1;
-
-            var newRegister = new RegisterModel
-            {
-                Name = newRegisterNumber.ToString(),
-                DisplayName = "New Register",
-                DocumentCount = 0,
-                Documents = []
-            };
-
-            folder.Registers.Add(newRegister);
-            folder.CurrentRegister = newRegister;
-        }
+        if (folder.CurrentRegister == null) AddNewRegister(folder);
 
         return folder;
+    }
+
+    public async Task<FolderModel?> GetFolderByIdAsync(string id)
+    {
+        var folder = await folderRepository.GetFolderAsync(new FolderModel { Id = id});
+        if (folder == null) return null;
+
+        if (folder.CurrentRegister == null) AddNewRegister(folder);
+        return folder;
+    }
+
+    public async Task<FolderModel?> GetFolderByIdAsync(int id)
+    {
+        return await GetFolderByIdAsync(id.ToString());
+    }
+
+    public async Task<FolderModel> CreateNewFolderAsync(FolderModel folder)
+    {
+        return await folderRepository.CreateFolderAsync(folder);
     }
 
     public async Task<FolderModel> GetOrCreateActiveFolderAsync()
@@ -44,6 +53,7 @@ public class FolderService(IFolderRepository folderRepository)
         {
             return await folderRepository.CreateFolderAsync(folderModel);
         }
+
         return await folderRepository.UpdateFolderAsync(folderModel);
     }
 
@@ -69,9 +79,10 @@ public class FolderService(IFolderRepository folderRepository)
         return folders;
     }
 
-    public Task<FolderModel> UpdateFolderAsync(FolderModel folder)
+    public async Task<FolderModel?> UpdateFolderAsync(FolderModel folder)
     {
-        throw new NotImplementedException();
+        return await folderRepository.UpdateFolderAsync(folder);
+        
         // TODO: Reimplement update logic so it works for cosmos and sql
         // await _repository.UpdateFolderAsync(folder);
         // await _documentRepository.UpdateFolderReferenceAsync(folder.Id, folder.DisplayName);
@@ -103,5 +114,22 @@ public class FolderService(IFolderRepository folderRepository)
             DocumentsFolder = 100,
             IsFull = false
         };
+    }
+
+    private void AddNewRegister(FolderModel folder)
+    {
+        var lastRegisterNumber = folder.GetLastRegisterNumber();
+        var newRegisterNumber = lastRegisterNumber + 1 ?? 1;
+
+        var newRegister = new RegisterModel
+        {
+            Name = newRegisterNumber.ToString(),
+            DisplayName = "New Register",
+            DocumentCount = 0,
+            Documents = []
+        };
+
+        folder.Registers.Add(newRegister);
+        folder.CurrentRegister = newRegister;
     }
 }

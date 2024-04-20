@@ -4,14 +4,9 @@ using Microsoft.Extensions.Options;
 
 namespace document.lib.shared.Services;
 
-public class BlobClientHelper
+public class BlobClientHelper(IOptions<AppConfiguration> config)
 {
-    private readonly BlobContainerClient _blobContainerClient;
-
-    public BlobClientHelper(IOptions<AppConfiguration> config)
-    {
-        _blobContainerClient = new BlobContainerClient(config.Value.BlobServiceConnectionString, config.Value.BlobContainer);
-    }
+    private readonly BlobContainerClient _blobContainerClient = new(config.Value.BlobServiceConnectionString, config.Value.BlobContainer);
 
     public async Task UploadBlobAsync(string name, Stream buffer)
     {

@@ -29,6 +29,7 @@ public static class ServiceCollectionExtensions
                 me.AddScoped<ICategoryRepository, CategorySqlRepository>();
                 me.AddScoped<ITagRepository, TagSqlRepository>();
                 me.AddScoped<IFolderRepository, FolderSqlRepository>();
+                me.AddScoped<IRegisterRepository, RegisterSqlRepository>();
                 break;
             case DatabaseProvider.Cosmos:
                 me.AddSingleton(new CosmosClient(cosmosDbConnection));

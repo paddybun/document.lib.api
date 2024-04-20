@@ -103,6 +103,11 @@ public class FolderCosmosRepository : IFolderRepository
         throw new NotImplementedException();
     }
 
+    public Task<(int, FolderModel[])> GetFolders(int page, int pageSize)
+    {
+        throw new NotImplementedException();
+    }
+
     private static DocLibFolder MapToEntity(FolderModel folderModel)
     {
         return new DocLibFolder

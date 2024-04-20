@@ -173,7 +173,7 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
                 .Include(x => x.Registers)
                 .SingleAsync(x => x.Id == folderId);
 
-            FolderHelpers.AssignCurrentRegister(efFolder);
+            FolderEntityHelpers.AssignCurrentRegister(efFolder);
 
             efDoc.Register = efFolder.CurrentRegister;
         }
