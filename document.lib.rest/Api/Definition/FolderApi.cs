@@ -1,7 +1,4 @@
-﻿using document.lib.rest.Api.Contract;
-using Microsoft.AspNetCore.Mvc;
-
-namespace document.lib.rest.Api.Definition;
+﻿namespace document.lib.rest.Api.Definition;
 
 public static class FolderApi
 {

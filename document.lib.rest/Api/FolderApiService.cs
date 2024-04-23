@@ -1,10 +1,4 @@
-﻿using System.Linq.Expressions;
-using document.lib.rest.Api.Contract;
-using document.lib.rest.Interfaces;
-using document.lib.shared.Interfaces;
-using document.lib.shared.Models.Models;
-
-namespace document.lib.rest.Api;
+﻿namespace document.lib.rest.Api;
 
 internal class FolderApiService(IFolderService folderService)
 {

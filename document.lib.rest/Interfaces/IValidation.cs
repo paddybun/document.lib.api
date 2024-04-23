@@ -1,6 +1,4 @@
-﻿using System.Linq.Expressions;
-
-namespace document.lib.rest.Interfaces;
+﻿namespace document.lib.rest.Interfaces;
 
 public class PropertyValidator
 {

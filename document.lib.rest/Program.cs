@@ -1,12 +1,3 @@
-using document.lib.ef;
-using document.lib.rest;
-using document.lib.rest.Api;
-using document.lib.rest.Api.Definition;
-using document.lib.shared.Extensions;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Web;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
