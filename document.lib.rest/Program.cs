@@ -1,6 +1,7 @@
 using document.lib.ef;
 using document.lib.rest;
-using document.lib.rest.ApiServices;
+using document.lib.rest.Api;
+using document.lib.rest.Api.Definition;
 using document.lib.shared.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;

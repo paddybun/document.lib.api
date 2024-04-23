@@ -1,8 +1,7 @@
-﻿using document.lib.rest.ApiServices;
-using document.lib.rest.Parameters;
+﻿using document.lib.rest.Api.Contract;
 using Microsoft.AspNetCore.Mvc;
 
-namespace document.lib.rest;
+namespace document.lib.rest.Api.Definition;
 
 public static class FolderApi
 {

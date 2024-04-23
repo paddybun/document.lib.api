@@ -1,7 +1,8 @@
 ﻿using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
+// ReSharper disable ClassNeverInstantiated.Global
 
-namespace document.lib.rest.Parameters;
+namespace document.lib.rest.Api.Contract;
 
 internal record FolderGetRouteParameters(
     [FromRoute(Name = "id")] int Id);
