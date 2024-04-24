@@ -1,6 +1,7 @@
 using System.Globalization;
 using Azure.Storage.Blobs;
 using document.lib.ef;
+using document.lib.shared.Enums;
 using document.lib.shared.Extensions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
@@ -33,27 +34,24 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor().AddMicrosoftIdentityConsentHandler();
 
 // ----- Dependency Injection -----
-var config = builder.Configuration.GetSection("Config");
-builder.Services.Configure<AppConfiguration>(config);
+var configSection = builder.Configuration.GetSection("Config");
+var appConfig = configSection.Get<AppConfiguration>();
 
+builder.Services.Configure<AppConfiguration>(configSection);
 builder.Services.ConfigureDocumentLibShared(
-    config["DatabaseProvider"],
-    config["CosmosDbConnection"],
-    config["BlobServiceConnectionString"],
-    config["BlobContainer"]);
+    appConfig.DatabaseProvider,
+    appConfig.CosmosDbConnection,
+    appConfig.BlobServiceConnectionString,
+    appConfig.BlobContainer);
+var provider = appConfig.DatabaseProvider;
 
-var provider = config["DatabaseProvider"];
-switch (provider)
+if (provider == DatabaseProvider.Sql)
 {
-    case "Sql":
-        builder.Services.AddDbContext<DocumentLibContext>(opts =>
-        {
-            opts.UseSqlServer(config["DbConnectionString"], x => x.MigrationsAssembly("document.lib.ef"));
-        });
-        break;
+    builder.Services.AddDbContext<DocumentLibContext>(opts =>
+    {
+        opts.UseSqlServer(appConfig.DbConnectionString, x => x.MigrationsAssembly("document.lib.ef"));
+    });
 }
-
-
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.

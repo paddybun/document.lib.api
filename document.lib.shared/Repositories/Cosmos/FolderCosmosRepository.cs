@@ -81,7 +81,7 @@ public class FolderCosmosRepository : IFolderRepository
         return newFolderEntity!;
     }
 
-    public async Task<FolderModel> UpdateFolderAsync(FolderModel folder)
+    public async Task<FolderModel?> UpdateFolderAsync(FolderModel folder)
     {
         await _cosmosContainer.UpsertItemAsync(folder, new PartitionKey(folder.Id));
         var folderModel = new FolderModel

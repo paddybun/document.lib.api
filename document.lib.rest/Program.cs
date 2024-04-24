@@ -1,49 +1,55 @@
+using document.lib.shared.Enums;
+using document.lib.shared.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Add sdk services
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
 builder.Services.AddAuthorization();
 
-var config = builder.Configuration.GetSection("Config");
+// Build configuration
+var appConfig = builder.Configuration.GetSection("Config").Get<AppConfiguration>();
+if (appConfig == null)
+{
+    throw new Exception("Config section not found!");
+}
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Init folder services
+// Init api services
 builder.Services.AddScoped<FolderApiService>();
-
+builder.Services.AddScoped<TagApiService>();
 
 // Init document lib services
 builder.Services.ConfigureDocumentLibShared(
-    config["DatabaseProvider"],
-    config["CosmosDbConnection"],
-    config["BlobServiceConnectionString"],
-    config["BlobContainer"]);
-builder.Services.AddDbContext<DocumentLibContext>(opts =>
+    appConfig.DatabaseProvider,
+    appConfig.CosmosDbConnection,
+    appConfig.BlobServiceConnectionString,
+    appConfig.BlobContainer);
+if (appConfig.DatabaseProvider == DatabaseProvider.Sql)
 {
-    opts.UseSqlServer(config["DbConnectionString"], x => x.MigrationsAssembly("document.lib.ef"));
-});
+    builder.Services.AddDbContext<DocumentLibContext>(opts =>
+    {
+        opts.UseSqlServer(appConfig.DbConnectionString, x => x.MigrationsAssembly("document.lib.ef"));
+    });    
+}
 
+// Build app and configure the HTTP request pipeline.
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Add apis
+app.AddFolderApi();
+app.AddTagApi();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
-// var scopeRequiredByApi = app.Configuration["AzureAd:Scopes"] ?? ""; -- scopes required by the api
-// httpContext.VerifyUserHasAnyAcceptedScope(scopeRequiredByApi); -- inside the endpoint
-//.RequireAuthorization(); -- append to the endpoint
-
-app.AddFolderApi();
-
 app.Run();

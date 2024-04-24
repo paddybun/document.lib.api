@@ -29,18 +29,24 @@ var host = Host
     .ConfigureServices((context, services) =>
     {
         var cfgRoot = context.Configuration;
-        var config = cfgRoot.GetSection("Config");
+        var configSection = cfgRoot.GetSection("Config");
+        var appConfig = configSection.Get<AppConfiguration>();
+        if (appConfig == null)
+        {
+            throw new Exception("Config section not found!");
+        }
+        
         services.Configure<ConsoleLifetimeOptions>(opts => opts.SuppressStatusMessages = true);
-        services.Configure<AppConfiguration>(config);
+        services.Configure<AppConfiguration>(configSection);
         services.ConfigureDocumentLibShared(
-            config["DatabaseProvider"],
-            config["CosmosDbConnection"],
-            config["BlobServiceConnectionString"],
-            config["BlobContainer"]);
+            appConfig.DatabaseProvider,
+            appConfig.CosmosDbConnection,
+            appConfig.BlobServiceConnectionString,
+            appConfig.BlobContainer);
         services.AddHostedService<CosmosToSqlMigration>();
         services.AddDbContext<DocumentLibContext>(opts =>
         {
-            opts.UseSqlServer(config["DbConnectionString"], x => x.MigrationsAssembly("document.lib.ef"));
+            opts.UseSqlServer(appConfig.DbConnectionString, x => x.MigrationsAssembly("document.lib.ef"));
         });
     })
     .UseSerilog()

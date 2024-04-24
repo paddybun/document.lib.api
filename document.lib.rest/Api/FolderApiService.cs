@@ -1,4 +1,6 @@
-﻿namespace document.lib.rest.Api;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+
+namespace document.lib.rest.Api;
 
 internal class FolderApiService(IFolderService folderService)
 {
@@ -10,7 +12,14 @@ internal class FolderApiService(IFolderService folderService)
     public async Task<IResult> GetFolderModel(FolderGetQueryParameters folderGetQueryParameters, HttpContext http)
     {
         try
-        {   
+        {
+            if (PropertyValidator.ValidateHasValue(folderGetQueryParameters, x => x.Id))
+                return Results.Ok(await folderService.GetFolderByIdAsync(folderGetQueryParameters.Id.ToString()!));
+
+
+            if (PropertyValidator.ValidateHasValue(folderGetQueryParameters, x => x.Name))
+                return Results.Ok(folderService.GetFolderByNameAsync(folderGetQueryParameters.Name!));
+            
             if (PropertyValidator.ValidateHasValue(folderGetQueryParameters, 
                     x => x.Page, 
                     x => x.PageSize))
@@ -19,18 +28,8 @@ internal class FolderApiService(IFolderService folderService)
                 http.Response.Headers.Append("total-results", count.ToString());
                 return Results.Ok(folders);
             }
-                
-            FolderModel? folder = null;
-            if (PropertyValidator.ValidateHasValue(folderGetQueryParameters, x => x.Id))
-                folder = await folderService.GetFolderByIdAsync(folderGetQueryParameters.Id.ToString()!);
 
-            if (PropertyValidator.ValidateHasValue(folderGetQueryParameters, x => x.Name))
-                folder = await folderService.GetFolderByNameAsync(folderGetQueryParameters.Name!);
-
-            if (folder == null) 
-                return Results.NotFound(folderGetQueryParameters);
-
-            return Results.Ok(folder);
+            return Results.NotFound(folderGetQueryParameters);
         }
         catch
         {

@@ -1,6 +1,6 @@
-@document.lib.rest_HostAddress = http://localhost:5131
+@document.lib.rest_HostAddress = https://localhost:7279
 
-GET {{document.lib.rest_HostAddress}}/weatherforecast/
+GET {{document.lib.rest_HostAddress}}/tags
 Accept: application/json
 
 ###

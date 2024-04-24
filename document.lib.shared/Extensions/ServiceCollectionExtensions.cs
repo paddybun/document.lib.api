@@ -11,18 +11,16 @@ namespace document.lib.shared.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static void ConfigureDocumentLibShared(this IServiceCollection me, string databaseProvider, string cosmosDbConnection, string blobstorageConnectionString, string blobContainer)
+    public static void ConfigureDocumentLibShared(this IServiceCollection me, DatabaseProvider? databaseProvider, string? cosmosDbConnection, string? blobstorageConnectionString, string? blobContainer)
     {
-        if (me == null) throw new ArgumentNullException();
-        if (string.IsNullOrWhiteSpace(databaseProvider)) throw new ArgumentNullException(nameof(databaseProvider));
-        if (string.IsNullOrWhiteSpace(cosmosDbConnection)) throw new ArgumentNullException(nameof(cosmosDbConnection));
-        if (string.IsNullOrWhiteSpace(blobstorageConnectionString)) throw new ArgumentNullException(nameof(blobstorageConnectionString));
-        if (string.IsNullOrWhiteSpace(blobContainer)) throw new ArgumentNullException(nameof(blobContainer));
+        ArgumentNullException.ThrowIfNull(me);
+        ArgumentNullException.ThrowIfNull(databaseProvider);
+        ArgumentException.ThrowIfNullOrEmpty(cosmosDbConnection, nameof(cosmosDbConnection));
+        ArgumentException.ThrowIfNullOrEmpty(blobstorageConnectionString, nameof(blobstorageConnectionString));
+        ArgumentException.ThrowIfNullOrEmpty(blobContainer, nameof(blobContainer));
 
-        var dbProvider = Enum.Parse<DatabaseProvider>(databaseProvider);
-
-            // Repositories
-        switch (dbProvider)
+        // Repositories
+        switch (databaseProvider)
         {
             case DatabaseProvider.Sql:
                 me.AddScoped<IDocumentRepository, DocumentSqlRepository>();
@@ -39,6 +37,9 @@ public static class ServiceCollectionExtensions
                 me.AddScoped<IFolderRepository, FolderCosmosRepository>();
                 me.AddScoped(typeof(CosmosQueryService));
                 me.AddScoped(typeof(CosmosMetadataService));
+                break;
+            default:
+                ArgumentNullException.ThrowIfNull(databaseProvider, nameof(databaseProvider));
                 break;
         }
 

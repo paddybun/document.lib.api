@@ -5,13 +5,10 @@ namespace document.lib.shared.Models;
 
 public class AppConfiguration
 {
-    public string AllowedHosts { get; set; }
-
-    public string CosmosDbConnection { get; set; }
-
-    public string BlobServiceConnectionString { get; set; }
-
-    public string BlobContainer { get; set; }
-
-    public DatabaseProvider DatabaseProvider { get; set; }
+    public string? AllowedHosts { get; init; }
+    public string? CosmosDbConnection { get; init; }
+    public string? BlobServiceConnectionString { get; init; }
+    public string? BlobContainer { get; init; }
+    public string? DbConnectionString { get; init; }
+    public DatabaseProvider? DatabaseProvider { get; init; }
 }
