@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+﻿using document.lib.shared.Helper;
 
 namespace document.lib.rest.Api;
 
@@ -13,14 +13,14 @@ internal class FolderApiService(IFolderService folderService)
     {
         try
         {
-            if (PropertyValidator.ValidateHasValue(folderGetQueryParameters, x => x.Id))
+            if (PropertyValidator.AllHaveValue(folderGetQueryParameters, x => x.Id))
                 return Results.Ok(await folderService.GetFolderByIdAsync(folderGetQueryParameters.Id.ToString()!));
 
 
-            if (PropertyValidator.ValidateHasValue(folderGetQueryParameters, x => x.Name))
+            if (PropertyValidator.AllHaveValue(folderGetQueryParameters, x => x.Name))
                 return Results.Ok(folderService.GetFolderByNameAsync(folderGetQueryParameters.Name!));
             
-            if (PropertyValidator.ValidateHasValue(folderGetQueryParameters, 
+            if (PropertyValidator.AllHaveValue(folderGetQueryParameters, 
                     x => x.Page, 
                     x => x.PageSize))
             {

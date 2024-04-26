@@ -5,6 +5,21 @@ namespace document.lib.shared.Services;
 
 public class TagService(ITagRepository repository) : ITagService
 {
+    public async Task<TagModel?> GetTagByIdAsync(int id)
+    {
+        return await repository.GetTagAsync(new TagModel { Id = id.ToString() });
+    }
+
+    public async Task<TagModel?> GetTagByNameAsync(string name)
+    {
+        return await repository.GetTagAsync(new TagModel { Name = name });
+    }
+
+    public async Task<(int, List<TagModel>)> GetTagsPagedAsync(int page, int pageSize)
+    {
+        return await repository.GetTagsAsync(page, pageSize);
+    }
+
     public async Task<List<TagModel>> GetTagsAsync()
     {
         return await repository.GetTagsAsync();

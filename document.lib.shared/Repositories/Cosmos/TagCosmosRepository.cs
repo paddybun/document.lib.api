@@ -44,6 +44,11 @@ public class TagCosmosRepository : ITagRepository
         return await Task.FromResult(tags.Select(Map).ToList());
     }
 
+    public Task<(int, List<TagModel>)> GetTagsAsync(int page, int pageSize)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<TagModel> CreateTagAsync(TagModel model)
     {
         var id = $"Tag.{model.Name}";

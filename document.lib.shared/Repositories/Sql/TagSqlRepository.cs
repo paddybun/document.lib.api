@@ -37,6 +37,19 @@ public sealed class TagSqlRepository(DocumentLibContext context) : ITagRepositor
         return tags.Select(Map).ToList();
     }
 
+    public async Task<(int, List<TagModel>)> GetTagsAsync(int page, int pageSize)
+    {
+        var count = await context.Tags.CountAsync();
+        var tags = await context.Tags
+            .OrderBy(x => x.Id)
+            .Skip(page * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var mappedTags = tags.Select(Map).ToList();
+        return (count, mappedTags);
+    }
+
     public async Task<TagModel> CreateTagAsync(TagModel tagModel)
     {
         var tag = new EfTag {Name = tagModel.Name, DisplayName = tagModel.DisplayName};

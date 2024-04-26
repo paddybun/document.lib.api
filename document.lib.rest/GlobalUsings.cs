@@ -6,7 +6,6 @@ global using document.lib.ef;
 global using document.lib.rest.Api;
 global using document.lib.rest.Api.Contract;
 global using document.lib.rest.Api.Definition;
-global using document.lib.rest.Interfaces;
 global using document.lib.shared.Extensions;
 global using document.lib.shared.Interfaces;
 global using document.lib.shared.Models.Models;

@@ -1,6 +1,7 @@
-﻿namespace document.lib.rest.Api.Contract;
+﻿// ReSharper disable ClassNeverInstantiated.Global
+namespace document.lib.rest.Api.Contract;
 
-internal record GetTagsQueryParameters(
+internal record GetTagsQueryParameters (
     [FromQuery(Name = "id")] int? Id, 
     [FromQuery(Name = "name")] string? Name,
     [FromQuery(Name = "page")] int? Page,
