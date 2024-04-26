@@ -17,7 +17,7 @@ public static class PropertyValidator
                 case string s:
                     checkedValues.Add(!string.IsNullOrWhiteSpace(s));
                     break;
-                case { } o:
+                case not null:
                     checkedValues.Add(true);
                     break;
                 default:
@@ -30,7 +30,7 @@ public static class PropertyValidator
     
     public static bool AnyHasValue<TObj> (TObj objToValidate, params Expression<Func<TObj, object?>>[] expressions)
     {
-        bool hasValue = false;
+        var hasValue = false;
         foreach (var expression in expressions)
         {
             if (expression.Body is not (UnaryExpression or MemberExpression)) continue;
@@ -41,7 +41,7 @@ public static class PropertyValidator
                 case string s:
                     hasValue = !string.IsNullOrWhiteSpace(s);
                     break;
-                case { } o:
+                case not null:
                     hasValue = true;
                     break;
                 default:
