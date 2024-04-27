@@ -11,7 +11,7 @@ public class PropertyCheckerTests
         object toTest = new { };
         var mockObject = new { toTest };
         
-        var actual = PropertyValidator.Any(mockObject, x => x.toTest);
+        var actual = PropertyChecker.Values.Any(mockObject, x => x.toTest);
         var expected = true;
         Assert.Equal(expected, actual);
     }
@@ -22,7 +22,7 @@ public class PropertyCheckerTests
         object? toTest = default;
         var mockObject = new { toTest };
         
-        var actual = PropertyValidator.Any(mockObject, x => x.toTest);
+        var actual = PropertyChecker.Values.Any(mockObject, x => x.toTest);
         var expected = false;
         Assert.Equal(expected, actual);
     }
@@ -34,7 +34,7 @@ public class PropertyCheckerTests
         object? toTest2 = null;
         var mockObject = new { toTest, toTest2 };
         
-        var actual = PropertyValidator.Any(mockObject, x => x.toTest, x => x.toTest2);
+        var actual = PropertyChecker.Values.Any(mockObject, x => x.toTest, x => x.toTest2);
         var expected = false;
         Assert.Equal(expected, actual);
     }
@@ -46,7 +46,7 @@ public class PropertyCheckerTests
         object? toTest2 = null;
         var mockObject = new { toTest, toTest2 };
         
-        var actual = PropertyValidator.Any(mockObject, x => x.toTest, x => x.toTest2);
+        var actual = PropertyChecker.Values.Any(mockObject, x => x.toTest, x => x.toTest2);
         var expected = true;
         Assert.Equal(expected, actual);
     }
@@ -57,7 +57,7 @@ public class PropertyCheckerTests
         string toTest = "test";
         var mockObject = new { toTest };
         
-        var actual = PropertyValidator.Any(mockObject, x => x.toTest);
+        var actual = PropertyChecker.Values.Any(mockObject, x => x.toTest);
         var expected = true;
         Assert.Equal(expected, actual);
     }
@@ -68,7 +68,7 @@ public class PropertyCheckerTests
         string toTest = "";
         var mockObject = new { toTest };
         
-        var actual = PropertyValidator.Any(mockObject, x => x.toTest);
+        var actual = PropertyChecker.Values.Any(mockObject, x => x.toTest);
         var expected = false;
         Assert.Equal(expected, actual);
     }
@@ -80,7 +80,7 @@ public class PropertyCheckerTests
         object toTest2 = new { };
         var mockObject = new { toTest, toTest2 };
         
-        var actual = PropertyValidator.Any(mockObject, x => x.toTest, x => x.toTest2);
+        var actual = PropertyChecker.Values.Any(mockObject, x => x.toTest, x => x.toTest2);
         var expected = true;
         Assert.Equal(expected, actual);
     }
@@ -91,7 +91,7 @@ public class PropertyCheckerTests
         object toTest = new { };
         var mockObject = new { toTest };
         
-        var actual = PropertyValidator.All(mockObject, x => x.toTest);
+        var actual = PropertyChecker.Values.All(mockObject, x => x.toTest);
         var expected = true;
         Assert.Equal(expected, actual);
     }
@@ -102,7 +102,7 @@ public class PropertyCheckerTests
         object? toTest = default;
         var mockObject = new { toTest };
         
-        var actual = PropertyValidator.All(mockObject, x => x.toTest);
+        var actual = PropertyChecker.Values.All(mockObject, x => x.toTest);
         var expected = false;
         Assert.Equal(expected, actual);
     }
@@ -114,7 +114,7 @@ public class PropertyCheckerTests
         object? toTest2 = null;
         var mockObject = new { toTest, toTest2 };
         
-        var actual = PropertyValidator.All(mockObject, x => x.toTest, x => x.toTest2);
+        var actual = PropertyChecker.Values.All(mockObject, x => x.toTest, x => x.toTest2);
         var expected = false;
         Assert.Equal(expected, actual);
     }
@@ -126,7 +126,7 @@ public class PropertyCheckerTests
         object? toTest2 = null;
         var mockObject = new { toTest, toTest2 };
         
-        var actual = PropertyValidator.All(mockObject, x => x.toTest, x => x.toTest2);
+        var actual = PropertyChecker.Values.All(mockObject, x => x.toTest, x => x.toTest2);
         var expected = false;
         Assert.Equal(expected, actual);
     }
@@ -138,7 +138,7 @@ public class PropertyCheckerTests
         object? toTest2 = new { };
         var mockObject = new { toTest, toTest2 };
         
-        var actual = PropertyValidator.All(mockObject, x => x.toTest, x => x.toTest2);
+        var actual = PropertyChecker.Values.All(mockObject, x => x.toTest, x => x.toTest2);
         var expected = true;
         Assert.Equal(expected, actual);
     }
@@ -149,7 +149,7 @@ public class PropertyCheckerTests
         string toTest = "test";
         var mockObject = new { toTest };
         
-        var actual = PropertyValidator.All(mockObject, x => x.toTest);
+        var actual = PropertyChecker.Values.All(mockObject, x => x.toTest);
         var expected = true;
         Assert.Equal(expected, actual);
     }
@@ -160,7 +160,7 @@ public class PropertyCheckerTests
         string toTest = "";
         var mockObject = new { toTest };
         
-        var actual = PropertyValidator.All(mockObject, x => x.toTest);
+        var actual = PropertyChecker.Values.All(mockObject, x => x.toTest);
         var expected = false;
         Assert.Equal(expected, actual);
     }
@@ -172,7 +172,7 @@ public class PropertyCheckerTests
         object toTest2 = new { };
         var mockObject = new { toTest, toTest2 };
         
-        var actual = PropertyValidator.All(mockObject, x => x.toTest, x => x.toTest2);
+        var actual = PropertyChecker.Values.All(mockObject, x => x.toTest, x => x.toTest2);
         var expected = false;
         Assert.Equal(expected, actual);
     }
@@ -185,7 +185,7 @@ public class PropertyCheckerTests
         object? toTest3 = null;
         var mockObject = new { toTest, toTest2, toTest3 };
         
-        var actual = PropertyValidator.All(mockObject, x => x.toTest, x => x.toTest2, x => x.toTest3);
+        var actual = PropertyChecker.Values.All(mockObject, x => x.toTest, x => x.toTest2, x => x.toTest3);
         var expected = false;
         Assert.Equal(expected, actual);
     }

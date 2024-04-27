@@ -58,9 +58,9 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
     {
         Expression<Func<EfDocument, bool>> getDocumentExpression;
         
-        if (PropertyValidator.Any(model, x => x.Id)) 
+        if (PropertyChecker.Values.Any(model, x => x.Id)) 
             getDocumentExpression = x => x.Id == int.Parse(model.Id);
-        else if (PropertyValidator.Any(model, x => x.Name)) 
+        else if (PropertyChecker.Values.Any(model, x => x.Name)) 
             getDocumentExpression = x => x.Name == model.Name;
         else { return null; }
 
