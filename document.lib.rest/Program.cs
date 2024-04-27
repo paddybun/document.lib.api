@@ -22,6 +22,7 @@ builder.Services.AddSwaggerGen();
 // Init api services
 builder.Services.AddScoped<FolderApiService>();
 builder.Services.AddScoped<TagApiService>();
+builder.Services.AddScoped<DocumentApiService>();
 
 // Init document lib services
 builder.Services.ConfigureDocumentLibShared(
@@ -43,6 +44,7 @@ var app = builder.Build();
 // Add apis
 app.AddFolderApi();
 app.AddTagApi();
+app.AddDocumentApi();
 
 if (app.Environment.IsDevelopment())
 {

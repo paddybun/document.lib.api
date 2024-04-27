@@ -43,7 +43,7 @@ public class CosmosToSqlMigration(
     {
         logger.LogInformation("Synchronizing documents from Cosmos to Sql ...");
         var sw = Stopwatch.StartNew();
-        var docs = await cosmosDocumentService.GetAllDocumentsAsync();
+        List<DocumentModel> docs = []; // await cosmosDocumentService.GetAllDocumentsAsync(); TODO: Use paged method
         foreach (var doc in docs)
         {
             await sqlDocumentService.CreateNewDocumentAsync(doc);

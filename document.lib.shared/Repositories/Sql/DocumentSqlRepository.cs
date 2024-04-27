@@ -1,7 +1,8 @@
-﻿using document.lib.ef;
+﻿using System.Linq.Expressions;
+using document.lib.ef;
 using document.lib.ef.Entities;
 using document.lib.ef.Helpers;
-using document.lib.shared.Exceptions;
+using document.lib.shared.Helper;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Models;
 using Microsoft.EntityFrameworkCore;
@@ -55,37 +56,24 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
 
     public async Task<DocumentModel?> GetDocumentAsync(DocumentModel model)
     {
-        if (model == null) throw new ArgumentNullException(nameof(model));
+        Expression<Func<EfDocument, bool>> getDocumentExpression;
+        
+        if (PropertyValidator.Any(model, x => x.Id)) 
+            getDocumentExpression = x => x.Id == int.Parse(model.Id);
+        else if (PropertyValidator.Any(model, x => x.Name)) 
+            getDocumentExpression = x => x.Name == model.Name;
+        else { return null; }
 
-        if (string.IsNullOrWhiteSpace(model.Id) || string.IsNullOrWhiteSpace(model.Name))
-            throw new InvalidParameterException(model.GetType());
-
-        EfDocument? efDocument;
-        if (!string.IsNullOrWhiteSpace(model.Id))
-        {
-            var id = int.Parse(model.Id);
-            efDocument = await context
-                .Documents
-                .Include(x => x.Register)
-                .ThenInclude(x => x.Folder)
-                .Include(x => x.Category)
-                .Include(x => x.Tags)
-                .SingleOrDefaultAsync(x => x.Id == id);
-        }
-        else
-        {
-            efDocument = await context
-                .Documents
-                .Include(x => x.Register)
-                .ThenInclude(x => x.Folder)
-                .Include(x => x.Category)
-                .Include(x => x.Tags)
-                .SingleOrDefaultAsync(x => x.Name == model.Name);
-        }
-
-        if (efDocument == null) return null;
-
-        return Map(efDocument);
+        var efDocument = await context
+            .Documents
+            .Include(x => x.Register)
+            .ThenInclude(x => x.Folder)
+            .Include(x => x.Category)
+            .Include(x => x.Tags)!
+            .ThenInclude(x => x.Tag)
+            .SingleOrDefaultAsync(getDocumentExpression);
+        
+        return efDocument == null ? null : Map(efDocument);
     }
 
     public async Task<List<DocumentModel>> GetAllDocumentsAsync()
@@ -97,16 +85,19 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
         return efDocuments.Select(Map).ToList();
     }
 
-    public async Task<List<DocumentModel>> GetDocumentsPagedAsync(int lastId = 0, int count = 20)
+    public async Task<(int, List<DocumentModel>)> GetDocumentsPagedAsync(int page, int pageSize)
     {
-        var efDocuments = await context
-            .Documents
-            .Include(x => x.Tags)
+        var count = await context.Documents.CountAsync();
+        var efDocuments = await context.Documents
             .OrderBy(x => x.Id)
-            .Where(x => x.Id > lastId)
-            .Take(count)                                       
+            .Include(x => x.Register)
+            .ThenInclude(x => x.Folder)
+            .Skip(page * pageSize)
+            .Take(pageSize)
             .ToListAsync();
-        return efDocuments.Select(Map).ToList();
+        
+        var documents = efDocuments.Select(Map).ToList();
+        return (count, documents);
     }
 
     public async Task<List<DocumentModel>> GetUnsortedDocumentsAsync()
@@ -220,7 +211,7 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
             Description = efDocument.Description,
             CategoryName = efDocument.Category?.DisplayName ?? string.Empty,
             BlobLocation = efDocument.BlobLocation,
-            FolderName = efDocument.Register.Folder?.Name ?? string.Empty,
+            FolderName = efDocument.Register?.Folder?.Name ?? string.Empty,
             Company = efDocument.Company,
             DateOfDocument = efDocument.DateOfDocument,
             DateModified = efDocument.DateModified,
@@ -228,8 +219,8 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
             Digital = efDocument.Digital,
             PhysicalName = efDocument.PhysicalName,
             Tags = tags,
-            RegisterName = efDocument.Register.Name,
-            FolderId = efDocument.Register.Folder?.Id.ToString() ?? string.Empty,
+            RegisterName = efDocument.Register?.Name ?? string.Empty,
+            FolderId = efDocument.Register?.Folder?.Id.ToString() ?? string.Empty,
             Unsorted = efDocument.Unsorted
         };
     }

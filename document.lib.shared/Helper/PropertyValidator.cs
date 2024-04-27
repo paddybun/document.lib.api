@@ -4,7 +4,7 @@ namespace document.lib.shared.Helper;
 
 public static class PropertyValidator
 {
-    public static bool AllHaveValue<TObj>(TObj objToValidate, params Expression<Func<TObj, object?>>[] expressions)
+    public static bool All<TObj>(TObj objToValidate, params Expression<Func<TObj, object?>>[] expressions)
     {
         List<bool> checkedValues = [];
         foreach (var expression in expressions)
@@ -20,6 +20,7 @@ public static class PropertyValidator
                 case not null:
                     checkedValues.Add(true);
                     break;
+                case null:
                 default:
                     checkedValues.Add(false);
                     break;
@@ -28,7 +29,7 @@ public static class PropertyValidator
         return checkedValues.All(x => x);
     }
     
-    public static bool AnyHasValue<TObj> (TObj objToValidate, params Expression<Func<TObj, object?>>[] expressions)
+    public static bool Any<TObj> (TObj objToValidate, params Expression<Func<TObj, object?>>[] expressions)
     {
         var hasValue = false;
         foreach (var expression in expressions)
@@ -44,6 +45,7 @@ public static class PropertyValidator
                 case not null:
                     hasValue = true;
                     break;
+                case null:
                 default:
                     hasValue = false;
                     break;

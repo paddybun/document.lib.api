@@ -1,6 +1,7 @@
 ﻿using Azure.Storage.Blobs;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Models;
+using Microsoft.Identity.Client;
 
 namespace document.lib.shared.Services
 {
@@ -18,6 +19,16 @@ namespace document.lib.shared.Services
         public async Task<List<DocumentModel>> GetUnsortedDocuments()
         {
             return await documentRepository.GetUnsortedDocumentsAsync();
+        }
+
+        public async Task<DocumentModel?> GetDocumentByIdAsync(int id)
+        {
+            return await documentRepository.GetDocumentAsync(new DocumentModel { Id = id.ToString() });
+        }
+        
+        public async Task<(int, List<DocumentModel>)> GetDocumentsPagedAsync(int page, int pageSize)
+        {
+            return await documentRepository.GetDocumentsPagedAsync(page, pageSize);
         }
 
         public async Task<DocumentModel?> GetDocumentAsync(string? id = null, string? name = null)
@@ -50,11 +61,6 @@ namespace document.lib.shared.Services
             }
 
             return await documentRepository.GetDocumentAsync(model);
-        }
-
-        public async Task<List<DocumentModel>> GetAllDocumentsAsync()
-        {
-            return await documentRepository.GetAllDocumentsAsync();
         }
 
         public async Task<DocumentModel> UpdateDocumentAsync(DocumentModel doc)

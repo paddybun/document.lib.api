@@ -13,14 +13,13 @@ internal class FolderApiService(IFolderService folderService)
     {
         try
         {
-            if (PropertyValidator.AllHaveValue(folderGetQueryParameters, x => x.Id))
+            if (PropertyValidator.All(folderGetQueryParameters, x => x.Id))
                 return Results.Ok(await folderService.GetFolderByIdAsync(folderGetQueryParameters.Id.ToString()!));
 
-
-            if (PropertyValidator.AllHaveValue(folderGetQueryParameters, x => x.Name))
+            if (PropertyValidator.All(folderGetQueryParameters, x => x.Name))
                 return Results.Ok(folderService.GetFolderByNameAsync(folderGetQueryParameters.Name!));
             
-            if (PropertyValidator.AllHaveValue(folderGetQueryParameters, 
+            if (PropertyValidator.All(folderGetQueryParameters, 
                     x => x.Page, 
                     x => x.PageSize))
             {

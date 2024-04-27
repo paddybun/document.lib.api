@@ -67,7 +67,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _documents = await _documentService.GetAllDocumentsAsync();
+        _documents = []; // await _documentService.GetAllDocumentsAsync();
     }
 
     private void Edit(MouseEventArgs args, string physicalName)

@@ -91,21 +91,15 @@ public class DocumentCosmosRepository : IDocumentRepository
         return await Task.FromResult(Map(document));
     }
 
-    public async Task<List<DocumentModel>> GetAllDocumentsAsync()
-    {
-        return await GetDocumentsPagedAsync(0, 0);
-    }
-
-    public async Task<List<DocumentModel>> GetDocumentsPagedAsync(int page, int count)
+    public async Task<(int, List<DocumentModel>)> GetDocumentsPagedAsync(int page, int pageSize)
     {
         var documents = _cosmosContainer.GetItemLinqQueryable<DocLibDocument>(true)
             .Where(x => x.Id.StartsWith("Document."))
             .AsEnumerable()
             .ToList();
-
+        
         var result = documents.Select(Map).ToList();
-
-        return await Task.FromResult(result);
+        return await Task.FromResult((result.Count, result));
     }
 
     public Task<int> GetDocumentCountAsync()
