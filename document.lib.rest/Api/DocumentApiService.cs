@@ -27,7 +27,9 @@ public class DocumentApiService(IDocumentService documentService)
                 page = parameters.Page!.Value;
                 pageSize = parameters.PageSize!.Value;
             }
-            var documents = await documentService.GetUnsortedDocuments(page, pageSize);
+            
+            var (count, documents) = await documentService.GetUnsortedDocuments(page, pageSize);
+            http.Response.Headers.Append("total-results", count.ToString());
             return Results.Ok(documents);
         }
         
