@@ -28,7 +28,9 @@ public class FolderCosmosRepository : IFolderRepository
         if (!IsValid(folderModel)) throw new InvalidParameterException(folderModel.GetType());
         IAsyncEnumerable<DocLibFolder>? folders = null;
 
-        if (!string.IsNullOrWhiteSpace(folderModel.Id))
+        var key = folderModel.Id as string;
+        
+        if (!string.IsNullOrWhiteSpace(key))
         {
             folders = _cosmosContainer.GetItemLinqQueryable<DocLibFolder>(true)
                 .Where(x => x.Id == folderModel.Id)
@@ -71,7 +73,8 @@ public class FolderCosmosRepository : IFolderRepository
     public async Task<FolderModel> CreateFolderAsync(FolderModel folder)
     {
         var folderEntity = MapToEntity(folder);
-        await _cosmosContainer.UpsertItemAsync(folderEntity, new PartitionKey(folder.Id));
+        var key = folder.Id!.ToString();
+        await _cosmosContainer.UpsertItemAsync(folderEntity, new PartitionKey(key));
 
         var folderModel = new FolderModel
         {
@@ -83,7 +86,8 @@ public class FolderCosmosRepository : IFolderRepository
 
     public async Task<FolderModel?> UpdateFolderAsync(FolderModel folder)
     {
-        await _cosmosContainer.UpsertItemAsync(folder, new PartitionKey(folder.Id));
+        var key = folder.Id!.ToString();
+        await _cosmosContainer.UpsertItemAsync(folder, new PartitionKey(key));
         var folderModel = new FolderModel
         {
             Name = folder.Name
@@ -112,7 +116,7 @@ public class FolderCosmosRepository : IFolderRepository
     {
         return new DocLibFolder
         {
-            Id = folderModel.Id ?? string.Empty,
+            Id = folderModel.Id?.ToString() ?? string.Empty,
             Name = folderModel.Name,
             DisplayName = folderModel.DisplayName ?? string.Empty,
             CurrentRegister = folderModel.CurrentRegisterName ?? string.Empty,
