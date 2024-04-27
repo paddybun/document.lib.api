@@ -1,6 +1,5 @@
 ﻿// Global using directives
 
-global using System.Linq.Expressions;
 global using System.Text.Json.Serialization;
 global using document.lib.ef;
 global using document.lib.rest.Api;

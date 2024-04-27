@@ -144,12 +144,12 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
 
         if (category != null)
         {
-            var efCategory = await context.Categories.SingleAsync(x => x.Id == int.Parse(category.Id));
+            var efCategory = await context.Categories.SingleAsync(x => x.Id == int.Parse(category.Id!));
             efDoc.Category = efCategory;
         }
         if (tags != null)
         {
-            var efTags = await context.Tags.Where(x => tags.Select(x => int.Parse(x.Id)).Contains(x.Id)).ToListAsync();
+            var efTags = await context.Tags.Where(x => tags.Select(y => (int)y.Id!).Contains(x.Id)).ToListAsync();
             var efTagAssignments = efTags.Select(x => new EfTagAssignment
             {
                 Tag = x
@@ -158,11 +158,11 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
         }
         if (folder != null)
         {
-            int.TryParse(folder.Id, out var folderId);
+            var id = (int?)folder.Id;
             var efFolder = await context
                 .Folders
                 .Include(x => x.Registers)
-                .SingleAsync(x => x.Id == folderId);
+                .SingleAsync(x => x.Id == id);
 
             FolderEntityHelpers.AssignCurrentRegister(efFolder);
 

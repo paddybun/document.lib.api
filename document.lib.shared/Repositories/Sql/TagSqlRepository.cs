@@ -1,33 +1,27 @@
-﻿using document.lib.ef;
+﻿using System.Linq.Expressions;
+using document.lib.ef;
 using document.lib.ef.Entities;
-using document.lib.shared.Exceptions;
+using document.lib.shared.Helper;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.shared.Repositories.Sql;
 
-// Scoped injection 
 public sealed class TagSqlRepository(DocumentLibContext context) : ITagRepository
 {
     public async Task<TagModel?> GetTagAsync(TagModel model)
     {
-        if (string.IsNullOrWhiteSpace(model.Id) && string.IsNullOrWhiteSpace(model.Name))
-            throw new InvalidParameterException(model.GetType());
-
-        EfTag? efTag;
-        if (!string.IsNullOrWhiteSpace(model.Id))
-        {
-            var id = int.Parse(model.Id);
-            efTag = await context.Tags
-                .SingleOrDefaultAsync(x => x.Id == id);    
-        }
+        Expression<Func<EfTag, bool>> getTagExpression;
+        
+        if (PropertyChecker.Values.Any(model, x => x.Id))
+            getTagExpression = x => x.Id == (int)model.Id!;
+        else if (PropertyChecker.Values.Any(model, x => x.Name))
+            getTagExpression = x => x.Name == model.Name;
         else
-        {
-            efTag = await context.Tags
-                .SingleOrDefaultAsync(x => x.Name == model.Name);
-        }
-
+            return null;
+        
+        var efTag = await context.Tags.SingleOrDefaultAsync(getTagExpression);
         return efTag == null ? null : Map(efTag);
     }
 

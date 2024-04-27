@@ -5,7 +5,7 @@ namespace document.lib.shared.Models.Interfaces;
 // Interface for FolderModel
 public interface IFolderModel
 {
-    string? Id { get; set; }
+    object? Id { get; set; }
     string Name { get; set; }
     string? DisplayName { get; set; }
     RegisterModel? CurrentRegister { get; set; }

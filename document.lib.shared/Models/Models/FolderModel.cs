@@ -5,7 +5,7 @@ namespace document.lib.shared.Models.Models;
 public class FolderModel : IFolderModel, IFolderModelExtensions
 {
     // IFolderModel
-    public string? Id { get; set; }
+    public object? Id { get; set; }
     public string Name { get; set; } =  null!;
     public string? DisplayName { get; set; } = null!;
     public RegisterModel? CurrentRegister { get; set; }

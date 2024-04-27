@@ -6,6 +6,13 @@ public static class PropertyChecker
 {
     public static class Values
     {
+        /// <summary>
+        /// Evaluates if all the given expressions are true. Avoid using this method for heavy workloads. 
+        /// </summary>
+        /// <param name="objToValidate">The object to perform property checks on</param>
+        /// <param name="expressions">The expressions to check</param>
+        /// <typeparam name="TObj">The object type</typeparam>
+        /// <returns>True if all checks succeed</returns>
         public static bool All<TObj>(TObj objToValidate, params Expression<Func<TObj, object?>>[] expressions)
         {
             List<bool> checkedValues = [];
@@ -29,6 +36,14 @@ public static class PropertyChecker
             }
             return checkedValues.All(x => x);
         }
+        
+        /// <summary>
+        /// Evaluates if any of the given expressions are true. Avoid using this method for heavy workloads. 
+        /// </summary>
+        /// <param name="objToValidate">The object to perform property checks on</param>
+        /// <param name="expressions">The expressions to check</param>
+        /// <typeparam name="TObj">The object type</typeparam>
+        /// <returns>True if any checks succeed</returns>
         public static bool Any<TObj> (TObj objToValidate, params Expression<Func<TObj, object?>>[] expressions)
         {
             var hasValue = false;

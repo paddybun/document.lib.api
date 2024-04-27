@@ -1,6 +1,8 @@
-﻿using document.lib.ef;
+﻿using System.Linq.Expressions;
+using document.lib.ef;
 using document.lib.ef.Entities;
 using document.lib.ef.Helpers;
+using document.lib.shared.Helper;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Models;
 using Microsoft.EntityFrameworkCore;
@@ -24,32 +26,29 @@ public sealed class FolderSqlRepository(DocumentLibContext context) : IFolderRep
 
     public async Task<FolderModel?> GetFolderAsync(FolderModel folderModel)
     {
-        EfFolder? efFolder = null;
-        if (!string.IsNullOrWhiteSpace(folderModel.Id))
+        Expression<Func<EfFolder, bool>> getFolderExpression;
+        
+        if (PropertyChecker.Values.Any(folderModel, x => x.Id))
         {
-            // Check if the id is a valid integer, if not a different id was used (e.g. cosmos)
-            if (!int.TryParse(folderModel.Id, out var parsedId))
-            {
-                return null;
-            }
-
-            efFolder = await context.Folders
-                .Include(x => x.Registers)
-                .SingleOrDefaultAsync(x => x.Id == parsedId);
+            getFolderExpression = x => x.Id == (int)folderModel.Id!;
         }
-        else if (!string.IsNullOrWhiteSpace(folderModel.Name))
+        else if (PropertyChecker.Values.Any(folderModel, x => x.Name))
         {
-            efFolder = await context.Folders
-                .Include(x => x.Registers)
-                .SingleOrDefaultAsync(x => x.Name == folderModel.Name);
+            getFolderExpression = x => x.Name == folderModel.Name;
         }
         else if (folderModel.IsActive)
         {
-            efFolder = await context.Folders
-                .Include(x => x.Registers)
-                .FirstOrDefaultAsync(x => !x.IsFull && (x.Name != "unsorted" || x.Name != "digital"));
+            getFolderExpression = x => !x.IsFull && (x.Name != "unsorted" || x.Name != "digital");
         }
-
+        else
+        {
+            return null;
+        }
+        
+        var efFolder = await context.Folders
+            .Include(x => x.Registers)
+            .SingleOrDefaultAsync(getFolderExpression);
+        
         // Assign current register, if all registers are full, then current register will be null and must be created via the service
         efFolder = FolderEntityHelpers.AssignCurrentRegister(efFolder);
 
@@ -94,10 +93,10 @@ public sealed class FolderSqlRepository(DocumentLibContext context) : IFolderRep
 
     public async Task<FolderModel?> UpdateFolderAsync(FolderModel folder)
     {
-        if (string.IsNullOrWhiteSpace(folder.Id)) return null;
+        if (!PropertyChecker.Values.Any(folder.Id)) 
+            return null;
 
-        var parsedId = int.Parse(folder.Id);
-        var efFolder = await context.Folders.SingleAsync(x => x.Id == parsedId);
+        var efFolder = await context.Folders.SingleAsync(x => x.Id == (int)folder.Id!);
         efFolder.DisplayName = folder.DisplayName;
         efFolder.MaxDocumentsFolder = folder.DocumentsFolder;
         efFolder.MaxDocumentsRegister = folder.DocumentsRegister;
