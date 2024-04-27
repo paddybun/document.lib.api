@@ -82,7 +82,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _documents = await _documentService.GetUnsortedDocuments();
+        var (_, docs) = await _documentService.GetUnsortedDocuments(0, int.MaxValue);
+        _documents = docs;
     }
 
     private async Task LoadFilesAsync(InputFileChangeEventArgs e)

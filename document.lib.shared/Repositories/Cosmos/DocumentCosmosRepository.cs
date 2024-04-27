@@ -14,18 +14,16 @@ namespace document.lib.shared.Repositories.Cosmos;
 
 public class DocumentCosmosRepository : IDocumentRepository
 {
-    private readonly BlobContainerClient _bcc;
     private readonly Container _cosmosContainer;
 
     public DocumentCosmosRepository(IOptions<AppConfiguration> config)
     {
-        _bcc = new BlobContainerClient(config.Value.BlobServiceConnectionString, config.Value.BlobContainer);
         var cosmosClient = new CosmosClient(config.Value.CosmosDbConnection);
         var db = cosmosClient.GetDatabase(TableNames.Doclib);
         _cosmosContainer = db.GetContainer(TableNames.Doclib);
     }
 
-    public async Task<List<DocumentModel>> GetUnsortedDocumentsAsync()
+    public async Task<(int, List<DocumentModel>)> GetUnsortedDocumentsAsync(int page, int pageSize)
     {
         var docs = _cosmosContainer.GetItemLinqQueryable<DocLibDocument>(true)
             .Where(x => x.Unsorted == true)
@@ -35,7 +33,7 @@ public class DocumentCosmosRepository : IDocumentRepository
         {
             result.Add(Map(doc));
         }
-        return result;
+        return (result.Count, result);
     }
 
     public Task DeleteDocumentAsync(DocumentModel doc)

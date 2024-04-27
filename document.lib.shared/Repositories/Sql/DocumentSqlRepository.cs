@@ -100,14 +100,18 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
         return (count, documents);
     }
 
-    public async Task<List<DocumentModel>> GetUnsortedDocumentsAsync()
+    public async Task<(int, List<DocumentModel>)> GetUnsortedDocumentsAsync(int page, int pageSize)
     {
+        var count = await context.Documents.Where(x => x.Unsorted).CountAsync();
         var efDocuments = await context
             .Documents
-            .Where(x => x.Unsorted)
             .OrderBy(x => x.Id)
+            .Where(x => x.Unsorted)
+            .Skip(page * pageSize)
+            .Take(pageSize)
             .ToListAsync();
-        return efDocuments.Select(Map).ToList();
+        var documents = efDocuments.Select(Map).ToList();
+        return (count, documents);
     }
 
     public async Task<int> GetDocumentCountAsync()

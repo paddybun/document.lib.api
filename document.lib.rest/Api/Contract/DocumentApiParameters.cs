@@ -3,4 +3,6 @@
 public record DocumentGetQueryParameters(
     [FromQuery(Name = "id")] int? Id,
     [FromQuery(Name = "page")] int? Page,
-    [FromQuery(Name = "pageSize")] int? PageSize);
+    [FromQuery(Name = "pageSize")] int? PageSize,
+    [FromQuery(Name = "unsorted")] bool? Unsorted
+);

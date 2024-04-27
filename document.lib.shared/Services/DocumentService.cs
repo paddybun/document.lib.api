@@ -1,7 +1,6 @@
 ﻿using Azure.Storage.Blobs;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Models;
-using Microsoft.Identity.Client;
 
 namespace document.lib.shared.Services
 {
@@ -16,9 +15,9 @@ namespace document.lib.shared.Services
         const string NewDocumentCategory = "uncategorized";
         const string NewDocumentRegister = "unsorted";
 
-        public async Task<List<DocumentModel>> GetUnsortedDocuments()
-        {
-            return await documentRepository.GetUnsortedDocumentsAsync();
+        public async Task<(int, List<DocumentModel>)> GetUnsortedDocuments(int page, int pageSize)
+        {            
+            return await documentRepository.GetUnsortedDocumentsAsync(page, pageSize);
         }
 
         public async Task<DocumentModel?> GetDocumentByIdAsync(int id)
