@@ -24,16 +24,16 @@ public class CosmosToSqlMigration(
     {
         // allow generic host to log lifetime logs first
         logger.LogInformation("Started cosmos to sql migration");
-        var documentSqlRepository = new DocumentSqlRepository(sqlContext);
-        var sqlCategoryService = new CategorySqlService(new CategorySqlRepository(sqlContext));
-        var sqlFolderService = new FolderSqlService(new FolderSqlRepository(sqlContext));
-        var sqlTagService = new TagSqlService(new TagSqlRepository(sqlContext));
-        var sqlDocumentService = new DocumentSqlService(blobContainerClient, documentSqlRepository, sqlCategoryService, sqlTagService, sqlFolderService);
+        // var documentSqlRepository = new DocumentSqlRepository(sqlContext);
+        // var sqlCategoryService = new CategorySqlService(new CategorySqlRepository(sqlContext));
+        // var sqlFolderService = new FolderSqlService(new FolderSqlRepository(sqlContext));
+        // var sqlTagService = new TagSqlService(new TagSqlRepository(sqlContext));
+        // var sqlDocumentService = new DocumentSqlService(blobContainerClient, documentSqlRepository, sqlCategoryService, sqlTagService, sqlFolderService);
 
-        await SyncCategoriesAsync(sqlCategoryService);
-        await SyncFoldersAsync(sqlFolderService);
-        await SyncTagsAsync(sqlTagService);
-        await SyncDocumentsAsync(sqlDocumentService);
+        // await SyncCategoriesAsync(sqlCategoryService);
+        // await SyncFoldersAsync(sqlFolderService);
+        // await SyncTagsAsync(sqlTagService);
+        // await SyncDocumentsAsync(sqlDocumentService);
 
         logger.LogInformation("Cosmos to sql migration successful");
     }

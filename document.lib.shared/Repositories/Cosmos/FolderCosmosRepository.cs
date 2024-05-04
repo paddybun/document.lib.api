@@ -102,4 +102,9 @@ public class FolderCosmosRepository : IFolderRepository<DocLibFolder>
     {
         throw new NotImplementedException();
     }
+
+    public Task SaveAsync(DocLibFolder entity)
+    {
+        throw new NotImplementedException();
+    }
 }

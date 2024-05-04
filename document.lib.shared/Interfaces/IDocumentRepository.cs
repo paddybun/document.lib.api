@@ -14,4 +14,5 @@ public interface IDocumentRepository<T>
     Task<(int, List<T>)> GetDocumentsForFolderAsync(string folderName, int page, int pageSize);
     Task<T> UpdateDocumentAsync(DocumentModel document, int? category = null, FolderModel? folder = null, TagModel[]? tags = null);
     Task DeleteDocumentAsync(T doc);
+    Task SaveAsync();
 }

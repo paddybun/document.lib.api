@@ -14,6 +14,7 @@ public sealed class FolderSqlRepository(DocumentLibContext context) : IFolderRep
     {
         return await context.Folders
             .Include(x => x.Registers)
+            .ThenInclude(x => x.Documents)
             .SingleOrDefaultAsync(x => x.Id == id);
     }
 
@@ -21,6 +22,7 @@ public sealed class FolderSqlRepository(DocumentLibContext context) : IFolderRep
     {
         return await context.Folders
             .Include(x => x.Registers)
+            .ThenInclude(x => x.Documents)
             .SingleOrDefaultAsync(x => x.Name == name);
     }
 
@@ -158,5 +160,11 @@ public sealed class FolderSqlRepository(DocumentLibContext context) : IFolderRep
         context.Update(efFolder);
         
         await context.SaveChangesAsync();
+    }
+
+    public async Task SaveAsync(EfFolder entity)
+    {
+        var changes = context.ChangeTracker.DebugView.LongView;
+        // await context.SaveChangesAsync();
     }
 }

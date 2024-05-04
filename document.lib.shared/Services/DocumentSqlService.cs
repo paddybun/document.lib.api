@@ -1,4 +1,5 @@
 ﻿using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using document.lib.ef.Entities;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Models;
@@ -7,6 +8,7 @@ namespace document.lib.shared.Services
 {
     public class DocumentSqlService(
         BlobContainerClient blobContainerClient,
+        IFolderRepository<EfFolder> folderRepository,
         IDocumentRepository<EfDocument> documentRepository,
         ICategoryService categoryService,
         ITagService tagService,
@@ -33,6 +35,31 @@ namespace document.lib.shared.Services
             var (count, efDocuments) = await documentRepository.GetUnsortedDocumentsAsync(page, pageSize);
             var documents = efDocuments.Select(Map).ToList();
             return (count, documents);
+        }
+
+        public async Task MoveDocumentAsync(int documentId, int folderFromId, int toFolderId)
+        {
+            var document = await documentRepository.GetDocumentAsync(documentId);
+            var folderFrom = await folderRepository.GetFolderAsync(folderFromId);
+            var folderTo = await folderRepository.GetFolderAsync(toFolderId);
+            if (document == null || folderTo == null || folderFrom == null) return;
+        
+            // remove document from old folder
+            var registerFrom = folderFrom.Registers.Single(reg => reg.Documents.Any(doc => doc.Id == documentId));
+            registerFrom.DocumentCount--;
+            folderFrom.TotalDocuments--;
+            
+            // add document to new folder
+            AddDocumentToFolder(document, folderTo);
+            await documentRepository.SaveAsync();
+
+            // move blob
+            var newBlobLocation = $"{folderTo.Name}/{folderTo.CurrentRegister!.Name}/{document.PhysicalName}";
+            await MoveBlob(document.BlobLocation, newBlobLocation);
+            document.BlobLocation = newBlobLocation;
+            await documentRepository.SaveAsync();
+            
+            await documentRepository.SaveAsync();
         }
 
         public async Task<(int, List<DocumentModel>)> GetDocumentsPagedAsync(int page, int pageSize)
@@ -109,9 +136,19 @@ namespace document.lib.shared.Services
             {
                 var destBlob = blobContainerClient.GetBlobClient(to);
                 await destBlob.StartCopyFromUriAsync(source.Uri);
-            }
 
-            await source.DeleteAsync();
+                var props = (await destBlob.GetPropertiesAsync()).Value;
+                while (props.CopyStatus == CopyStatus.Pending)
+                {
+                    await Task.Delay(50);
+                    props = (await destBlob.GetPropertiesAsync()).Value;
+                }
+                
+                if (props.CopyStatus == CopyStatus.Success)
+                {
+                    await source.DeleteAsync();
+                }
+            }
         }
 
         private bool IsValid(DocumentModel model)
@@ -122,6 +159,31 @@ namespace document.lib.shared.Services
                    !string.IsNullOrWhiteSpace(model.CategoryName) &&
                    model.Tags != null &&
                    model.Tags.Any();
+        }
+        
+        private void AddDocumentToFolder(EfDocument doc, EfFolder folder)
+        {
+            var register = folder.CurrentRegister ?? CreateRegister(folder);
+            register.Documents.Add(doc);
+            register.DocumentCount++;
+            folder.TotalDocuments++;
+            folder.IsFull = folder.TotalDocuments >= folder.MaxDocumentsFolder;
+        }
+    
+        private EfRegister CreateRegister(EfFolder folder)
+        {
+            var lastIx = int.Parse(folder.Registers.OrderByDescending(x => x.Name).First().Name);
+            var newIx = (lastIx++).ToString();
+            var register = new EfRegister
+            {
+                Name = newIx,
+                Documents = [],
+                DisplayName = newIx,
+                DocumentCount = 0,
+                Folder = folder
+            };
+            folder.Registers.Add(register);
+            return register;
         }
         
         private DocumentModel Map(EfDocument efDocument)

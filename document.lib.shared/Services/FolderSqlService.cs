@@ -64,16 +64,6 @@ public class FolderSqlService(IFolderRepository<EfFolder> folderRepository)
         return updatedFolder == null ? null : Map(updatedFolder);
     }
 
-    public async Task MoveDocumentAsync(int documentId, int toFolderId)
-    {
-        var document = new DocumentModel { Id = documentId };
-        var fromFolder = new FolderModel { Id = document.FolderId };
-        var toFolder = new FolderModel { Id = toFolderId.ToString() };
-        
-        await folderRepository.RemoveDocFromFolderAsync(fromFolder, document);
-        await folderRepository.AddDocumentToFolderAsync(toFolder, document);
-    }
-
     public async Task AddDocumentToFolderAsync(FolderModel folder, DocumentModel doc)
     {
         throw new NotImplementedException();

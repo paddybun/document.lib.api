@@ -15,7 +15,7 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
             .Include(x => x.Register)
             .ThenInclude(x => x.Folder)
             .Include(x => x.Category)
-            .Include(x => x.Tags)!
+            .Include(x => x.Tags)
             .ThenInclude(x => x.Tag)
             .SingleOrDefaultAsync(x => x.Id== id);
         return doc;
@@ -184,6 +184,12 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
     public async Task DeleteDocumentAsync(EfDocument doc)
     {
         context.Documents.Remove(doc);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task SaveAsync()
+    {
+        var changes = context.ChangeTracker.DebugView.LongView;
         await context.SaveChangesAsync();
     }
 }

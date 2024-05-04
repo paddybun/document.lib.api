@@ -29,7 +29,7 @@ public class EfDocument: EfBaseFields
     [MaxLength(2000)]
     public string? Description { get; set; }
     public EfRegister Register { get; set; } = null!;
-    public List<EfTagAssignment>? Tags { get; set; }
+    public List<EfTagAssignment> Tags { get; set; } = null!;
     public bool Unsorted { get; set; }
     public EfCategory Category { get; set; } = null!;
     public bool Digital { get; set; }

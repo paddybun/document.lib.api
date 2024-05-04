@@ -11,7 +11,6 @@ public interface IFolderService
     Task <List<FolderModel>> GetAllAsync();
     Task<(int, List<FolderModel>)> GetFoldersPaged(int page, int pageSize);
     Task<FolderModel?> UpdateFolderAsync(FolderModel folder);
-    Task MoveDocumentAsync(int documentId, int toFolderId);
     Task AddDocumentToFolderAsync(FolderModel folder, DocumentModel doc);
     Task RemoveDocumentFromFolder(FolderModel folder, DocumentModel doc);
 }

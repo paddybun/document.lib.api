@@ -9,5 +9,6 @@ public record DocumentGetQueryParameters(
 );
 
 public record DocumentMoveParameters(
-    [property: JsonPropertyName("to"), FromBody] int? To
+    [property: JsonPropertyName("folderFrom"), FromBody] int? FolderFrom,
+    [property: JsonPropertyName("folderTo"), FromBody] int? FolderTo
 );

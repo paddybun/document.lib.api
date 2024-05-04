@@ -89,4 +89,14 @@ public class DocumentCosmosRepository : IDocumentRepository<DocLibDocument>
     {
         throw new NotImplementedException();
     }
+
+    public Task SaveAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SaveAsync(DocLibDocument entity)
+    {
+        throw new NotImplementedException();
+    }
 }

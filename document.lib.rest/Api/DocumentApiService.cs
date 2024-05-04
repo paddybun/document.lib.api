@@ -38,14 +38,12 @@ public class DocumentApiService(IDocumentService documentService, IFolderService
 
     public async Task<IResult> MoveDocumentsAsync(int id, DocumentMoveParameters parameters)
     {
-        if (!PropertyChecker.Values.Any(parameters, x => x.To))
+        if (!PropertyChecker.Values.All(parameters, x => x.FolderTo, x => x.FolderFrom))
         {
             return Results.BadRequest("Invalid parameters");
         }
         
-        await folderService.MoveDocumentAsync(id, parameters.To!.Value);
-        
-        
-        throw new NotImplementedException();
+        await documentService.MoveDocumentAsync(id, parameters.FolderFrom!.Value, parameters.FolderTo!.Value);
+        return Results.Ok();
     }
 }
