@@ -1,5 +1,4 @@
 ﻿using document.lib.shared.Constants;
-using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
 using document.lib.shared.Models.Models;
@@ -9,89 +8,54 @@ using Microsoft.Extensions.Options;
 
 namespace document.lib.shared.Repositories.Cosmos;
 
-public class CategoryCosmosRepository : ICategoryRepository
+public class CategoryCosmosRepository : ICategoryRepository<DocLibCategory>
 {
     private readonly Container _cosmosContainer;
 
-    public CategoryCosmosRepository(IOptions<AppConfiguration> config)
+    public CategoryCosmosRepository(IOptions<SharedConfig> config)
     {
         var cosmosClient = new CosmosClient(config.Value.CosmosDbConnection);
         var db = cosmosClient.GetDatabase(TableNames.Doclib);
         _cosmosContainer = db.GetContainer(TableNames.Doclib);
     }
 
-    public async Task<CategoryModel?> GetCategoryAsync(CategoryModel categoryModel)
+    public Task<DocLibCategory?> GetCategoryByIdAsync(int id)
     {
-        if (categoryModel == null) throw new ArgumentNullException(nameof(categoryModel));
-
-        if (string.IsNullOrWhiteSpace(categoryModel.Id) && string.IsNullOrWhiteSpace(categoryModel.Name))
-        {
-            throw new InvalidParameterException(categoryModel.GetType());
-        }
-
-        DocLibCategory? category;
-        if (!string.IsNullOrWhiteSpace(categoryModel.Id))
-        {
-            category = _cosmosContainer.GetItemLinqQueryable<DocLibCategory>(true)
-                .Where(x => x.Id == categoryModel.Id)
-                .AsEnumerable()
-                .FirstOrDefault();
-        }
-        else
-        {
-            category = _cosmosContainer.GetItemLinqQueryable<DocLibCategory>(true)
-                .Where(x => x.Id == $"Category.{categoryModel.Name}")
-                .AsEnumerable()
-                .FirstOrDefault();
-        }
-
-        if (category == null)
-        {
-            return null;
-        }
-
-        return await Task.FromResult(MapToModel(category));
+        throw new NotImplementedException();
     }
 
-    public async Task<List<CategoryModel>> GetCategoriesAsync()
+    public Task<DocLibCategory?> GetCategoryByNameAsync(string name)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<List<DocLibCategory>> GetCategoriesAsync()
     {
         var categories = _cosmosContainer.GetItemLinqQueryable<DocLibCategory>(true)
             .Where(x => x.Id.StartsWith("Category."))
             .AsEnumerable()
             .ToList();
-        return await Task.FromResult(categories.Select(MapToModel).ToList());
+        return await Task.FromResult(categories);
     }
 
-    public async Task<CategoryModel> CreateCategoryAsync(CategoryModel category)
+    public async Task<DocLibCategory> CreateCategoryAsync(string name, string? description = null, string? displayName = null)
     {
-        var id = $"Category.{category.Name}";
+        var id = $"Category.{name}";
         var cat = new DocLibCategory
         {
             Id = id,
-            Name = category.Name,
-            DisplayName = category.DisplayName,
-            Description = ""
+            Name = name,
+            DisplayName = displayName,
+            Description = description
         };
         var response = await _cosmosContainer.CreateItemAsync(cat, new PartitionKey(cat.Id));
-        return MapToModel(response.Resource);
+        return response.Resource;
     }
 
-    public async Task<CategoryModel> UpdateCategoryAsync(CategoryModel category)
+    public async Task<DocLibCategory> UpdateCategoryAsync(DocLibCategory category)
     {
-        var entity = MapToEntity(category);
-        await _cosmosContainer.UpsertItemAsync(entity, new PartitionKey(entity.Id));
-        return MapToModel(entity);
-    }
-
-    private static DocLibCategory MapToEntity(CategoryModel categoryModel)
-    {
-        return new DocLibCategory
-        {
-            Id = categoryModel.Id ?? string.Empty,
-            Name = categoryModel.Name,
-            DisplayName = categoryModel.DisplayName,
-            Description = categoryModel.Description
-        };
+        await _cosmosContainer.UpsertItemAsync(category, new PartitionKey(category.Id));
+        return category;
     }
 
     private static CategoryModel MapToModel(DocLibCategory category)

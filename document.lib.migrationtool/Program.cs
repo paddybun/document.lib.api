@@ -30,19 +30,15 @@ var host = Host
     {
         var cfgRoot = context.Configuration;
         var configSection = cfgRoot.GetSection("Config");
-        var appConfig = configSection.Get<AppConfiguration>();
+        var appConfig = configSection.Get<SharedConfig>();
         if (appConfig == null)
         {
             throw new Exception("Config section not found!");
         }
         
         services.Configure<ConsoleLifetimeOptions>(opts => opts.SuppressStatusMessages = true);
-        services.Configure<AppConfiguration>(configSection);
-        services.ConfigureDocumentLibShared(
-            appConfig.DatabaseProvider,
-            appConfig.CosmosDbConnection,
-            appConfig.BlobServiceConnectionString,
-            appConfig.BlobContainer);
+        services.Configure<SharedConfig>(configSection);
+        services.ConfigureDocumentLibShared(configSection);
         services.AddHostedService<CosmosToSqlMigration>();
         services.AddDbContext<DocumentLibContext>(opts =>
         {

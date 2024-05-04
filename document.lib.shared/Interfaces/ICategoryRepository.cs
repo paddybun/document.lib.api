@@ -2,10 +2,11 @@
 
 namespace document.lib.shared.Interfaces;
 
-public interface ICategoryRepository
-{
-    Task<CategoryModel?> GetCategoryAsync(CategoryModel categoryModel);
-    Task<List<CategoryModel>> GetCategoriesAsync();
-    Task<CategoryModel> CreateCategoryAsync(CategoryModel category);
-    Task<CategoryModel> UpdateCategoryAsync(CategoryModel category);
+public interface ICategoryRepository<T>
+{   
+    Task<T?> GetCategoryByIdAsync(int id);
+    Task<T?> GetCategoryByNameAsync(string name);
+    Task<List<T>> GetCategoriesAsync();
+    Task<T> CreateCategoryAsync(string name, string? description = null, string? displayName = null);
+    Task<T> UpdateCategoryAsync(T category);
 }

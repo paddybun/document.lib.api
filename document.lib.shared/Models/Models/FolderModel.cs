@@ -11,8 +11,6 @@ public class FolderModel : IFolderModel, IFolderModelExtensions
     public RegisterModel? CurrentRegister { get; set; }
     public string? CurrentRegisterName { get; set; }
     public List<RegisterModel> Registers { get; set; } = [];
-
-    // TODO: Needs to be a calculated field
     public int TotalDocuments { get; set; }
     public int DocumentsRegister { get; set; }
     public int DocumentsFolder { get; set; }

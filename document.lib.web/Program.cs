@@ -11,6 +11,7 @@ using document.lib.shared.Services;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Azure;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 
@@ -35,14 +36,10 @@ builder.Services.AddServerSideBlazor().AddMicrosoftIdentityConsentHandler();
 
 // ----- Dependency Injection -----
 var configSection = builder.Configuration.GetSection("Config");
-var appConfig = configSection.Get<AppConfiguration>();
+var appConfig = configSection.Get<SharedConfig>();
 
-builder.Services.Configure<AppConfiguration>(configSection);
-builder.Services.ConfigureDocumentLibShared(
-    appConfig.DatabaseProvider,
-    appConfig.CosmosDbConnection,
-    appConfig.BlobServiceConnectionString,
-    appConfig.BlobContainer);
+builder.Services.Configure<SharedConfig>(configSection);
+builder.Services.ConfigureDocumentLibShared(configSection);
 var provider = appConfig.DatabaseProvider;
 
 if (provider == DatabaseProvider.Sql)
@@ -70,8 +67,5 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
-
-var setup = app.Services.GetService<OneTimeSetup>();
-await setup!.CreateDefaultsAsync();
 
 app.Run();

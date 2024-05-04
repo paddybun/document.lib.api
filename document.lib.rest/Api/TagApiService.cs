@@ -5,10 +5,8 @@ namespace document.lib.rest.Api;
 internal class TagApiService(ITagService tagService)
 {
     public async Task<IResult> GetTagsAsync(GetTagsQueryParameters parameters, HttpContext http)
-    {
-        var res = PropertyChecker.Values.Any(parameters, x => x.Id, x => x.Name);
-        
-        if (PropertyChecker.Values.All(parameters, x => x.Id))
+    {   
+        if (PropertyChecker.Values.Any(parameters, x => x.Id))
         {
             var model = await tagService.GetTagByIdAsync(parameters.Id!.Value);
             return model == null 
@@ -16,7 +14,7 @@ internal class TagApiService(ITagService tagService)
                 : Results.Ok(model);
         }
         
-        if (PropertyChecker.Values.All(parameters, x => x.Name))
+        if (PropertyChecker.Values.Any(parameters, x => x.Name))
         {
             var model = await tagService.GetTagByNameAsync(parameters.Name!);
             return model == null 

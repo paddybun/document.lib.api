@@ -1,25 +1,25 @@
-﻿using document.lib.shared.Interfaces;
+﻿using document.lib.ef.Entities;
+using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
-using document.lib.shared.Services;
 using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 
 namespace document.lib.test;
 
-public class DocumentServiceTests
+public class DocumentSqlServiceTests
 {
-    private readonly IOptions<AppConfiguration> _defaultConfiguration;
-    private readonly IDocumentRepository _defaultDocumentRepository;
+    private readonly IOptions<SharedConfig> _defaultConfiguration;
+    private readonly IDocumentRepository<EfDocument> _defaultDocumentRepository;
     private readonly ICategoryService _defaultCategoryService;
     private readonly ITagService _defaultTagService;
     private readonly IFolderService _defaultFolderService;
 
 
-    public DocumentServiceTests()
+    public DocumentSqlServiceTests()
     {
-        _defaultConfiguration = Options.Create(new AppConfiguration());
-        _defaultDocumentRepository = new Mock<IDocumentRepository>().Object;
+        _defaultConfiguration = Options.Create(new SharedConfig());
+        _defaultDocumentRepository = new Mock<IDocumentRepository<EfDocument>>().Object;
         _defaultCategoryService = new Mock<ICategoryService>().Object;
         _defaultTagService = new Mock<ITagService>().Object;
         _defaultFolderService = new Mock<IFolderService>().Object;

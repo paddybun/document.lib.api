@@ -2,7 +2,7 @@
 
 public class DocumentModel
 {
-    public string Id { get; set; } = null!;
+    public object? Id { get; set; }
     public string Name { get; set; } = null!;
     public string? DisplayName { get; set; }
     public string PhysicalName { get; set; } = null!;

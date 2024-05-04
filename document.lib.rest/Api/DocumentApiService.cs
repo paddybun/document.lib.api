@@ -2,9 +2,9 @@
 
 namespace document.lib.rest.Api;
 
-public class DocumentApiService(IDocumentService documentService)
+public class DocumentApiService(IDocumentService documentService, IFolderService folderService)
 {
-    public async Task<IResult> GetDocuments(DocumentGetQueryParameters parameters, HttpContext http)
+    public async Task<IResult> GetDocumentsAsync(DocumentGetQueryParameters parameters, HttpContext http)
     {
         if (PropertyChecker.Values.Any(parameters, x => x.Id))
         {
@@ -34,5 +34,18 @@ public class DocumentApiService(IDocumentService documentService)
         }
         
         return Results.NotFound();
+    }
+
+    public async Task<IResult> MoveDocumentsAsync(int id, DocumentMoveParameters parameters)
+    {
+        if (!PropertyChecker.Values.Any(parameters, x => x.To))
+        {
+            return Results.BadRequest("Invalid parameters");
+        }
+        
+        await folderService.MoveDocumentAsync(id, parameters.To!.Value);
+        
+        
+        throw new NotImplementedException();
     }
 }

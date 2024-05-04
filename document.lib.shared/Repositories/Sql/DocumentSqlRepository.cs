@@ -1,17 +1,88 @@
-﻿using System.Linq.Expressions;
-using document.lib.ef;
+﻿using document.lib.ef;
 using document.lib.ef.Entities;
-using document.lib.ef.Helpers;
-using document.lib.shared.Helper;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.shared.Repositories.Sql;
 
-public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumentRepository
+public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumentRepository<EfDocument>
 {
-    public async Task<DocumentModel> CreateDocumentAsync(DocumentModel document)
+    public async Task<EfDocument?> GetDocumentAsync(int id)
+    {
+        var doc = await context
+            .Documents
+            .Include(x => x.Register)
+            .ThenInclude(x => x.Folder)
+            .Include(x => x.Category)
+            .Include(x => x.Tags)!
+            .ThenInclude(x => x.Tag)
+            .SingleOrDefaultAsync(x => x.Id== id);
+        return doc;
+    }
+
+    public async Task<EfDocument?> GetDocumentAsync(string name)
+    {
+        var doc = await context.
+            Documents
+            .Include(x => x.Register)
+            .ThenInclude(x => x.Folder)
+            .Include(x => x.Category)
+            .Include(x => x.Tags)!
+            .ThenInclude(x => x.Tag)
+            .SingleOrDefaultAsync(x => x.Name == name);
+        return doc;
+    }
+
+    public async Task<(int, List<EfDocument>)> GetDocumentsPagedAsync(int page, int pageSize)
+    {
+        var count = await context.Documents.CountAsync();
+        var efDocuments = await context.Documents
+            .OrderBy(x => x.Id)
+            .Include(x => x.Register)
+            .ThenInclude(x => x.Folder)
+            .Skip(page * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        
+        return (count, efDocuments);
+    }
+
+    public async Task<(int, List<EfDocument>)> GetUnsortedDocumentsAsync(int page, int pageSize)
+    {
+        var count = await context.Documents.Where(x => x.Unsorted).CountAsync();
+        var efDocuments = await context
+            .Documents
+            .OrderBy(x => x.Id)
+            .Where(x => x.Unsorted)
+            .Skip(page * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        return (count, efDocuments);
+    }
+
+    public async Task<(int, List<EfDocument>)> GetDocumentsForFolderAsync(string folderName, int page, int pageSize)
+    {
+        var folder = await context
+            .Folders
+            .Where(x => x.Name == folderName)
+            .SingleOrDefaultAsync();
+        var efDocuments = await context
+            .Documents
+            .Include(x => x.Register)
+            .ThenInclude(x => x.Folder)
+            .Include(x => x.Category)
+            .Include(x => x.Tags)
+            .Where(x => x.Register.Folder!.Name == folderName)
+            .OrderBy(x => x.Id)
+            .Skip(page * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        
+        return (folder?.TotalDocuments ?? 0, efDocuments);
+    }
+
+    public async Task<EfDocument> CreateDocumentAsync(DocumentModel document)
     {
         var registerName = document.Digital ? "digital" : document.RegisterName;
         var register = await context
@@ -51,67 +122,7 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
         await context.Documents.AddAsync(efDocument);
         await context.SaveChangesAsync();
 
-        return Map(efDocument);
-    }
-
-    public async Task<DocumentModel?> GetDocumentAsync(DocumentModel model)
-    {
-        Expression<Func<EfDocument, bool>> getDocumentExpression;
-        
-        if (PropertyChecker.Values.Any(model, x => x.Id)) 
-            getDocumentExpression = x => x.Id == int.Parse(model.Id);
-        else if (PropertyChecker.Values.Any(model, x => x.Name)) 
-            getDocumentExpression = x => x.Name == model.Name;
-        else { return null; }
-
-        var efDocument = await context
-            .Documents
-            .Include(x => x.Register)
-            .ThenInclude(x => x.Folder)
-            .Include(x => x.Category)
-            .Include(x => x.Tags)!
-            .ThenInclude(x => x.Tag)
-            .SingleOrDefaultAsync(getDocumentExpression);
-        
-        return efDocument == null ? null : Map(efDocument);
-    }
-
-    public async Task<List<DocumentModel>> GetAllDocumentsAsync()
-    {
-        var efDocuments = await context
-            .Documents
-            .Include(x => x.Tags)
-            .ToListAsync();
-        return efDocuments.Select(Map).ToList();
-    }
-
-    public async Task<(int, List<DocumentModel>)> GetDocumentsPagedAsync(int page, int pageSize)
-    {
-        var count = await context.Documents.CountAsync();
-        var efDocuments = await context.Documents
-            .OrderBy(x => x.Id)
-            .Include(x => x.Register)
-            .ThenInclude(x => x.Folder)
-            .Skip(page * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
-        
-        var documents = efDocuments.Select(Map).ToList();
-        return (count, documents);
-    }
-
-    public async Task<(int, List<DocumentModel>)> GetUnsortedDocumentsAsync(int page, int pageSize)
-    {
-        var count = await context.Documents.Where(x => x.Unsorted).CountAsync();
-        var efDocuments = await context
-            .Documents
-            .OrderBy(x => x.Id)
-            .Where(x => x.Unsorted)
-            .Skip(page * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
-        var documents = efDocuments.Select(Map).ToList();
-        return (count, documents);
+        return efDocument;
     }
 
     public async Task<int> GetDocumentCountAsync()
@@ -119,23 +130,7 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
         return await context.Documents.CountAsync();
     }
 
-    public async Task<List<DocumentModel>> GetDocumentsForFolderAsync(string folderName, int page, int count)
-    {
-        var efDocuments = await context
-            .Documents
-            .Include(x => x.Register)
-            .ThenInclude(x => x.Folder)
-            .Include(x => x.Category)
-            .Include(x => x.Tags)
-            .Where(x => x.Register.Folder!.Name == folderName)
-            .Skip(page).Take(count)
-            .ToListAsync();
-
-        var mapped = efDocuments.Select(Map).ToList();
-        return mapped;
-    }
-
-    public async Task<DocumentModel> UpdateDocumentAsync(DocumentModel document, CategoryModel? category = null, FolderModel? folder = null,
+    public async Task<EfDocument> UpdateDocumentAsync(DocumentModel document, int? category = null, FolderModel? folder = null,
         TagModel[]? tags = null)
     {
         var efDoc = context
@@ -148,7 +143,7 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
 
         if (category != null)
         {
-            var efCategory = await context.Categories.SingleAsync(x => x.Id == int.Parse(category.Id!));
+            var efCategory = await context.Categories.SingleAsync(x => x.Id == category);
             efDoc.Category = efCategory;
         }
         if (tags != null)
@@ -168,9 +163,8 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
                 .Include(x => x.Registers)
                 .SingleAsync(x => x.Id == id);
 
-            FolderEntityHelpers.AssignCurrentRegister(efFolder);
-
-            efDoc.Register = efFolder.CurrentRegister;
+            if (efFolder.CurrentRegister != null)
+                efDoc.Register = efFolder.CurrentRegister;
         }
 
         efDoc.Name = document.Name;
@@ -184,48 +178,12 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
 
         context.Update(efDoc);
         await context.SaveChangesAsync();
-        return Map(efDoc);
+        return efDoc;
     }
 
-    public async Task DeleteDocumentAsync(DocumentModel doc)
+    public async Task DeleteDocumentAsync(EfDocument doc)
     {
-        var docId = int.Parse(doc.Id);
-        var efDoc = await context.Documents.SingleAsync(x => x.Id == docId);
-        context.Remove(efDoc);
+        context.Documents.Remove(doc);
         await context.SaveChangesAsync();
-    }
-
-    public async Task DeleteDocumentAsync(string documentId)
-    {
-        var docId = int.Parse(documentId);
-        var efDoc = await context.Documents.SingleAsync(x => x.Id == docId);
-        context.Remove(efDoc);
-        await context.SaveChangesAsync();
-    }
-
-    private DocumentModel Map(EfDocument efDocument)
-    {
-        var tags = efDocument.Tags?.Select(x => x.Tag?.Name ?? "").ToList() ?? [];
-
-        return new DocumentModel
-        {
-            Id = efDocument.Id.ToString(),
-            Name = efDocument.Name,
-            DisplayName = efDocument.DisplayName,
-            Description = efDocument.Description,
-            CategoryName = efDocument.Category?.DisplayName ?? string.Empty,
-            BlobLocation = efDocument.BlobLocation,
-            FolderName = efDocument.Register?.Folder?.Name ?? string.Empty,
-            Company = efDocument.Company,
-            DateOfDocument = efDocument.DateOfDocument,
-            DateModified = efDocument.DateModified,
-            UploadDate = efDocument.DateCreated,
-            Digital = efDocument.Digital,
-            PhysicalName = efDocument.PhysicalName,
-            Tags = tags,
-            RegisterName = efDocument.Register?.Name ?? string.Empty,
-            FolderId = efDocument.Register?.Folder?.Id.ToString() ?? string.Empty,
-            Unsorted = efDocument.Unsorted
-        };
     }
 }

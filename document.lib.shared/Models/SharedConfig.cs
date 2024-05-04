@@ -3,7 +3,7 @@ using document.lib.shared.Enums;
 
 namespace document.lib.shared.Models;
 
-public class AppConfiguration
+public class SharedConfig
 {
     public string? AllowedHosts { get; init; }
     public string? CosmosDbConnection { get; init; }

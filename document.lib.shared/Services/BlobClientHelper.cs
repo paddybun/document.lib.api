@@ -1,16 +1,13 @@
 ﻿using Azure.Storage.Blobs;
 using document.lib.shared.Models;
-using Microsoft.Extensions.Options;
 
 namespace document.lib.shared.Services;
 
-public class BlobClientHelper(IOptions<AppConfiguration> config)
+public class BlobClientHelper(BlobContainerClient blobContainerClient)
 {
-    private readonly BlobContainerClient _blobContainerClient = new(config.Value.BlobServiceConnectionString, config.Value.BlobContainer);
-
     public async Task UploadBlobAsync(string name, Stream buffer)
     {
-        var blobClient = _blobContainerClient.GetBlobClient(name);
+        var blobClient = blobContainerClient.GetBlobClient(name);
         if (!await blobClient.ExistsAsync())
         {
             await blobClient.UploadAsync(buffer);
@@ -19,7 +16,7 @@ public class BlobClientHelper(IOptions<AppConfiguration> config)
 
     public async Task<Stream> DownloadBlobAsync(string blob)
     {
-        var blobClient = _blobContainerClient.GetBlobClient(blob);
+        var blobClient = blobContainerClient.GetBlobClient(blob);
         var blobInfo = await blobClient.DownloadAsync();
         return blobInfo.Value.Content;
     }

@@ -1,5 +1,6 @@
 using document.lib.shared.Enums;
 using document.lib.shared.Models;
+using Microsoft.Extensions.Azure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +10,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 // Build configuration
-var appConfig = builder.Configuration.GetSection("Config").Get<AppConfiguration>();
+var appConfig = builder.Configuration.GetSection("Config").Get<SharedConfig>();
 if (appConfig == null)
 {
     throw new Exception("Config section not found!");
@@ -25,11 +26,7 @@ builder.Services.AddScoped<TagApiService>();
 builder.Services.AddScoped<DocumentApiService>();
 
 // Init document lib services
-builder.Services.ConfigureDocumentLibShared(
-    appConfig.DatabaseProvider,
-    appConfig.CosmosDbConnection,
-    appConfig.BlobServiceConnectionString,
-    appConfig.BlobContainer);
+builder.Services.ConfigureDocumentLibShared(builder.Configuration.GetSection("Config"));
 if (appConfig.DatabaseProvider == DatabaseProvider.Sql)
 {
     builder.Services.AddDbContext<DocumentLibContext>(opts =>

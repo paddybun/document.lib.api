@@ -1,12 +1,13 @@
 ﻿using Azure.Storage.Blobs;
+using document.lib.ef.Entities;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Models;
 
 namespace document.lib.shared.Services
 {
-    public class DocumentService(
+    public class DocumentSqlService(
         BlobContainerClient blobContainerClient,
-        IDocumentRepository documentRepository,
+        IDocumentRepository<EfDocument> documentRepository,
         ICategoryService categoryService,
         ITagService tagService,
         IFolderService folderService)
@@ -15,51 +16,30 @@ namespace document.lib.shared.Services
         const string NewDocumentCategory = "uncategorized";
         const string NewDocumentRegister = "unsorted";
 
-        public async Task<(int, List<DocumentModel>)> GetUnsortedDocuments(int page, int pageSize)
-        {            
-            return await documentRepository.GetUnsortedDocumentsAsync(page, pageSize);
-        }
-
         public async Task<DocumentModel?> GetDocumentByIdAsync(int id)
         {
-            return await documentRepository.GetDocumentAsync(new DocumentModel { Id = id.ToString() });
+            var doc = await documentRepository.GetDocumentAsync(id);
+            return doc != null ? Map(doc) : null;
         }
-        
+
+        public async Task<DocumentModel?> GetDocumentByNameAsync(string name)
+        {
+            var doc = await documentRepository.GetDocumentAsync(name);
+            return doc != null ? Map(doc) : null;
+        }
+
+        public async Task<(int, List<DocumentModel>)> GetUnsortedDocuments(int page, int pageSize)
+        {
+            var (count, efDocuments) = await documentRepository.GetUnsortedDocumentsAsync(page, pageSize);
+            var documents = efDocuments.Select(Map).ToList();
+            return (count, documents);
+        }
+
         public async Task<(int, List<DocumentModel>)> GetDocumentsPagedAsync(int page, int pageSize)
         {
-            return await documentRepository.GetDocumentsPagedAsync(page, pageSize);
-        }
-
-        public async Task<DocumentModel?> GetDocumentAsync(string? id = null, string? name = null)
-        {
-            if (string.IsNullOrWhiteSpace(id) && string.IsNullOrWhiteSpace(name))
-            {
-                var idNull = new ArgumentNullException(nameof(id));
-                var nameNull = new ArgumentNullException(nameof(name));
-                throw new AggregateException(idNull, nameNull);
-            }
-
-            DocumentModel model;
-            if (int.TryParse(id, out var parsedId))
-            {
-                 model = new DocumentModel
-                {
-                    Id = parsedId.ToString()
-                };
-            }
-            else if (!string.IsNullOrWhiteSpace(name))
-            {
-                model = new DocumentModel
-                {
-                    Name = name
-                };
-            }
-            else
-            {
-                return null;
-            }
-
-            return await documentRepository.GetDocumentAsync(model);
+            var (count, efDocuments) = await documentRepository.GetDocumentsPagedAsync(page, pageSize);
+            var documents = efDocuments.Select(Map).ToList();
+            return (count, documents);
         }
 
         public async Task<DocumentModel> UpdateDocumentAsync(DocumentModel doc)
@@ -67,16 +47,16 @@ namespace document.lib.shared.Services
             if (!IsValid(doc)) { throw new Exception("Please make sure the following fields are filled ['DisplayName, Company, DateOfDocument, Category, Tags']"); }
 
             var category = await categoryService.CreateOrGetCategoryAsync(doc.CategoryName);
-            var tags = await tagService.GetOrCreateTagsAsync(doc.Tags);
-            var folder = await folderService.GetOrCreateFolderByIdAsync(doc.FolderId);
+            var tags = await tagService.GetOrCreateTagsAsync(doc.Tags ?? []);
+            var folder = await folderService.GetFolderByNameAsync(doc.FolderId ?? "") ?? await folderService.CreateNewFolderAsync();
 
             if (doc.Unsorted)
             {
                 await MoveDocumentFromUnsorted(doc);
             }
 
-            var res = await documentRepository.UpdateDocumentAsync(doc, category, folder, tags.ToArray());
-            return res;
+            var res = await documentRepository.UpdateDocumentAsync(doc, (int?)category.Id, folder, tags.ToArray());
+            return Map(res);
         }
 
         public async Task<DocumentModel> CreateNewDocumentAsync(DocumentModel doc)
@@ -91,41 +71,9 @@ namespace document.lib.shared.Services
             }
 
             var document = await documentRepository.CreateDocumentAsync(doc);
-            var folder = await folderService.GetOrCreateActiveFolderAsync();
-            if (folder != null) { folder = await folderService.SaveAsync(folder); }
-            return document;
+            return Map(document);
         }
-
-        public async Task<bool> MoveDocumentAsync(DocumentModel doc)
-        {
-            var oldPath = doc.BlobLocation;
-            
-            var model = new DocumentModel { };
-
-            if (int.TryParse(doc.Id, out var id))
-                model.Id = id.ToString();
-            else
-                model.Name = doc.Id;
-
-            var dbDoc = await documentRepository.GetDocumentAsync(model);
-            if (dbDoc == null || doc.FolderName == dbDoc.FolderName) return false;
-
-            var oldFolder = await folderService.GetFolderByNameAsync(dbDoc.FolderName);
-            var newFolder = await folderService.GetFolderByNameAsync(doc.FolderName);
-
-            if (oldFolder == null || newFolder == null) return false;
-            await folderService.RemoveDocumentFromFolder(oldFolder, dbDoc);
-            await folderService.AddDocumentToFolderAsync(newFolder, dbDoc);
-
-            var relocatedDoc = await documentRepository.GetDocumentAsync(model);
-            dbDoc.BlobLocation = $"{newFolder.Name}/{relocatedDoc.RegisterName}/{dbDoc.PhysicalName}";
-            
-            await MoveBlob(oldPath, dbDoc.BlobLocation);
-            await documentRepository.UpdateDocumentAsync(dbDoc);
-
-            return true;
-        }
-
+        
         public Task DeleteDocumentAsync(DocumentModel doc)
         {
             throw new NotImplementedException();
@@ -175,5 +123,32 @@ namespace document.lib.shared.Services
                    model.Tags != null &&
                    model.Tags.Any();
         }
+        
+        private DocumentModel Map(EfDocument efDocument)
+        {
+            var tags = efDocument.Tags?.Select(x => x.Tag?.Name ?? "").ToList() ?? [];
+
+            return new DocumentModel
+            {
+                Id = efDocument.Id.ToString(),
+                Name = efDocument.Name,
+                DisplayName = efDocument.DisplayName,
+                Description = efDocument.Description,
+                CategoryName = efDocument.Category?.DisplayName ?? string.Empty,
+                BlobLocation = efDocument.BlobLocation,
+                FolderName = efDocument.Register?.Folder?.Name ?? string.Empty,
+                Company = efDocument.Company,
+                DateOfDocument = efDocument.DateOfDocument,
+                DateModified = efDocument.DateModified,
+                UploadDate = efDocument.DateCreated,
+                Digital = efDocument.Digital,
+                PhysicalName = efDocument.PhysicalName,
+                Tags = tags,
+                RegisterName = efDocument.Register?.Name ?? string.Empty,
+                FolderId = efDocument.Register?.Folder?.Id.ToString() ?? string.Empty,
+                Unsorted = efDocument.Unsorted
+            };
+        }
+
     }
 }

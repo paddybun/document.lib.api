@@ -6,7 +6,7 @@ internal class FolderApiService(IFolderService folderService)
 {
     public async Task<FolderModel?> GetFolderModel(FolderGetRouteParameters folderGetRouteParameters)
     {
-        return await folderService.GetFolderByIdAsync(folderGetRouteParameters.Id.ToString());
+        return await folderService.GetFolderByIdAsync(folderGetRouteParameters.Id);
     }
 
     public async Task<IResult> GetFolderModel(FolderGetQueryParameters folderGetQueryParameters, HttpContext http)
@@ -14,7 +14,7 @@ internal class FolderApiService(IFolderService folderService)
         try
         {
             if (PropertyChecker.Values.All(folderGetQueryParameters, x => x.Id))
-                return Results.Ok(await folderService.GetFolderByIdAsync(folderGetQueryParameters.Id.ToString()!));
+                return Results.Ok(await folderService.GetFolderByIdAsync(folderGetQueryParameters.Id!.Value));
 
             if (PropertyChecker.Values.All(folderGetQueryParameters, x => x.Name))
                 return Results.Ok(folderService.GetFolderByNameAsync(folderGetQueryParameters.Name!));
@@ -41,11 +41,10 @@ internal class FolderApiService(IFolderService folderService)
     {
         try
         {
-            var folder = FolderModel.New();
-            folder.DocumentsFolder = folderPutParameters.DocumentsPerFolder ?? 0;
-            folder.DocumentsRegister = folderPutParameters.DocumentsPerRegister ?? 0;
-            folder.DisplayName = folderPutParameters.DisplayName;
-            var newFolder = await folderService.CreateNewFolderAsync(folder);
+            var newFolder = await folderService.CreateNewFolderAsync(
+                folderPutParameters.DocumentsPerFolder ?? 150, 
+                folderPutParameters.DocumentsPerRegister ?? 10, 
+                folderPutParameters.DisplayName);
             return Results.Ok(newFolder);
         }
         catch
