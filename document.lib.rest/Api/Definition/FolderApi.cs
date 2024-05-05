@@ -14,7 +14,7 @@ public static class FolderApi
             .WithOpenApi();
 
         app?.MapPut("/folders",
-                async (FolderPutParameters parameters, FolderApiService svc) => await svc.CreateFolder(parameters))
+                async ([FromBody]FolderPutParameters parameters, FolderApiService svc) => await svc.CreateFolder(parameters))
             .WithName("PutFolder")
             .WithOpenApi();
 

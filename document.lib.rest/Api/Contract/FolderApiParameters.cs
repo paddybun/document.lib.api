@@ -13,8 +13,8 @@ internal record FolderGetQueryParameters(
 
 internal record FolderPutParameters(
     [property: JsonPropertyName("name")] string DisplayName, 
-    int? DocumentsPerFolder, 
-    int? DocumentsPerRegister);
+    int DocumentsPerFolder, 
+    int DocumentsPerRegister);
 
 internal record FolderPostParameters(
     string? DisplayName, 

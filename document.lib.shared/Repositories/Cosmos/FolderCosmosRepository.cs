@@ -2,7 +2,7 @@
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
 using document.lib.shared.Models.Models;
-using document.lib.shared.Repositories.Models;
+using document.lib.shared.Models.Update;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
@@ -103,7 +103,7 @@ public class FolderCosmosRepository : IFolderRepository<DocLibFolder>
         throw new NotImplementedException();
     }
 
-    public Task SaveAsync(DocLibFolder entity)
+    public Task SaveAsync()
     {
         throw new NotImplementedException();
     }

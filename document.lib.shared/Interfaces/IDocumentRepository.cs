@@ -2,7 +2,7 @@
 
 namespace document.lib.shared.Interfaces;
 
-public interface IDocumentRepository<T>
+public interface IDocumentRepository<T>: IRepository
 {
     Task<T> CreateDocumentAsync(DocumentModel document);
     Task<T?> GetDocumentAsync(int id);
@@ -14,5 +14,4 @@ public interface IDocumentRepository<T>
     Task<(int, List<T>)> GetDocumentsForFolderAsync(string folderName, int page, int pageSize);
     Task<T> UpdateDocumentAsync(DocumentModel document, int? category = null, FolderModel? folder = null, TagModel[]? tags = null);
     Task DeleteDocumentAsync(T doc);
-    Task SaveAsync();
 }

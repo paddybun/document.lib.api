@@ -1,7 +1,7 @@
 ﻿using document.lib.ef.Entities;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Models;
-using document.lib.shared.Repositories.Models;
+using document.lib.shared.Models.Update;
 
 namespace document.lib.shared.Services;
 

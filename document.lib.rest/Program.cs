@@ -1,5 +1,7 @@
+using document.lib.rest.Api.Validators;
 using document.lib.shared.Enums;
 using document.lib.shared.Models;
+using FluentValidation;
 using Microsoft.Extensions.Azure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +26,10 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<FolderApiService>();
 builder.Services.AddScoped<TagApiService>();
 builder.Services.AddScoped<DocumentApiService>();
+
+// Validators
+ValidatorOptions.Global.LanguageManager.Enabled = false; // Disable localization
+builder.Services.AddScoped<IValidator<FolderPutParameters>, FolderPutValidator>();
 
 // Init document lib services
 builder.Services.ConfigureDocumentLibShared(builder.Configuration.GetSection("Config"));

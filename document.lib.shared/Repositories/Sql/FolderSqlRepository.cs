@@ -3,7 +3,7 @@ using document.lib.ef.Entities;
 using document.lib.shared.Helper;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Models;
-using document.lib.shared.Repositories.Models;
+using document.lib.shared.Models.Update;
 using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.shared.Repositories.Sql;
@@ -162,9 +162,8 @@ public sealed class FolderSqlRepository(DocumentLibContext context) : IFolderRep
         await context.SaveChangesAsync();
     }
 
-    public async Task SaveAsync(EfFolder entity)
+    public async Task SaveAsync()
     {
-        var changes = context.ChangeTracker.DebugView.LongView;
-        // await context.SaveChangesAsync();
+        await context.SaveChangesAsync();
     }
 }

@@ -3,6 +3,7 @@ using Azure.Storage.Blobs.Models;
 using document.lib.ef.Entities;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Models;
+using document.lib.shared.Models.Update;
 
 namespace document.lib.shared.Services
 {
@@ -10,7 +11,7 @@ namespace document.lib.shared.Services
         BlobContainerClient blobContainerClient,
         IFolderRepository<EfFolder> folderRepository,
         IDocumentRepository<EfDocument> documentRepository,
-        ICategoryService categoryService,
+        ICategoryRepository<EfCategory> categoryRepository,
         ITagService tagService,
         IFolderService folderService)
         : IDocumentService
@@ -51,14 +52,11 @@ namespace document.lib.shared.Services
             
             // add document to new folder
             AddDocumentToFolder(document, folderTo);
-            await documentRepository.SaveAsync();
 
             // move blob
             var newBlobLocation = $"{folderTo.Name}/{folderTo.CurrentRegister!.Name}/{document.PhysicalName}";
             await MoveBlob(document.BlobLocation, newBlobLocation);
             document.BlobLocation = newBlobLocation;
-            await documentRepository.SaveAsync();
-            
             await documentRepository.SaveAsync();
         }
 
@@ -69,26 +67,31 @@ namespace document.lib.shared.Services
             return (count, documents);
         }
 
-        public async Task<DocumentModel> UpdateDocumentAsync(DocumentModel doc)
+        public async Task<DocumentModel?> UpdateDocumentAsync(DocumentModel doc)
         {
-            if (!IsValid(doc)) { throw new Exception("Please make sure the following fields are filled ['DisplayName, Company, DateOfDocument, Category, Tags']"); }
+            var documentId = (int)doc.Id!;
+            var updateModel = DocumentUpdateModel.CreateFromModel(doc);
+            var document = await documentRepository.GetDocumentAsync(documentId);
+            if (document == null) return null;
 
-            var category = await categoryService.CreateOrGetCategoryAsync(doc.CategoryName);
-            var tags = await tagService.GetOrCreateTagsAsync(doc.Tags ?? []);
-            var folder = await folderService.GetFolderByNameAsync(doc.FolderId ?? "") ?? await folderService.CreateNewFolderAsync();
-
-            if (doc.Unsorted)
+            if (updateModel.Category != document.Category.Name)
             {
-                await MoveDocumentFromUnsorted(doc);
+                var category = await categoryRepository.GetCategoryByNameAsync(updateModel.Category);
+                document.Category = category ?? document.Category;
             }
+            document.DisplayName = updateModel.DisplayName;
+            document.Company = updateModel.Company;
+            document.DateOfDocument = updateModel.DateOfDocument;
+            document.Description = updateModel.Description;
 
-            var res = await documentRepository.UpdateDocumentAsync(doc, (int?)category.Id, folder, tags.ToArray());
-            return Map(res);
+            await documentRepository.SaveAsync();
+            return Map(document);
         }
 
         public async Task<DocumentModel> CreateNewDocumentAsync(DocumentModel doc)
         {
-            if (!IsValid(doc)) { throw new Exception("Please make sure the following fields are filled ['DisplayName, Company, DateOfDocument, Category, Tags']"); }
+            
+            
 
             if (doc.Unsorted)
             {
@@ -104,29 +107,6 @@ namespace document.lib.shared.Services
         public Task DeleteDocumentAsync(DocumentModel doc)
         {
             throw new NotImplementedException();
-        }
-
-        private async Task MoveDocumentFromUnsorted(DocumentModel doc)
-        {
-            var dbFolder = await folderService.GetFolderByNameAsync("unsorted");
-            var newFolder = await folderService.GetOrCreateActiveFolderAsync();
-            await folderService.RemoveDocumentFromFolder(dbFolder, doc);
-
-            string newBlobLocation;
-            if (doc.Digital)
-            {
-                doc.PhysicalName = doc.PhysicalName.Replace("unsorted/", "");
-                newBlobLocation = $"digital/{doc.PhysicalName}";
-            }
-            else
-            {
-                doc.PhysicalName = doc.Unsorted ? doc.PhysicalName.Replace("unsorted/", "") : doc.PhysicalName;
-                newBlobLocation = $"{newFolder.Name}/{newFolder.CurrentRegister}/{doc.PhysicalName}";
-            }
-            
-            
-            await MoveBlob(doc.BlobLocation, newBlobLocation);
-            doc.BlobLocation = newBlobLocation;
         }
 
         private async Task MoveBlob(string from, string to)

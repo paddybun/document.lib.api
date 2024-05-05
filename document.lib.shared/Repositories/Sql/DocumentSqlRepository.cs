@@ -189,7 +189,6 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
 
     public async Task SaveAsync()
     {
-        var changes = context.ChangeTracker.DebugView.LongView;
         await context.SaveChangesAsync();
     }
 }

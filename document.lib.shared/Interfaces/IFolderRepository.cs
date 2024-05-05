@@ -1,9 +1,9 @@
 ﻿using document.lib.shared.Models.Models;
-using document.lib.shared.Repositories.Models;
+using document.lib.shared.Models.Update;
 
 namespace document.lib.shared.Interfaces;
 
-public interface IFolderRepository<T>: IRepository<T>
+public interface IFolderRepository<T>: IRepository
 {
     Task<T?> GetFolderAsync(int id);
     Task<T?> GetFolderAsync(string name);
@@ -16,7 +16,7 @@ public interface IFolderRepository<T>: IRepository<T>
     Task<(int, List<T>)> GetFolders(int page, int pageSize);
 }
 
-public interface IRepository<T>
+public interface IRepository
 {
-    Task SaveAsync(T entity);
+    Task SaveAsync();
 }

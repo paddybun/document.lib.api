@@ -1,7 +1,7 @@
 ﻿using document.lib.ef.Entities;
 using document.lib.shared.Models.Models;
 
-namespace document.lib.shared.Repositories.Models;
+namespace document.lib.shared.Models.Update;
 
 public record FolderUpdateModel (
     int Id,

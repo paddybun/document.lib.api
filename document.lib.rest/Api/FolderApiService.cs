@@ -1,8 +1,9 @@
 ﻿using document.lib.shared.Helper;
+using FluentValidation;
 
 namespace document.lib.rest.Api;
 
-internal class FolderApiService(IFolderService folderService)
+internal class FolderApiService(IFolderService folderService, IValidator<FolderPutParameters> folderPutValidator)
 {
     public async Task<FolderModel?> GetFolderModel(FolderGetRouteParameters folderGetRouteParameters)
     {
@@ -41,9 +42,18 @@ internal class FolderApiService(IFolderService folderService)
     {
         try
         {
+            var res = await folderPutValidator.ValidateAsync(folderPutParameters);
+            if (!res.IsValid)
+            {
+                var validationErrors = res.Errors
+                    .GroupBy(x => x.PropertyName)
+                    .Select(g => new ValidationError(g.Key, string.Join(" | ", g.Select(x => x.ErrorMessage)))).ToList();
+                return Results.BadRequest(validationErrors);
+            }
+            
             var newFolder = await folderService.CreateNewFolderAsync(
-                folderPutParameters.DocumentsPerFolder ?? 150, 
-                folderPutParameters.DocumentsPerRegister ?? 10, 
+                folderPutParameters.DocumentsPerFolder, 
+                folderPutParameters.DocumentsPerRegister, 
                 folderPutParameters.DisplayName);
             return Results.Ok(newFolder);
         }
