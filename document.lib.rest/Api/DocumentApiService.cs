@@ -14,13 +14,13 @@ public class DocumentApiService(ApiConfig config, IDocumentService documentServi
     
     public async Task<IResult> GetDocumentsAsync(DocumentGetQueryParameters parameters, HttpContext http)
     {
+        if (parameters.PageSize.HasValue && parameters.PageSize.Value > config.MaxPageSize)
+        {
+            return Results.BadRequest(string.Format(ErrorMessages.PageSizeExceeded, config.MaxPageSize));
+        }
+        
         if (PropertyChecker.Values.All(parameters, x => x.Page, x => x.PageSize))
         {
-            if (parameters.PageSize!.Value > 50)
-            {
-                return Results.BadRequest(string.Format(ErrorMessages.PageSizeExceeded, config.MaxPageSize));
-            }
-
             var (count, documents) = await documentService.GetDocumentsPagedAsync(parameters.Page!.Value, parameters.PageSize!.Value);
             http.Response.Headers.Append("total-results", count.ToString());
             return Results.Ok(documents);
@@ -28,7 +28,7 @@ public class DocumentApiService(ApiConfig config, IDocumentService documentServi
 
         if (PropertyChecker.Values.Any(parameters, x => x.Unsorted) && parameters.Unsorted!.Value)
         {
-            int page = 0, pageSize = int.MaxValue;
+            int page = 0, pageSize = config.DefaultPageSize;
             if (PropertyChecker.Values.All(parameters, x => x.Page, x => x.PageSize))
             {
                 page = parameters.Page!.Value;
@@ -40,8 +40,7 @@ public class DocumentApiService(ApiConfig config, IDocumentService documentServi
             return Results.Ok(documents);
         }
         
-        
-        var (_, docs) = await documentService.GetDocumentsPagedAsync(0, 100);
+        var (_, docs) = await documentService.GetDocumentsPagedAsync(0, 10);
         return Results.Ok(docs);
     }
 
