@@ -6,7 +6,7 @@ internal class FolderPutValidator: AbstractValidator<FolderPutParameters>
 {
     public FolderPutValidator()
     {
-        RuleFor(x => x.DisplayName).NotNull().NotEmpty();
+        RuleFor(x => x.DisplayName).NotNull();
         RuleFor(x => x.DocumentsPerFolder).GreaterThan(0);
         RuleFor(x => x.DocumentsPerRegister).GreaterThan(0);
     }

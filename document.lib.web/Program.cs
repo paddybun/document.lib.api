@@ -39,7 +39,7 @@ var configSection = builder.Configuration.GetSection("Config");
 var appConfig = configSection.Get<SharedConfig>();
 
 builder.Services.Configure<SharedConfig>(configSection);
-builder.Services.ConfigureDocumentLibShared(configSection);
+builder.Services.UseDocumentLibShared(configSection);
 var provider = appConfig.DatabaseProvider;
 
 if (provider == DatabaseProvider.Sql)

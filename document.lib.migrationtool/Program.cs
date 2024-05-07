@@ -38,7 +38,7 @@ var host = Host
         
         services.Configure<ConsoleLifetimeOptions>(opts => opts.SuppressStatusMessages = true);
         services.Configure<SharedConfig>(configSection);
-        services.ConfigureDocumentLibShared(configSection);
+        services.UseDocumentLibShared(configSection);
         services.AddHostedService<CosmosToSqlMigration>();
         services.AddDbContext<DocumentLibContext>(opts =>
         {

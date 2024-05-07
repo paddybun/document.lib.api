@@ -44,7 +44,7 @@ public class DocumentCosmosRepository : IDocumentRepository<DocLibDocument>
         };
     }
 
-    public Task<DocLibDocument> CreateDocumentAsync(DocumentModel document)
+    public Task<DocLibDocument> CreateDocumentAsync(DocLibDocument document)
     {
         throw new NotImplementedException();
     }

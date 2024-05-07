@@ -2,7 +2,7 @@
 
 public static class TagApi
 {
-    public static void AddTagApi(this WebApplication? app)
+    public static void UseTagApi(this WebApplication? app)
     {
         app?.MapGet("/tags/{id}", async ([FromRoute] int id, TagApiService svc) => await svc.GetTagAsync(id));
             

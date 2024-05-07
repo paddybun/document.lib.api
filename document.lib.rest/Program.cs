@@ -1,8 +1,8 @@
+using document.lib.rest;
 using document.lib.rest.Api.Validators;
 using document.lib.shared.Enums;
 using document.lib.shared.Models;
 using FluentValidation;
-using Microsoft.Extensions.Azure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,10 +12,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 // Build configuration
-var appConfig = builder.Configuration.GetSection("Config").Get<SharedConfig>();
-if (appConfig == null)
+var sharedConfigSection = builder.Configuration.GetSection("Config"); 
+var sharedConfig = sharedConfigSection.Get<SharedConfig>();
+var apiConfig = builder.Configuration.GetSection("ApiConfig").Get<ApiConfig>();
+if (sharedConfig == null || apiConfig == null)
 {
-    throw new Exception("Config section not found!");
+    throw new Exception("Required config section not found!");
 }
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -23,6 +25,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Init api services
+builder.Services.AddSingleton<ApiConfig>();
 builder.Services.AddScoped<FolderApiService>();
 builder.Services.AddScoped<TagApiService>();
 builder.Services.AddScoped<DocumentApiService>();
@@ -30,14 +33,16 @@ builder.Services.AddScoped<DocumentApiService>();
 // Validators
 ValidatorOptions.Global.LanguageManager.Enabled = false; // Disable localization
 builder.Services.AddScoped<IValidator<FolderPutParameters>, FolderPutValidator>();
+builder.Services.AddScoped<IValidator<DocumentUpdateParameters>, DocumentPostValidator>();
+builder.Services.AddScoped<IValidator<DocumentTagsParameters>, DocumentTagsValidator>();
 
 // Init document lib services
-builder.Services.ConfigureDocumentLibShared(builder.Configuration.GetSection("Config"));
-if (appConfig.DatabaseProvider == DatabaseProvider.Sql)
+builder.Services.UseDocumentLibShared(sharedConfigSection);
+if (sharedConfig.DatabaseProvider == DatabaseProvider.Sql)
 {
     builder.Services.AddDbContext<DocumentLibContext>(opts =>
     {
-        opts.UseSqlServer(appConfig.DbConnectionString, x => x.MigrationsAssembly("document.lib.ef"));
+        opts.UseSqlServer(sharedConfig.DbConnectionString, x => x.MigrationsAssembly("document.lib.ef"));
     });    
 }
 
@@ -45,9 +50,9 @@ if (appConfig.DatabaseProvider == DatabaseProvider.Sql)
 var app = builder.Build();
 
 // Add apis
-app.AddFolderApi();
-app.AddTagApi();
-app.AddDocumentApi();
+app.UseFolderApi();
+app.UseTagApi();
+app.UseDocumentApi();
 
 if (app.Environment.IsDevelopment())
 {

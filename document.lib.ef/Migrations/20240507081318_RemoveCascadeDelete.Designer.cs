@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using document.lib.ef;
 
@@ -11,9 +12,11 @@ using document.lib.ef;
 namespace document.lib.ef.Migrations
 {
     [DbContext(typeof(DocumentLibContext))]
-    partial class DocumentLibContextModelSnapshot : ModelSnapshot
+    [Migration("20240507081318_RemoveCascadeDelete")]
+    partial class RemoveCascadeDelete
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -292,7 +295,7 @@ namespace document.lib.ef.Migrations
                     b.HasOne("document.lib.ef.Entities.EfDocument", "Document")
                         .WithMany("Tags")
                         .HasForeignKey("DocumentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("document.lib.ef.Entities.EfTag", "Tag")

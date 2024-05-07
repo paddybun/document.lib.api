@@ -290,7 +290,8 @@ else
         DocumentModel updatedDoc;
         if (Doc.Unsorted)
         {
-            updatedDoc = await _documentService.CreateNewDocumentAsync(doc);
+            // updatedDoc = await _documentService.AddDocumentToIndexAsync(doc);
+            updatedDoc = null;
         }
         else
         {

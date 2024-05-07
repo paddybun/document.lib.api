@@ -52,7 +52,23 @@ public class DocumentLibContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        modelBuilder.Entity<EfCategory>().HasIndex(x => x.Name).IsUnique();
+        
+        modelBuilder
+            .Entity<EfCategory>()
+            .HasIndex(x => x.Name)
+            .IsUnique();
+        
+        // remove cascade delete
+        foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
+        {
+            relationship.DeleteBehavior = DeleteBehavior.Restrict;
+        }
+        
+        // enable cascade delete for tag assignments
+        modelBuilder.Entity<EfTagAssignment>()
+            .HasOne(x => x.Document)
+            .WithMany(x => x.Tags)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 
     private void UpdateNewEntities()

@@ -12,7 +12,7 @@ namespace document.lib.shared.Services
         IFolderRepository<EfFolder> folderRepository,
         IDocumentRepository<EfDocument> documentRepository,
         ICategoryRepository<EfCategory> categoryRepository,
-        ITagService tagService,
+        ITagRepository<EfTag> tagRepository,
         IFolderService folderService)
         : IDocumentService
     {
@@ -67,6 +67,30 @@ namespace document.lib.shared.Services
             return (count, documents);
         }
 
+        public async Task<DocumentModel?> ModifyTagsAsync(int id, string[] toAdd, string[] toRemove)
+        {
+            var document = await documentRepository.GetDocumentAsync(id);
+            if (document == null) return null;
+
+            var availableTags = document.Tags.Select(x => x.Tag.Name).ToList();
+            var tagsToAdd = toAdd.Where(x => !availableTags.Contains(x)).ToList();
+            foreach (var add in tagsToAdd)
+            {
+                // create tag if it doesn't exist
+                var tag = await tagRepository.GetTagByNameAsync(add) ?? await tagRepository.CreateTagAsync(add, add);
+                document.Tags.Add(new EfTagAssignment { Document = document, Tag = tag });
+            }
+
+            var tagsToRemove = document.Tags.Where(ta => toRemove.Contains(ta.Tag.Name)).ToList();
+            foreach (var remove in tagsToRemove)
+            {
+                document.Tags.Remove(remove);                
+            }
+
+            await documentRepository.SaveAsync();
+            return Map(document);
+        }
+
         public async Task<DocumentModel?> UpdateDocumentAsync(DocumentModel doc)
         {
             var documentId = (int)doc.Id!;
@@ -76,7 +100,7 @@ namespace document.lib.shared.Services
 
             if (updateModel.Category != document.Category.Name)
             {
-                var category = await categoryRepository.GetCategoryByNameAsync(updateModel.Category);
+                var category = await categoryRepository.GetCategoryByNameAsync(updateModel.Category!);
                 document.Category = category ?? document.Category;
             }
             document.DisplayName = updateModel.DisplayName;
@@ -88,18 +112,27 @@ namespace document.lib.shared.Services
             return Map(document);
         }
 
-        public async Task<DocumentModel> CreateNewDocumentAsync(DocumentModel doc)
+        public async Task<DocumentModel> AddDocumentToIndexAsync(string blobPath)
         {
-            
-            
+            var filename = blobPath.Split('/')[^1];
+            var name = Guid.NewGuid().ToString();
+            var folder = await folderRepository.GetFolderAsync(NewDocumentRegister);
+            if (folder == null) throw new Exception("Unsorted folder not found. Please make sure a folder with the name \"unsorted\" exists");
 
-            if (doc.Unsorted)
+            var category = await categoryRepository.GetCategoryByNameAsync(NewDocumentCategory);
+            if (folder == null) throw new Exception("Uncategorized category not found. Please make sure a folder with the name \"uncategorized\" exists");
+            
+            var doc = new EfDocument
             {
-                // overwrite what ever the user has set for a new document
-                doc.CategoryName = NewDocumentCategory;
-                doc.RegisterName = NewDocumentRegister;
-            }
-
+                Name = name,
+                PhysicalName = filename,
+                BlobLocation = blobPath,
+                UploadDate = DateTimeOffset.Now,
+                Register = folder.CurrentRegister!,
+                Unsorted = true,
+                Category = category!
+            };
+            
             var document = await documentRepository.CreateDocumentAsync(doc);
             return Map(document);
         }
@@ -131,16 +164,6 @@ namespace document.lib.shared.Services
             }
         }
 
-        private bool IsValid(DocumentModel model)
-        {
-            return !string.IsNullOrWhiteSpace(model.DisplayName) &&
-                   !string.IsNullOrWhiteSpace(model.Company) &&
-                   model.DateOfDocument != default &&
-                   !string.IsNullOrWhiteSpace(model.CategoryName) &&
-                   model.Tags != null &&
-                   model.Tags.Any();
-        }
-        
         private void AddDocumentToFolder(EfDocument doc, EfFolder folder)
         {
             var register = folder.CurrentRegister ?? CreateRegister(folder);

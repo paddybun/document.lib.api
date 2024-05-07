@@ -82,47 +82,11 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
         return (folder?.TotalDocuments ?? 0, efDocuments);
     }
 
-    public async Task<EfDocument> CreateDocumentAsync(DocumentModel document)
+    public async Task<EfDocument> CreateDocumentAsync(EfDocument document)
     {
-        var registerName = document.Digital ? "digital" : document.RegisterName;
-        var register = await context
-            .Registers
-            .SingleAsync(x => x.Name == registerName);
-        var category = await context
-            .Categories
-            .SingleAsync(x => x.Name == document.CategoryName);
-        var t = document.Tags?.Select(x => x) ?? [];
-        var tags = await context
-            .Tags
-            .Where(x => t.Contains(x.Name))
-            .ToListAsync();
-
-        var assignments = tags.Select(x => new EfTagAssignment
-        {
-            Tag = x
-        }).ToList();
-
-        var efDocument = new EfDocument
-        {
-            Name = document.Name,
-            DisplayName = document.DisplayName,
-            BlobLocation = document.BlobLocation,
-            Category = category,
-            Company = document.Company,
-            DateOfDocument = document.DateOfDocument,
-            UploadDate = document.UploadDate,
-            Description = document.Description,
-            Digital = document.Digital,
-            PhysicalName = document.PhysicalName,
-            Register = register,
-            Unsorted = document.Unsorted,
-            Tags = assignments
-        };
-
-        await context.Documents.AddAsync(efDocument);
+        await context.Documents.AddAsync(document);
         await context.SaveChangesAsync();
-
-        return efDocument;
+        return document;
     }
 
     public async Task<int> GetDocumentCountAsync()

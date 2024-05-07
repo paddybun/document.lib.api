@@ -16,7 +16,7 @@ namespace document.lib.shared.Extensions;
 public static class ServiceCollectionExtensions
 {
     
-    public static void ConfigureDocumentLibShared(this IServiceCollection services, IConfigurationSection? configSection)
+    public static void UseDocumentLibShared(this IServiceCollection services, IConfigurationSection? configSection)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configSection);
