@@ -16,8 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Models\Interfaces\" />
-    <Folder Include="Models\Models\" />
+    <Folder Include="Models\Data\" />
     <Folder Include="Enums\" />
     <Folder Include="Extensions\" />
   </ItemGroup>

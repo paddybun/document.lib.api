@@ -40,7 +40,7 @@ public static class ServiceCollectionExtensions
                 services.AddScoped<IDocumentRepository<EfDocument>, DocumentSqlRepository>();
                 services.AddScoped<ICategoryRepository<EfCategory>, CategorySqlRepository>();
                 services.AddScoped<ITagRepository<EfTag>, TagSqlRepository>();
-                services.AddScoped<IFolderRepository<EfFolder>, FolderSqlRepository>();
+                services.AddScoped<IFolderRepository<EfFolder>, FolderSqlSqlRepository>();
                 services.AddScoped<IDocumentService, DocumentSqlService>();
                 services.AddScoped<ICategoryService, CategorySqlService>();
                 services.AddScoped<IFolderService, FolderSqlService>();

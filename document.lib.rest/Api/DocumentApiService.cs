@@ -1,5 +1,6 @@
 ﻿using document.lib.rest.Api.Constants;
 using document.lib.shared.Helper;
+using document.lib.shared.Models.Data;
 using FluentValidation;
 
 namespace document.lib.rest.Api;

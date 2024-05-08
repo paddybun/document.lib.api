@@ -2,13 +2,13 @@
 using document.lib.ef.Entities;
 using document.lib.shared.Helper;
 using document.lib.shared.Interfaces;
-using document.lib.shared.Models.Models;
+using document.lib.shared.Models.Data;
 using document.lib.shared.Models.Update;
 using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.shared.Repositories.Sql;
 
-public sealed class FolderSqlRepository(DocumentLibContext context) : IFolderRepository<EfFolder>
+public sealed class FolderSqlSqlRepository(DocumentLibContext context) : SqlRepositoryBase(context), IFolderRepository<EfFolder>
 {
     public async Task<EfFolder?> GetFolderAsync(int id)
     {
@@ -159,11 +159,6 @@ public sealed class FolderSqlRepository(DocumentLibContext context) : IFolderRep
         context.Update(efRegister);
         context.Update(efFolder);
         
-        await context.SaveChangesAsync();
-    }
-
-    public async Task SaveAsync()
-    {
         await context.SaveChangesAsync();
     }
 }

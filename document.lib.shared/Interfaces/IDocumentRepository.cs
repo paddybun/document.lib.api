@@ -1,4 +1,4 @@
-﻿using document.lib.shared.Models.Models;
+﻿using document.lib.shared.Models.Data;
 
 namespace document.lib.shared.Interfaces;
 

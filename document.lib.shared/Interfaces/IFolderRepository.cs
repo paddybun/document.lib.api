@@ -1,5 +1,4 @@
-﻿using document.lib.ef.Entities;
-using document.lib.shared.Models.Models;
+﻿using document.lib.shared.Models.Data;
 using document.lib.shared.Models.Update;
 
 namespace document.lib.shared.Interfaces;
@@ -15,9 +14,4 @@ public interface IFolderRepository<T>: IRepository
     Task<T?> AddDocumentToFolderAsync(FolderModel folder, DocumentModel document);
     Task RemoveDocFromFolderAsync(FolderModel folder, DocumentModel document);
     Task<(int, List<T>)> GetFolders(int page, int pageSize);
-}
-
-public interface IRepository
-{
-    Task SaveAsync();
 }

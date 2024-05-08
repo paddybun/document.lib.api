@@ -1,8 +1,7 @@
-﻿using document.lib.shared.Models.Models;
+﻿using document.lib.shared.Models.Data;
 
-namespace document.lib.shared.Models.Interfaces;
+namespace document.lib.shared.Interfaces.Models;
 
-// Interface for FolderModel
 public interface IFolderModel
 {
     object? Id { get; set; }
@@ -16,10 +15,4 @@ public interface IFolderModel
     int DocumentsFolder { get; set; }
     bool IsFull { get; set; }
     DateTimeOffset CreatedAt { get; set; }
-}
-
-public interface IFolderModelExtensions
-{
-    bool IsActive { get; set; }
-    int? GetLastRegisterNumber();
 }

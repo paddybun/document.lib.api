@@ -1,6 +1,6 @@
-﻿using document.lib.shared.Models.Interfaces;
+﻿using document.lib.shared.Interfaces.Models;
 
-namespace document.lib.shared.Models.Models;
+namespace document.lib.shared.Models.Data;
 
 public class FolderModel : IFolderModel, IFolderModelExtensions
 {

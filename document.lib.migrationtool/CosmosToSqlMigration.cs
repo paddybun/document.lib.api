@@ -2,7 +2,6 @@
 using Azure.Storage.Blobs;
 using document.lib.ef;
 using document.lib.shared.Interfaces;
-using document.lib.shared.Models.Models;
 using document.lib.shared.Repositories.Sql;
 using document.lib.shared.Services;
 using Microsoft.Extensions.Hosting;
