@@ -1,42 +1,48 @@
-﻿using document.lib.shared.Helper;
+﻿using document.lib.rest.Api.Constants;
+using document.lib.shared.Helper;
 using document.lib.shared.Models.Data;
 using FluentValidation;
 
 namespace document.lib.rest.Api;
 
-internal class FolderApiService(IFolderService folderService, IValidator<FolderPutParameters> folderPutValidator)
+internal class FolderApiService(
+    IFolderService folderService, 
+    IValidator<FolderPutParameters> folderPutValidator, 
+    IValidator<FolderPostParameters> folderPostValidator,
+    ApiConfig config)
 {
-    public async Task<FolderModel?> GetFolderModel(FolderGetRouteParameters folderGetRouteParameters)
+    public async Task<IResult> GetFolderModel(int id)
     {
-        return await folderService.GetFolderByIdAsync(folderGetRouteParameters.Id);
+        var result = await folderService.GetFolderAsync(id);
+        return result.IsSuccess 
+            ? Results.Ok(result.Data) 
+            : Results.NotFound(id);
     }
 
     public async Task<IResult> GetFolderModel(FolderGetQueryParameters folderGetQueryParameters, HttpContext http)
-    {
-        try
+    {   
+        if (!PropertyChecker.Values.All(folderGetQueryParameters, 
+                x => x.Page, 
+                x => x.PageSize))
         {
-            if (PropertyChecker.Values.All(folderGetQueryParameters, x => x.Id))
-                return Results.Ok(await folderService.GetFolderByIdAsync(folderGetQueryParameters.Id!.Value));
+            var sample = await folderService.GetFoldersPaged(0, config.DefaultPageSize);
+            return sample.IsSuccess
+                ? Results.Ok(sample.Data.Item2)
+                : Results.StatusCode(500);    
+        }
 
-            if (PropertyChecker.Values.All(folderGetQueryParameters, x => x.Name))
-                return Results.Ok(folderService.GetFolderByNameAsync(folderGetQueryParameters.Name!));
+        if (folderGetQueryParameters.PageSize >= config.MaxPageSize) 
+            return Results.BadRequest(string.Format(ErrorMessages.PageSizeExceeded, config.MaxPageSize));
             
-            if (PropertyChecker.Values.All(folderGetQueryParameters, 
-                    x => x.Page, 
-                    x => x.PageSize))
-            {
-                var (count, folders) = await folderService.GetFoldersPaged(folderGetQueryParameters.Page!.Value, folderGetQueryParameters.PageSize!.Value);
-                http.Response.Headers.Append("total-results", count.ToString());
-                return Results.Ok(folders);
-            }
-
-            return Results.NotFound(folderGetQueryParameters);
-        }
-        catch
+        var result = await folderService.GetFoldersPaged(folderGetQueryParameters.Page!.Value, folderGetQueryParameters.PageSize!.Value);
+        if (result.IsSuccess)
         {
-            // TODO: logging
-            return Results.StatusCode(500);
+            var (count, folders) = result.Data;
+            http.Response.Headers.Append("total-results", count.ToString());
+            return Results.Ok(folders);
         }
+
+        return Results.StatusCode(500);
     }
 
     public async Task<IResult> CreateFolder(FolderPutParameters folderPutParameters)
@@ -70,33 +76,24 @@ internal class FolderApiService(IFolderService folderService, IValidator<FolderP
         try
         {
             if (folderId <= 0) return Results.BadRequest(folderId);
-
-            var folder = await folderService.GetFolderByIdAsync(folderId);
-            if (folder == null) return Results.NotFound(folderId);
-
-            var hasChanged = false;
-
-            if (!string.IsNullOrWhiteSpace(parameters.DisplayName) &&
-                !folder.DisplayName!.Equals(parameters.DisplayName))
+            var validationResults = await folderPostValidator.ValidateAsync(parameters);
+            if (!validationResults.IsValid)
             {
-                folder.DisplayName = parameters.DisplayName;
-                hasChanged = true;
+                var validationErrors = validationResults.Errors.Select(x => new ValidationError(x.PropertyName,x.ErrorMessage)).ToList();
+                return Results.BadRequest(validationErrors);
             }
 
-            if (parameters.DocumentsPerFolder.HasValue && folder.DocumentsFolder != parameters.DocumentsPerFolder)
+            var folderResult = await folderService.UpdateFolderAsync(new FolderModel
             {
-                folder.DocumentsFolder = parameters.DocumentsPerFolder.Value;
-                hasChanged = true;
-            }
-
-            if (parameters.DocumentsPerRegister.HasValue && folder.DocumentsRegister != parameters.DocumentsPerRegister)
-            {
-                folder.DocumentsRegister = parameters.DocumentsPerRegister.Value;
-                hasChanged = true;
-            }
-
-            if (hasChanged) await folderService.UpdateFolderAsync(folder);
-            return Results.Ok(folder);
+                Id = folderId,
+                DisplayName = parameters.DisplayName,
+                DocumentsFolder = parameters.DocumentsPerFolder!.Value,
+                DocumentsRegister = parameters.DocumentsPerRegister!.Value
+            });
+            
+            return folderResult.IsSuccess
+                ? Results.Ok(folderResult.Data)
+                : Results.NotFound(folderId);
         }
         catch
         {

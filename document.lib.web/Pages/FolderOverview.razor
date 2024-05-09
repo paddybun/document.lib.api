@@ -62,7 +62,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _folders = await _folderService.GetAllAsync();
+        _folders = []; // await _folderService.GetAllAsync();
         await base.OnInitializedAsync();
     }
 

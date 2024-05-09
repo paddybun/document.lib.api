@@ -7,6 +7,7 @@ public static class ServiceResult
     public static IServiceResult Ok() => new OkResult();
     public static IServiceResult Error() => new ErrorResult();
 
-    public static ITypedServiceResult<TMe> Ok<TMe>(TMe? data) => new OkDataResult<TMe>(data);
-    public static ITypedServiceResult<TMe> Error<TMe>(TMe? data) => new ErrorDataResult<TMe>(data);
+    public static ITypedServiceResult<T> Ok<T>(T? data) => new OkDataResult<T>(data);
+    public static ITypedServiceResult<T> Error<T>(T? data) => new ErrorDataResult<T>(data);
+    public static ITypedServiceResult<T> ErrorDefault<T>() => new ErrorDataResult<T>(default);
 }

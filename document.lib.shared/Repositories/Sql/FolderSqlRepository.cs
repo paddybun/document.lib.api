@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.shared.Repositories.Sql;
 
-public sealed class FolderSqlSqlRepository(DocumentLibContext context) : SqlRepositoryBase(context), IFolderRepository<EfFolder>
+public sealed class FolderSqlRepository(DocumentLibContext context) : SqlRepositoryBase(context), IFolderRepository<EfFolder>
 {
     public async Task<EfFolder?> GetFolderAsync(int id)
     {
@@ -26,13 +26,13 @@ public sealed class FolderSqlSqlRepository(DocumentLibContext context) : SqlRepo
             .SingleOrDefaultAsync(x => x.Name == name);
     }
 
-    public async Task<EfFolder?> GetActiveFolderAsync()
+    public async Task<List<EfFolder>> GetActiveFoldersAsync()
     {
         return await context.Folders
             .Include(x => x.Registers)
-            .FirstOrDefaultAsync(x => !x.IsFull);
+            .Where(x => !x.IsFull)
+            .ToListAsync();
     }
-    
     
     public async Task<(int, List<EfFolder>)> GetFolders(int page, int pageSize)
     {
@@ -55,29 +55,11 @@ public sealed class FolderSqlSqlRepository(DocumentLibContext context) : SqlRepo
         return efFolders;
     }
 
-    public async Task<EfFolder> CreateFolderAsync(string name, int docsPerRegister = 10, int docsPerFolder = 150, string? displayName = null)
+    public async Task<EfFolder> CreateFolderAsync(EfFolder folder)
     {
-        var regName = 1.ToString();
-        var efRegister = new EfRegister
-        {
-            Name = regName,
-            DisplayName = regName
-        };
-
-        var efFolder = new EfFolder
-        {
-            Name = name,
-            DisplayName = displayName,
-            IsFull = false,
-            MaxDocumentsFolder = docsPerFolder,
-            MaxDocumentsRegister = docsPerRegister,
-            TotalDocuments = 0,
-            Registers = [efRegister]
-        };
-
-        await context.AddAsync(efFolder);
+        await context.AddAsync(folder);
         await context.SaveChangesAsync();
-        return efFolder;
+        return folder;
     }
 
     public async Task<EfFolder?> UpdateFolderAsync(FolderUpdateModel folder, string? _ = null)

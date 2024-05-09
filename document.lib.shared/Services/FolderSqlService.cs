@@ -1,80 +1,152 @@
 ﻿using document.lib.ef.Entities;
+using document.lib.shared.Enums;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Data;
-using document.lib.shared.Models.Update;
+using document.lib.shared.Models.Result;
 
 namespace document.lib.shared.Services;
 
 public class FolderSqlService(IFolderRepository<EfFolder> folderRepository)
     : IFolderService
 {
-    public async Task<(int, List<FolderModel>)> GetFoldersPaged(int page, int pageSize)
+    public async Task<ITypedServiceResult<FolderModel?>> GetFolderAsync(int id)
     {
-        var (count, folders) = await folderRepository.GetFolders(page, pageSize);
-        var mapped = folders.Select(MapShallow).ToList();
-        return (count, mapped);
+        try
+        {
+            var folder = await folderRepository.GetFolderAsync(id);
+            return folder != null
+                ? ServiceResult.Ok(Map(folder))
+                : ServiceResult.ErrorDefault<FolderModel>();           
+        }
+        catch
+        {
+            return ServiceResult.Error(default(FolderModel));
+        }
     }
 
-    public async Task<FolderModel?> GetFolderByNameAsync(string name)
+    public async Task<ITypedServiceResult<FolderModel?>> GetFolderAsync(string name)
     {
-        var folder = await folderRepository.GetFolderAsync(name);
-        if (folder == null) return null;
-
-        return Map(folder);
+        try
+        {
+            var folder = await folderRepository.GetFolderAsync(name);
+            return folder != null
+                ? ServiceResult.Ok(Map(folder))
+                : ServiceResult.ErrorDefault<FolderModel>();
+        }
+        catch
+        {
+            return ServiceResult.ErrorDefault<FolderModel>();
+        }
     }
 
-    public async Task<FolderModel?> GetFolderByIdAsync(int id)
+    public async Task<ITypedServiceResult<FolderModel?>> GetActiveFolderAsync(RetrievalOptions options = RetrievalOptions.GetOnly)
     {
-        var folder = await folderRepository.GetFolderAsync(id);
-        if (folder == null) return null;
-        return Map(folder);
+        try
+        {
+            FolderModel folder;
+            var folders = await folderRepository.GetActiveFoldersAsync();
+            if (folders.Count != 0 && options == RetrievalOptions.CreateIfNotExists)
+            {
+                var folderCreateResult = await CreateNewFolderAsync();
+                folder = folderCreateResult.IsSuccess
+                    ? folderCreateResult.Data!
+                    : null!;
+            }
+            else
+            {
+                folder = Map(folders.First());
+            }
+
+            return ServiceResult.Ok(folder);
+        }
+        catch
+        {
+            return ServiceResult.ErrorDefault<FolderModel>();
+        }
     }
 
-    public async Task<FolderModel> CreateNewFolderAsync(int docsPerFolder = 150, int docsPerRegister = 10, string? displayName = null)
+    public async Task<ITypedServiceResult<(int, List<FolderModel>)>> GetFoldersPaged(int page, int pageSize)
     {
-        var name = Guid.NewGuid();
-        var folder = await folderRepository.CreateFolderAsync(name.ToString(), docsPerRegister, docsPerFolder, displayName);
-        return Map(folder);
+        try
+        {
+            var (count, folders) = await folderRepository.GetFolders(page, pageSize);
+            var mapped = folders.Select(MapShallow).ToList();
+            return ServiceResult.Ok((count, mapped));
+        }
+        catch
+        {
+            return ServiceResult.ErrorDefault<(int, List<FolderModel>)>();
+        }
     }
 
-    public async Task<FolderModel> GetOrCreateActiveFolderAsync()
+    public async Task<ITypedServiceResult<FolderModel>> CreateNewFolderAsync(int docsPerFolder = 150, int docsPerRegister = 10, string? displayName = null)
     {
-        var folder = await folderRepository.GetActiveFolderAsync();
-        if (folder == null)
+        try
         {
             var name = Guid.NewGuid().ToString();
-            folder = await folderRepository.CreateFolderAsync(name);
+            var regName = 1.ToString();
+            var efRegister = new EfRegister
+            {
+                Name = regName,
+                DisplayName = regName
+            };
+
+            var efFolder = new EfFolder
+            {
+                Name = name,
+                DisplayName = displayName,
+                IsFull = false,
+                MaxDocumentsFolder = docsPerFolder,
+                MaxDocumentsRegister = docsPerRegister,
+                TotalDocuments = 0,
+                Registers = [efRegister]
+            };
+
+            var folder = await folderRepository.CreateFolderAsync(efFolder);
+            return ServiceResult.Ok(Map(folder));
         }
-        return Map(folder);
-    }
-    
-    public async Task<List<FolderModel>> GetAllAsync()
-    {
-        var folders = await folderRepository.GetAllFoldersAsync();
-        return folders.Select(Map).ToList();
-    }
-
-    public async Task<FolderModel?> UpdateFolderAsync(FolderModel folder)
-    {
-        folder.IsFull = folder.TotalDocuments >= folder.DocumentsFolder;
-        var updateModel = FolderUpdateModel.CreateFromModel(folder);
+        catch
+        {
+            return ServiceResult.ErrorDefault<FolderModel>();
+        }
         
-        var updatedFolder = await folderRepository.UpdateFolderAsync(updateModel);
-        return updatedFolder == null ? null : Map(updatedFolder);
     }
 
-    public async Task AddDocumentToFolderAsync(FolderModel folder, DocumentModel doc)
+
+    public async Task<ITypedServiceResult<List<FolderModel>>> GetAllAsync()
     {
-        throw new NotImplementedException();
-        // TODO: Reimplement update logic so it works for cosmos and sql, move repo logic to here
-        // await _repository.AddDocumentToFolderAsync(folder, doc);
+        try
+        {
+            var folders = (await folderRepository.GetAllFoldersAsync())
+                .Select(Map)
+                .ToList();
+            return ServiceResult.Ok(folders);
+        }
+        catch
+        {
+            return ServiceResult.ErrorDefault<List<FolderModel>>();
+        }
     }
 
-    public async Task RemoveDocumentFromFolder(FolderModel folder, DocumentModel doc)
+    public async Task<ITypedServiceResult<FolderModel?>> UpdateFolderAsync(FolderModel folder)
     {
-        throw new NotImplementedException();
-        // TODO: Reimplement removal logic so it works for cosmos and sql, move repo logic to here
-        // await _repository.RemoveDocFromFolderAsync(folder, doc);
+        try
+        {
+            var efFolder = await folderRepository.GetFolderAsync((int)folder.Id!);
+            if (efFolder == null) return ServiceResult.ErrorDefault<FolderModel>();
+            
+            efFolder.MaxDocumentsFolder = folder.DocumentsFolder;
+            efFolder.MaxDocumentsRegister = folder.DocumentsRegister;
+            efFolder.DisplayName = folder.DisplayName;
+
+            await folderRepository.SaveAsync();
+
+            return ServiceResult.Ok(Map(efFolder));
+        }
+        catch
+        {
+            return ServiceResult.ErrorDefault<FolderModel>();
+        }
     }
     
     private static FolderModel MapShallow(EfFolder efFolder)

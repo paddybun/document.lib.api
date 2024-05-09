@@ -9,7 +9,7 @@ public static class FolderApi
             .WithName("GetFoldersByQuery")
             .WithOpenApi();
 
-        app?.MapGet("/folders/{id}", async ([AsParameters] FolderGetRouteParameters parameters, FolderApiService svc) => await svc.GetFolderModel(parameters))
+        app?.MapGet("/folders/{id}", async (int id, FolderApiService svc) => await svc.GetFolderModel(id))
             .WithName("GetFoldersById")
             .WithOpenApi();
 

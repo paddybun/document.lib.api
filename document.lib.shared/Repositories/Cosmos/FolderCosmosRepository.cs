@@ -1,4 +1,5 @@
-﻿using document.lib.shared.Constants;
+﻿using document.lib.ef.Entities;
+using document.lib.shared.Constants;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
 using document.lib.shared.Models.Data;
@@ -34,12 +35,12 @@ public class FolderCosmosRepository : IFolderRepository<DocLibFolder>
         return folder.FirstOrDefault();
     }
 
-    public async Task<DocLibFolder?> GetActiveFolderAsync()
+    public async Task<List<DocLibFolder>> GetActiveFoldersAsync()
     {
         var folders = await _cosmosContainer.GetItemLinqQueryable<DocLibFolder>(true)
             .Where(x => x.IsFull == false)
             .ToListAsync();
-        return folders.FirstOrDefault();
+        return folders;
     }
 
     public async Task<List<DocLibFolder>> GetAllFoldersAsync()
@@ -49,7 +50,12 @@ public class FolderCosmosRepository : IFolderRepository<DocLibFolder>
             .AsEnumerable();
         return await Task.FromResult(folders.ToList());
     }
-    
+
+    public Task<DocLibFolder> CreateFolderAsync(DocLibFolder folder)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<DocLibFolder> CreateFolderAsync(string name, int docsPerRegister = 10, int docsPerFolder = 150, string? displayName = null)
     {
         var folder = new DocLibFolder
