@@ -1,4 +1,5 @@
 ﻿using document.lib.shared.Models.Data;
+using document.lib.shared.Models.Result;
 
 namespace document.lib.shared.Interfaces;
 
@@ -13,4 +14,5 @@ public interface IDocumentService
     Task<DocumentModel?> ModifyTagsAsync(int id, string[] toAdd, string[] toRemove);
     Task<DocumentModel?> UpdateDocumentAsync(DocumentModel doc);
     Task<DocumentModel> AddDocumentToIndexAsync(string blobPath);
+    Task<ITypedServiceResult<DocumentModel>> CreateDocumentAsync(DocumentModel doc);
 }

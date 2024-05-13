@@ -1,8 +1,10 @@
-﻿using Azure.Storage.Blobs;
+﻿using System.Xml;
+using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using document.lib.ef.Entities;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Data;
+using document.lib.shared.Models.Result;
 using document.lib.shared.Models.Update;
 
 namespace document.lib.shared.Services
@@ -136,7 +138,37 @@ namespace document.lib.shared.Services
             var document = await documentRepository.CreateDocumentAsync(doc);
             return Map(document);
         }
-        
+
+        public async Task<ITypedServiceResult<DocumentModel>> CreateDocumentAsync(DocumentModel model)
+        {
+            try
+            {
+                var doc = await documentRepository.GetDocumentAsync((int)model.Id!);
+                var category = await categoryRepository.GetCategoryByNameAsync(model.CategoryName);
+                var folder = (await folderRepository.GetActiveFoldersAsync()).FirstOrDefault();
+                if (doc == null || doc.Unsorted == false || category == null || folder == null)
+                {
+                    return ServiceResult.DefaultError<DocumentModel>();
+                }
+
+                doc.Category = category;
+                doc.DisplayName = model.DisplayName;
+                doc.Company = model.Company;
+                doc.DateOfDocument = model.DateOfDocument;
+                doc.Description = model.Description;
+                doc.Unsorted = false;
+
+                AddDocumentToFolder(doc, folder);
+                await documentRepository.SaveAsync();
+                return ServiceResult.Ok(Map(doc));
+            }
+            catch
+            {
+                return ServiceResult.DefaultError<DocumentModel>();
+            }
+            
+        }
+
         public Task DeleteDocumentAsync(DocumentModel doc)
         {
             throw new NotImplementedException();

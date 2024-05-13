@@ -7,9 +7,9 @@ using FluentValidation;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add sdk services
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
-builder.Services.AddAuthorization();
+// builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+//     .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+// builder.Services.AddAuthorization();
 
 // Build configuration
 var sharedConfigSection = builder.Configuration.GetSection("Config"); 
@@ -25,7 +25,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Init api services
-builder.Services.AddSingleton<ApiConfig>();
+builder.Services.AddSingleton(apiConfig);
 builder.Services.AddScoped<FolderApiService>();
 builder.Services.AddScoped<TagApiService>();
 builder.Services.AddScoped<DocumentApiService>();
@@ -33,6 +33,7 @@ builder.Services.AddScoped<DocumentApiService>();
 // Validators
 ValidatorOptions.Global.LanguageManager.Enabled = false; // Disable localization
 builder.Services.AddScoped<IValidator<FolderPutParameters>, FolderPutValidator>();
+builder.Services.AddScoped<IValidator<FolderPostParameters>, FolderPostValidator>();
 builder.Services.AddScoped<IValidator<DocumentUpdateParameters>, DocumentPostValidator>();
 builder.Services.AddScoped<IValidator<DocumentTagsParameters>, DocumentTagsValidator>();
 
@@ -60,6 +61,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 app.UseHttpsRedirection();
-app.UseAuthentication();
-app.UseAuthorization();
+// app.UseAuthentication();
+// app.UseAuthorization();
 app.Run();

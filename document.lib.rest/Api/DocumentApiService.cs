@@ -91,4 +91,29 @@ public class DocumentApiService(ApiConfig config, IDocumentService documentServi
         await documentService.MoveDocumentAsync(id, parameters.FolderFrom!.Value, parameters.FolderTo!.Value);
         return Results.Ok();
     }
+
+    public async Task<IResult> CreateDocumentAsync(int id, DocumentUpdateParameters parameters)
+    {
+        var validationResults = await documentPostValidator.ValidateAsync(parameters);
+        if (!validationResults.IsValid)
+        {
+            var validationErrors = validationResults.Errors.Select(x => new ValidationError(x.PropertyName, x.ErrorMessage)).ToList();
+            return Results.BadRequest(validationErrors);
+        }
+
+        var model = new DocumentModel
+        {
+            Id = id,
+            CategoryName = parameters.Category!,
+            DisplayName = parameters.DisplayName,
+            Description = parameters.Description,
+            Company = parameters.Company,
+            DateOfDocument = parameters.DateOfDocument
+        };
+        var result = await documentService.CreateDocumentAsync(model);
+
+        return result.IsSuccess 
+            ? Results.Ok(result.Data) 
+            : Results.NotFound();
+    }
 }

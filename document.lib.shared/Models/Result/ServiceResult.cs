@@ -9,5 +9,5 @@ public static class ServiceResult
 
     public static ITypedServiceResult<T> Ok<T>(T? data) => new OkDataResult<T>(data);
     public static ITypedServiceResult<T> Error<T>(T? data) => new ErrorDataResult<T>(data);
-    public static ITypedServiceResult<T> ErrorDefault<T>() => new ErrorDataResult<T>(default);
+    public static ITypedServiceResult<T> DefaultError<T>() => new ErrorDataResult<T>(default);
 }

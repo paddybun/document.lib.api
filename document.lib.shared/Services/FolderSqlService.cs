@@ -16,7 +16,7 @@ public class FolderSqlService(IFolderRepository<EfFolder> folderRepository)
             var folder = await folderRepository.GetFolderAsync(id);
             return folder != null
                 ? ServiceResult.Ok(Map(folder))
-                : ServiceResult.ErrorDefault<FolderModel>();           
+                : ServiceResult.DefaultError<FolderModel>();           
         }
         catch
         {
@@ -31,11 +31,11 @@ public class FolderSqlService(IFolderRepository<EfFolder> folderRepository)
             var folder = await folderRepository.GetFolderAsync(name);
             return folder != null
                 ? ServiceResult.Ok(Map(folder))
-                : ServiceResult.ErrorDefault<FolderModel>();
+                : ServiceResult.DefaultError<FolderModel>();
         }
         catch
         {
-            return ServiceResult.ErrorDefault<FolderModel>();
+            return ServiceResult.DefaultError<FolderModel>();
         }
     }
 
@@ -61,7 +61,7 @@ public class FolderSqlService(IFolderRepository<EfFolder> folderRepository)
         }
         catch
         {
-            return ServiceResult.ErrorDefault<FolderModel>();
+            return ServiceResult.DefaultError<FolderModel>();
         }
     }
 
@@ -75,7 +75,7 @@ public class FolderSqlService(IFolderRepository<EfFolder> folderRepository)
         }
         catch
         {
-            return ServiceResult.ErrorDefault<(int, List<FolderModel>)>();
+            return ServiceResult.DefaultError<(int, List<FolderModel>)>();
         }
     }
 
@@ -107,7 +107,7 @@ public class FolderSqlService(IFolderRepository<EfFolder> folderRepository)
         }
         catch
         {
-            return ServiceResult.ErrorDefault<FolderModel>();
+            return ServiceResult.DefaultError<FolderModel>();
         }
         
     }
@@ -124,7 +124,7 @@ public class FolderSqlService(IFolderRepository<EfFolder> folderRepository)
         }
         catch
         {
-            return ServiceResult.ErrorDefault<List<FolderModel>>();
+            return ServiceResult.DefaultError<List<FolderModel>>();
         }
     }
 
@@ -133,7 +133,7 @@ public class FolderSqlService(IFolderRepository<EfFolder> folderRepository)
         try
         {
             var efFolder = await folderRepository.GetFolderAsync((int)folder.Id!);
-            if (efFolder == null) return ServiceResult.ErrorDefault<FolderModel>();
+            if (efFolder == null) return ServiceResult.DefaultError<FolderModel>();
             
             efFolder.MaxDocumentsFolder = folder.DocumentsFolder;
             efFolder.MaxDocumentsRegister = folder.DocumentsRegister;
@@ -145,7 +145,7 @@ public class FolderSqlService(IFolderRepository<EfFolder> folderRepository)
         }
         catch
         {
-            return ServiceResult.ErrorDefault<FolderModel>();
+            return ServiceResult.DefaultError<FolderModel>();
         }
     }
     

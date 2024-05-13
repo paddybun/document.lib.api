@@ -21,6 +21,12 @@ public static class DocumentApi
             .WithName("UpdateDocument")
             .WithOpenApi();
 
+        app?.MapPost("/documents/{id}/create",
+                async ([FromBody] DocumentUpdateParameters parameters, [FromRoute] int id, DocumentApiService svc) =>
+                await svc.CreateDocumentAsync(id, parameters))
+            .WithName("CreateDocument")
+            .WithOpenApi();
+        
         app?.MapPost("/documents/{id}/move",
                 async ([FromBody] DocumentMoveParameters parameters, [FromRoute] int id, DocumentApiService svc) =>
                 await svc.MoveDocumentsAsync(id, parameters))
