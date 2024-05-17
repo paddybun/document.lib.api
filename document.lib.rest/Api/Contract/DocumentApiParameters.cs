@@ -2,6 +2,11 @@
 
 namespace document.lib.rest.Api.Contract;
 
+public record DocumentGetPagedParameters(
+    [FromQuery(Name = "page")] int? Page,
+    [FromQuery(Name = "pageSize")] int? PageSize
+);
+
 public record DocumentGetQueryParameters(
     [FromQuery(Name = "page")] int? Page,
     [FromQuery(Name = "pageSize")] int? PageSize,

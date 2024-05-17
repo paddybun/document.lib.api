@@ -48,7 +48,7 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
         return new PagedResult<EfDocument>(efDocuments, count);
     }
 
-    public async Task<(int, List<EfDocument>)> GetUnsortedDocumentsAsync(int page, int pageSize)
+    public async Task<PagedResult<EfDocument>> GetUnsortedDocumentsAsync(int page, int pageSize)
     {
         var count = await context.Documents.Where(x => x.Unsorted).CountAsync();
         var efDocuments = await context
@@ -58,10 +58,11 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
             .Skip(page * pageSize)
             .Take(pageSize)
             .ToListAsync();
-        return (count, efDocuments);
+
+        return new PagedResult<EfDocument>(efDocuments, count);
     }
 
-    public async Task<(int, List<EfDocument>)> GetDocumentsForFolderAsync(string folderName, int page, int pageSize)
+    public async Task<PagedResult<EfDocument>> GetDocumentsForFolderAsync(string folderName, int page, int pageSize)
     {
         var folder = await context
             .Folders
@@ -73,13 +74,14 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
             .ThenInclude(x => x.Folder)
             .Include(x => x.Category)
             .Include(x => x.Tags)
+            .ThenInclude(x => x.Tag)
             .Where(x => x.Register.Folder!.Name == folderName)
             .OrderBy(x => x.Id)
             .Skip(page * pageSize)
             .Take(pageSize)
             .ToListAsync();
         
-        return (folder?.TotalDocuments ?? 0, efDocuments);
+        return new PagedResult<EfDocument>(efDocuments, folder?.TotalDocuments ?? 0);
     }
 
     public async Task<EfDocument> CreateDocumentAsync(EfDocument document)

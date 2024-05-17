@@ -14,6 +14,12 @@ public static class DocumentApi
                 async ([FromRoute] int id, DocumentApiService svc) => await svc.GetDocumentAsync(id))
             .WithName("GetDocument")
             .WithOpenApi();
+        
+        app?.MapGet("documents/folder/{name}",
+                async ([AsParameters] DocumentGetPagedParameters parameters, [FromRoute] string name, DocumentApiService svc, HttpContext http) 
+                    => await svc.GetDocumentsForFolderAsync(name, parameters, http))
+            .WithName("GetDocumentsForFolder")
+            .WithOpenApi();
 
         app?.MapPost("/documents/{id}",
                 async ([FromBody] DocumentUpdateParameters parameters, [FromRoute] int id, DocumentApiService svc) =>

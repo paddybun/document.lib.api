@@ -68,12 +68,6 @@
     </div>
 </div>
 
-
-
-
-
-
-
 @code {
     List<DocumentModel> _documents = new();
     private readonly List<string> _loadedFiles = new();
@@ -82,8 +76,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var (_, docs) = await _documentService.GetUnsortedDocuments(0, int.MaxValue);
-        _documents = docs;
+        var pagedResult = await _documentService.GetUnsortedDocuments(0, int.MaxValue);
+        _documents = pagedResult.IsSuccess ? [..pagedResult.Data!.Results] : new List<DocumentModel>();
     }
 
     private async Task LoadFilesAsync(InputFileChangeEventArgs e)

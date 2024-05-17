@@ -2,6 +2,7 @@
 using document.lib.shared.Helper;
 using document.lib.shared.Models.Data;
 using FluentValidation;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace document.lib.rest.Api;
 
@@ -42,9 +43,13 @@ public class DocumentApiService(ApiConfig config, IDocumentService documentServi
                 pageSize = parameters.PageSize!.Value;
             }
             
-            var (count, documents) = await documentService.GetUnsortedDocuments(page, pageSize);
-            http.Response.Headers.Append("total-results", count.ToString());
-            return Results.Ok(documents);
+            var pagedResult = await documentService.GetUnsortedDocuments(page, pageSize);
+            if (pagedResult.IsSuccess)
+            {
+                http.Response.Headers.Append("total-results", pagedResult.Data!.Total.ToString());
+                return Results.Ok(pagedResult.Data!.Results);    
+            }
+            return Results.NoContent();
         }
         
         var sampleResult = await documentService.GetDocumentsPagedAsync(0, 10);
@@ -53,6 +58,28 @@ public class DocumentApiService(ApiConfig config, IDocumentService documentServi
             return Results.Ok(sampleResult.Data!.Results);
         }
         
+        return Results.NoContent();
+    }
+    
+    public async Task<IResult> GetDocumentsForFolderAsync(string folderName, DocumentGetPagedParameters parameters, HttpContext http)
+    {
+        if (!PropertyChecker.Values.All(parameters, x => x.Page, x => x.PageSize))
+        {
+            return Results.BadRequest("Invalid parameters");
+        }
+        
+        if (parameters.PageSize!.Value > config.MaxPageSize)
+        {
+            return Results.BadRequest(string.Format(ErrorMessages.PageSizeExceeded, config.MaxPageSize));
+        }
+        
+        var result = await documentService.GetDocumentsForFolder(folderName, parameters.Page!.Value,  parameters.PageSize!.Value);
+        if (result.IsSuccess)
+        {
+            http.Response.Headers.Append("total-results", result.Data!.Total.ToString());
+            return Results.Ok(result.Data!.Results);
+        }
+
         return Results.NoContent();
     }
 

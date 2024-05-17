@@ -8,7 +8,8 @@ public interface IDocumentService
     Task<ITypedServiceResult<DocumentModel>> GetDocumentAsync(int id);
     Task<ITypedServiceResult<DocumentModel>> GetDocumentAsync(string name);
     Task<ITypedServiceResult<PagedResult<DocumentModel>>> GetDocumentsPagedAsync(int page, int pageSize);
-    Task<(int, List<DocumentModel>)> GetUnsortedDocuments(int page, int pageSize);
+    Task<ITypedServiceResult<PagedResult<DocumentModel>>> GetUnsortedDocuments(int page, int pageSize);
+    Task<ITypedServiceResult<PagedResult<DocumentModel>>> GetDocumentsForFolder(string folderName, int page, int pageSize);
     Task MoveDocumentAsync(int documentId, int folderFromId, int toFolderId);
     Task DeleteDocumentAsync(DocumentModel doc);
     Task<DocumentModel?> ModifyTagsAsync(int id, string[] toAdd, string[] toRemove);

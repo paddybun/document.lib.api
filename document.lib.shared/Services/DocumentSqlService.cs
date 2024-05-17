@@ -35,11 +35,21 @@ namespace document.lib.shared.Services
                 : ServiceResult.DefaultError<DocumentModel>();
         }
 
-        public async Task<(int, List<DocumentModel>)> GetUnsortedDocuments(int page, int pageSize)
+        public async Task<ITypedServiceResult<PagedResult<DocumentModel>>> GetUnsortedDocuments(int page, int pageSize)
         {
-            var (count, efDocuments) = await documentRepository.GetUnsortedDocumentsAsync(page, pageSize);
-            var documents = efDocuments.Select(Map).ToList();
-            return (count, documents);
+            var pagedResult = await documentRepository.GetUnsortedDocumentsAsync(page, pageSize);
+            var documents = pagedResult.Results.Select(Map).ToList();
+
+            var toReturn = new PagedResult<DocumentModel>(documents, pagedResult.Total);
+            return ServiceResult.Ok(toReturn);
+        }
+
+        public async Task<ITypedServiceResult<PagedResult<DocumentModel>>> GetDocumentsForFolder(string folderName, int page, int pageSize)
+        {
+            var pagedResult = await documentRepository.GetDocumentsForFolderAsync(folderName, page, pageSize);
+            var documents = pagedResult.Results.Select(Map).ToList();
+            var toReturn = new PagedResult<DocumentModel>(documents, pagedResult.Total);
+            return ServiceResult.Ok(toReturn);
         }
 
         public async Task MoveDocumentAsync(int documentId, int folderFromId, int toFolderId)

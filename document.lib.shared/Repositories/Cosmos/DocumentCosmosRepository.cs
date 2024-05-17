@@ -65,7 +65,7 @@ public class DocumentCosmosRepository : IDocumentRepository<DocLibDocument>
         throw new NotImplementedException();
     }
 
-    public Task<(int, List<DocLibDocument>)> GetUnsortedDocumentsAsync(int page, int pageSize)
+    public Task<PagedResult<DocLibDocument>> GetUnsortedDocumentsAsync(int page, int pageSize)
     {
         throw new NotImplementedException();
     }
@@ -75,7 +75,7 @@ public class DocumentCosmosRepository : IDocumentRepository<DocLibDocument>
         throw new NotImplementedException();
     }
 
-    public Task<(int, List<DocLibDocument>)> GetDocumentsForFolderAsync(string folderName, int page, int pageSize)
+    public Task<PagedResult<DocLibDocument>> GetDocumentsForFolderAsync(string folderName, int page, int pageSize)
     {
         throw new NotImplementedException();
     }
