@@ -1,5 +1,4 @@
-﻿using System.Xml;
-using Azure.Storage.Blobs;
+﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using document.lib.ef.Entities;
 using document.lib.shared.Interfaces;
@@ -14,23 +13,26 @@ namespace document.lib.shared.Services
         IFolderRepository<EfFolder> folderRepository,
         IDocumentRepository<EfDocument> documentRepository,
         ICategoryRepository<EfCategory> categoryRepository,
-        ITagRepository<EfTag> tagRepository,
-        IFolderService folderService)
+        ITagRepository<EfTag> tagRepository)
         : IDocumentService
     {
         const string NewDocumentCategory = "uncategorized";
         const string NewDocumentRegister = "unsorted";
 
-        public async Task<DocumentModel?> GetDocumentByIdAsync(int id)
+        public async Task<ITypedServiceResult<DocumentModel>> GetDocumentAsync(int id)
         {
             var doc = await documentRepository.GetDocumentAsync(id);
-            return doc != null ? Map(doc) : null;
+            return doc != null 
+                ? ServiceResult.Ok(Map(doc)) 
+                : ServiceResult.DefaultError<DocumentModel>();
         }
 
-        public async Task<DocumentModel?> GetDocumentByNameAsync(string name)
+        public async Task<ITypedServiceResult<DocumentModel>> GetDocumentAsync(string name)
         {
             var doc = await documentRepository.GetDocumentAsync(name);
-            return doc != null ? Map(doc) : null;
+            return doc != null 
+                ? ServiceResult.Ok(Map(doc)) 
+                : ServiceResult.DefaultError<DocumentModel>();
         }
 
         public async Task<(int, List<DocumentModel>)> GetUnsortedDocuments(int page, int pageSize)
@@ -62,11 +64,12 @@ namespace document.lib.shared.Services
             await documentRepository.SaveAsync();
         }
 
-        public async Task<(int, List<DocumentModel>)> GetDocumentsPagedAsync(int page, int pageSize)
+        public async Task<ITypedServiceResult<PagedResult<DocumentModel>>> GetDocumentsPagedAsync(int page, int pageSize)
         {
-            var (count, efDocuments) = await documentRepository.GetDocumentsPagedAsync(page, pageSize);
-            var documents = efDocuments.Select(Map).ToList();
-            return (count, documents);
+            var pagedResult = await documentRepository.GetDocumentsPagedAsync(page, pageSize);
+            var documents = pagedResult.Results.Select(Map).ToList();
+            var toReturn = new PagedResult<DocumentModel>(documents, pagedResult.Total);
+            return ServiceResult.Ok(toReturn);
         }
 
         public async Task<DocumentModel?> ModifyTagsAsync(int id, string[] toAdd, string[] toRemove)

@@ -219,7 +219,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        Doc = await _documentService.GetDocumentByNameAsync(Name);
+        var result = await _documentService.GetDocumentAsync(Name);
+        Doc = result.IsSuccess ? result.Data : null;
         _documentTags.AddRange(Doc?.Tags.ToList() ?? new List<string>());
         await DownloadAsync();
         Metadata = await _cosmosMetadataService.GetMetadataAsync();

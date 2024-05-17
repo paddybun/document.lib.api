@@ -34,7 +34,7 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
         return doc;
     }
 
-    public async Task<(int, List<EfDocument>)> GetDocumentsPagedAsync(int page, int pageSize)
+    public async Task<PagedResult<EfDocument>> GetDocumentsPagedAsync(int page, int pageSize)
     {
         var count = await context.Documents.CountAsync();
         var efDocuments = await context.Documents
@@ -45,7 +45,7 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
             .Take(pageSize)
             .ToListAsync();
         
-        return (count, efDocuments);
+        return new PagedResult<EfDocument>(efDocuments, count);
     }
 
     public async Task<(int, List<EfDocument>)> GetUnsortedDocumentsAsync(int page, int pageSize)

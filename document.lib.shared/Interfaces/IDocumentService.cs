@@ -5,9 +5,9 @@ namespace document.lib.shared.Interfaces;
 
 public interface IDocumentService
 {
-    Task<DocumentModel?> GetDocumentByIdAsync(int id);
-    Task<DocumentModel?> GetDocumentByNameAsync(string name);
-    Task<(int, List<DocumentModel>)> GetDocumentsPagedAsync(int page, int pageSize);
+    Task<ITypedServiceResult<DocumentModel>> GetDocumentAsync(int id);
+    Task<ITypedServiceResult<DocumentModel>> GetDocumentAsync(string name);
+    Task<ITypedServiceResult<PagedResult<DocumentModel>>> GetDocumentsPagedAsync(int page, int pageSize);
     Task<(int, List<DocumentModel>)> GetUnsortedDocuments(int page, int pageSize);
     Task MoveDocumentAsync(int documentId, int folderFromId, int toFolderId);
     Task DeleteDocumentAsync(DocumentModel doc);
@@ -16,3 +16,5 @@ public interface IDocumentService
     Task<DocumentModel> AddDocumentToIndexAsync(string blobPath);
     Task<ITypedServiceResult<DocumentModel>> CreateDocumentAsync(DocumentModel doc);
 }
+
+public record PagedResult<T>(IReadOnlyList<T> Results, int Total);

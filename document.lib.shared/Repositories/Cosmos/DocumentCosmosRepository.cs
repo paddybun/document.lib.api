@@ -1,4 +1,5 @@
-﻿using document.lib.shared.Constants;
+﻿using Azure;
+using document.lib.shared.Constants;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
 using document.lib.shared.Models.Data;
@@ -59,7 +60,7 @@ public class DocumentCosmosRepository : IDocumentRepository<DocLibDocument>
         throw new NotImplementedException();
     }
 
-    public Task<(int, List<DocLibDocument>)> GetDocumentsPagedAsync(int page, int pageSize)
+    public Task<PagedResult<DocLibDocument>> GetDocumentsPagedAsync(int page, int pageSize)
     {
         throw new NotImplementedException();
     }
@@ -91,11 +92,6 @@ public class DocumentCosmosRepository : IDocumentRepository<DocLibDocument>
     }
 
     public Task SaveAsync()
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task SaveAsync(DocLibDocument entity)
     {
         throw new NotImplementedException();
     }

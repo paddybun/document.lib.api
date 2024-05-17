@@ -9,8 +9,10 @@ public class DocumentApiService(ApiConfig config, IDocumentService documentServi
 {
     public async Task<IResult> GetDocumentAsync(int id)
     {
-        var document = await documentService.GetDocumentByIdAsync(id);
-        return document is null ? Results.NotFound() : Results.Ok(document);
+        var result = await documentService.GetDocumentAsync(id);
+        return result.IsSuccess 
+            ? Results.Ok(result.Data) 
+            : Results.NotFound();
     }
     
     public async Task<IResult> GetDocumentsAsync(DocumentGetQueryParameters parameters, HttpContext http)
@@ -22,9 +24,13 @@ public class DocumentApiService(ApiConfig config, IDocumentService documentServi
         
         if (PropertyChecker.Values.All(parameters, x => x.Page, x => x.PageSize))
         {
-            var (count, documents) = await documentService.GetDocumentsPagedAsync(parameters.Page!.Value, parameters.PageSize!.Value);
-            http.Response.Headers.Append("total-results", count.ToString());
-            return Results.Ok(documents);
+            var pagedResult = await documentService.GetDocumentsPagedAsync(parameters.Page!.Value, parameters.PageSize!.Value);
+            if (pagedResult.IsSuccess)
+            {
+                http.Response.Headers.Append("total-results", pagedResult.Data!.Total.ToString());
+                return Results.Ok(pagedResult.Data!.Results);    
+            }
+            return Results.NoContent();
         }
 
         if (PropertyChecker.Values.Any(parameters, x => x.Unsorted) && parameters.Unsorted!.Value)
@@ -41,8 +47,13 @@ public class DocumentApiService(ApiConfig config, IDocumentService documentServi
             return Results.Ok(documents);
         }
         
-        var (_, docs) = await documentService.GetDocumentsPagedAsync(0, 10);
-        return Results.Ok(docs);
+        var sampleResult = await documentService.GetDocumentsPagedAsync(0, 10);
+        if (sampleResult.IsSuccess)
+        {
+            return Results.Ok(sampleResult.Data!.Results);
+        }
+        
+        return Results.NoContent();
     }
 
     public async Task<IResult> UpdateDocumentAsync(int id, DocumentUpdateParameters parameters)
