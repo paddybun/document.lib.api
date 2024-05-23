@@ -7,9 +7,15 @@ using FluentValidation;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add sdk services
-// builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-//     .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
-// builder.Services.AddAuthorization();
+builder.Services.AddAuthentication(opts =>
+{
+    opts.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    opts.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.Authority = "";
+    options.Audience = "https://localhost:7279/";
+});
 
 // Build configuration
 var sharedConfigSection = builder.Configuration.GetSection("Config"); 
@@ -31,7 +37,7 @@ builder.Services.AddScoped<TagApiService>();
 builder.Services.AddScoped<DocumentApiService>();
 
 // Validators
-ValidatorOptions.Global.LanguageManager.Enabled = false; // Disable localization
+ValidatorOptions.Global.LanguageManager.Enabled = false; // Disable validation localization
 builder.Services.AddScoped<IValidator<FolderPutParameters>, FolderPutValidator>();
 builder.Services.AddScoped<IValidator<FolderPostParameters>, FolderPostValidator>();
 builder.Services.AddScoped<IValidator<DocumentUpdateParameters>, DocumentPostValidator>();
