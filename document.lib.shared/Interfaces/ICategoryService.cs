@@ -1,17 +1,14 @@
 ﻿using document.lib.shared.Enums;
 using document.lib.shared.Models.Data;
+using document.lib.shared.Models.Result;
 
 namespace document.lib.shared.Interfaces;
 
 public interface ICategoryService
 {
-    // Task<CategoryModel?> GetCategoryAsync(string name);
-    // Task<List<CategoryModel>> GetAllAsync();
-    // Task<CategoryModel> CreateOrGetCategoryAsync(string category);
-    // Task<CategoryModel> SaveAsync(CategoryModel category, bool createNew = false);
-    public DatabaseProvider DatabaseProvider { get; }
-    Task<CategoryModel?> GetCategoryAsync(string name);
-    Task<List<CategoryModel>> GetAllAsync();
-    Task<CategoryModel> CreateOrGetCategoryAsync(string name);
-    Task<CategoryModel?> UpdateAsync(CategoryModel category);
+    Task<ITypedServiceResult<CategoryModel>> GetCategoryAsync(int id);
+    Task<ITypedServiceResult<CategoryModel>> GetCategoryAsync(string name);
+    Task<ITypedServiceResult<PagedResult<CategoryModel>>> GetCategoriesPagedAsync(int page, int pageSize);
+    Task<ITypedServiceResult<CategoryModel>> CreateCategoryAsync(CategoryModel model);
+    Task<ITypedServiceResult<CategoryModel>> UpdateCategory(CategoryModel model);
 }

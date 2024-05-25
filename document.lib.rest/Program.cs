@@ -35,6 +35,7 @@ builder.Services.AddSingleton(apiConfig);
 builder.Services.AddScoped<FolderApiService>();
 builder.Services.AddScoped<TagApiService>();
 builder.Services.AddScoped<DocumentApiService>();
+builder.Services.AddScoped<CategoryApiService>();
 
 // Validators
 ValidatorOptions.Global.LanguageManager.Enabled = false; // Disable validation localization
@@ -42,6 +43,8 @@ builder.Services.AddScoped<IValidator<FolderPutParameters>, FolderPutValidator>(
 builder.Services.AddScoped<IValidator<FolderPostParameters>, FolderPostValidator>();
 builder.Services.AddScoped<IValidator<DocumentUpdateParameters>, DocumentPostValidator>();
 builder.Services.AddScoped<IValidator<DocumentTagsParameters>, DocumentTagsValidator>();
+builder.Services.AddScoped<IValidator<GetCategoryParams>, CategoryGetValidator>();
+builder.Services.AddScoped<IValidator<UpdateCategoryParams>, CategoryUpdateValidator>();
 
 // Init document lib services
 builder.Services.UseDocumentLibShared(sharedConfigSection);
@@ -60,6 +63,7 @@ var app = builder.Build();
 app.UseFolderApi();
 app.UseTagApi();
 app.UseDocumentApi();
+app.UseCatergoryApi();
 
 if (app.Environment.IsDevelopment())
 {

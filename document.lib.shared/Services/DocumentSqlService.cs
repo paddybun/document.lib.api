@@ -115,7 +115,7 @@ namespace document.lib.shared.Services
 
             if (updateModel.Category != document.Category.Name)
             {
-                var category = await categoryRepository.GetCategoryByNameAsync(updateModel.Category!);
+                var category = await categoryRepository.GetCategoryAsync(updateModel.Category!);
                 document.Category = category ?? document.Category;
             }
             document.DisplayName = updateModel.DisplayName;
@@ -134,7 +134,7 @@ namespace document.lib.shared.Services
             var folder = await folderRepository.GetFolderAsync(NewDocumentRegister);
             if (folder == null) throw new Exception("Unsorted folder not found. Please make sure a folder with the name \"unsorted\" exists");
 
-            var category = await categoryRepository.GetCategoryByNameAsync(NewDocumentCategory);
+            var category = await categoryRepository.GetCategoryAsync(NewDocumentCategory);
             if (folder == null) throw new Exception("Uncategorized category not found. Please make sure a folder with the name \"uncategorized\" exists");
             
             var doc = new EfDocument
@@ -157,7 +157,7 @@ namespace document.lib.shared.Services
             try
             {
                 var doc = await documentRepository.GetDocumentAsync((int)model.Id!);
-                var category = await categoryRepository.GetCategoryByNameAsync(model.CategoryName);
+                var category = await categoryRepository.GetCategoryAsync(model.CategoryName);
                 var folder = (await folderRepository.GetActiveFoldersAsync()).FirstOrDefault();
                 if (doc == null || doc.Unsorted == false || category == null || folder == null)
                 {

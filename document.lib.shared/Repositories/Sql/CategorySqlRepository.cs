@@ -7,45 +7,44 @@ namespace document.lib.shared.Repositories.Sql;
 
 public sealed class CategorySqlRepository(DocumentLibContext context) : ICategoryRepository<EfCategory>
 {
-    public Task<EfCategory?> GetCategoryByIdAsync(int id)
+    public async Task<EfCategory?> GetCategoryAsync(int id)
     {
-        var efCategory = context
+        var efCategory = await context
             .Categories
             .SingleOrDefaultAsync(x => x.Id == id);
         return efCategory;
     }
 
-    public Task<EfCategory?> GetCategoryByNameAsync(string name)
+    public async Task<EfCategory?> GetCategoryAsync(string name)
     {
-        var efCategory = context
+        var efCategory = await context
             .Categories
             .SingleOrDefaultAsync(x => x.Name == name);
         return efCategory;
     }
 
-    public async Task<List<EfCategory>> GetCategoriesAsync()
+    public async Task<PagedResult<EfCategory>> GetCategoriesPagedAsync(int page, int pageSize)
     {
-        var categories = await context.Categories.ToListAsync();
-        return categories; //.Select(Map).ToList();
+        var count = context.Categories.Count();
+        var categories = await context
+            .Categories
+            .OrderBy(x => x.Id)
+            .Skip(pageSize * page)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PagedResult<EfCategory>(categories, count);
     }
 
-    public async Task<EfCategory> CreateCategoryAsync(string name, string? description = null, string? displayName = null)
+    public async Task<EfCategory> CreateCategoryAsync(EfCategory category)
     {
-        var efCategory = new EfCategory
-        {
-            Name = name,
-            Description = description,
-            DisplayName = displayName
-        };
-        await context.Categories.AddAsync(efCategory);
-        await context.SaveChangesAsync();
-        return efCategory;
-    }
-
-    public async Task<EfCategory> UpdateCategoryAsync(EfCategory category)
-    {
-        context.Update(category);
+        await context.Categories.AddAsync(category);
         await context.SaveChangesAsync();
         return category;
+    }
+
+    public async Task SaveAsync()
+    {
+        await context.SaveChangesAsync();
     }
 }

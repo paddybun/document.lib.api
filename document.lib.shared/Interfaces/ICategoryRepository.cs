@@ -1,10 +1,11 @@
-﻿namespace document.lib.shared.Interfaces;
+﻿using document.lib.ef.Entities;
 
-public interface ICategoryRepository<T>
+namespace document.lib.shared.Interfaces;
+
+public interface ICategoryRepository<T>: IRepository
 {   
-    Task<T?> GetCategoryByIdAsync(int id);
-    Task<T?> GetCategoryByNameAsync(string name);
-    Task<List<T>> GetCategoriesAsync();
-    Task<T> CreateCategoryAsync(string name, string? description = null, string? displayName = null);
-    Task<T> UpdateCategoryAsync(T category);
+    Task<T?> GetCategoryAsync(int id);
+    Task<T?> GetCategoryAsync(string name);
+    Task<PagedResult<T>> GetCategoriesPagedAsync(int page, int pageSize);
+    Task<T> CreateCategoryAsync(EfCategory category);
 }
