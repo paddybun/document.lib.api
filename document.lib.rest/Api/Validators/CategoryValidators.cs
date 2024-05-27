@@ -2,7 +2,7 @@
 
 namespace document.lib.rest.Api.Validators;
 
-internal class CategoryGetValidator : AbstractValidator<GetCategoryParams>
+internal class CategoryGetValidator : AbstractValidator<CategoryGetParams>
 {
     public CategoryGetValidator(ApiConfig config)
     {
@@ -11,7 +11,7 @@ internal class CategoryGetValidator : AbstractValidator<GetCategoryParams>
     }
 }
 
-internal class CategoryUpdateValidator : AbstractValidator<UpdateCategoryParams>
+internal class CategoryUpdateValidator : AbstractValidator<CategoryUpdateParams>
 {
     public CategoryUpdateValidator()
     {

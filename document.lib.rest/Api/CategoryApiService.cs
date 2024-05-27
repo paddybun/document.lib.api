@@ -4,7 +4,7 @@ using FluentValidation;
 
 namespace document.lib.rest.Api;
 
-internal sealed class CategoryApiService(ICategoryService categoryService, IValidator<GetCategoryParams> getValidator, IValidator<UpdateCategoryParams> updateValidator)
+internal sealed class CategoryApiService(ICategoryService categoryService, IValidator<CategoryGetParams> getValidator, IValidator<CategoryUpdateParams> updateValidator)
 {
     public async Task<IResult> GetCategoryAsync(int id)
     {
@@ -14,7 +14,7 @@ internal sealed class CategoryApiService(ICategoryService categoryService, IVali
             : Results.NotFound();
     }
     
-    public async Task<IResult> GetCategoriesAsync(GetCategoryParams parameters, HttpContext http)
+    public async Task<IResult> GetCategoriesAsync(CategoryGetParams parameters, HttpContext http)
     {
         var validationResult = await getValidator.ValidateAsync(parameters);
         if (!validationResult.IsValid)
@@ -35,7 +35,7 @@ internal sealed class CategoryApiService(ICategoryService categoryService, IVali
             : Results.NotFound();
     }
 
-    public async Task<IResult> CreateCategoryAsync(UpdateCategoryParams parameters)
+    public async Task<IResult> CreateCategoryAsync(CategoryUpdateParams parameters)
     {
         var validationResult = await updateValidator.ValidateAsync(parameters);
         if (!validationResult.IsValid)
@@ -55,7 +55,7 @@ internal sealed class CategoryApiService(ICategoryService categoryService, IVali
             : Results.StatusCode(500);
     }
     
-    public async Task<IResult> UpdateCategoryAsync(int id, UpdateCategoryParams parameters)
+    public async Task<IResult> UpdateCategoryAsync(int id, CategoryUpdateParams parameters)
     {
         var validationResult = await updateValidator.ValidateAsync(parameters);
         if (!validationResult.IsValid)

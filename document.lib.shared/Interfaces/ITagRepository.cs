@@ -1,10 +1,10 @@
 ﻿namespace document.lib.shared.Interfaces;
 
-public interface ITagRepository<T>
+public interface ITagRepository<T>: IRepository
 {
-    Task<T?> GetTagByIdAsync(int id);
-    Task<T?> GetTagByNameAsync(string name);
-    Task<List<T>> GetTagsAsync();
+    Task<T?> GetTagAsync(int id);
+    Task<T?> GetTagAsync(string name);
+    Task<List<T>> GetTagsAsync(string[] names);
     Task<(int, List<T>)> GetTagsAsync(int page, int pageSize);
-    Task<T> CreateTagAsync(string name, string? displayName);
+    Task<List<T>> CreateTagsAsync(params T[] tags);
 }

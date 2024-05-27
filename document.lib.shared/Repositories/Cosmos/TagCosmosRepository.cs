@@ -19,19 +19,19 @@ public class TagCosmosRepository : ITagRepository<DocLibTag>
         _cosmosContainer = db.GetContainer(TableNames.Doclib);
     }
 
-    public Task<DocLibTag?> GetTagByIdAsync(int id)
+    public Task<DocLibTag?> GetTagAsync(int id)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<DocLibTag?> GetTagByNameAsync(string name)
+    public async Task<DocLibTag?> GetTagAsync(string name)
     {
         var tag = _cosmosContainer.GetItemLinqQueryable<DocLibTag>(true)
             .SingleOrDefault(x => x.Name == name);
         return await Task.FromResult(tag);
     }
 
-    public async Task<List<DocLibTag>> GetTagsAsync()
+    public async Task<List<DocLibTag>> GetTagsAsync(params string[] names)
     {
         var tags = _cosmosContainer.GetItemLinqQueryable<DocLibTag>(true)
             .Where(x => x.Id.StartsWith("Tag."))
@@ -49,6 +49,11 @@ public class TagCosmosRepository : ITagRepository<DocLibTag>
         return await Task.FromResult((tags.Count, tags));
     }
 
+    public Task<List<DocLibTag>> CreateTagsAsync(params DocLibTag[] tags)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<DocLibTag> CreateTagAsync(string name, string? displayName)
     {
         var id = $"Tag.{name}";
@@ -60,6 +65,11 @@ public class TagCosmosRepository : ITagRepository<DocLibTag>
         });
 
         return response.Resource;
+    }
+
+    public Task SaveAsync()
+    {
+        throw new NotImplementedException();
     }
 
     private static TagModel Map(DocLibTag tag)

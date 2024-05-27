@@ -43,8 +43,10 @@ builder.Services.AddScoped<IValidator<FolderPutParameters>, FolderPutValidator>(
 builder.Services.AddScoped<IValidator<FolderPostParameters>, FolderPostValidator>();
 builder.Services.AddScoped<IValidator<DocumentUpdateParameters>, DocumentPostValidator>();
 builder.Services.AddScoped<IValidator<DocumentTagsParameters>, DocumentTagsValidator>();
-builder.Services.AddScoped<IValidator<GetCategoryParams>, CategoryGetValidator>();
-builder.Services.AddScoped<IValidator<UpdateCategoryParams>, CategoryUpdateValidator>();
+builder.Services.AddScoped<IValidator<CategoryGetParams>, CategoryGetValidator>();
+builder.Services.AddScoped<IValidator<CategoryUpdateParams>, CategoryUpdateValidator>();
+builder.Services.AddScoped<IValidator<TagsGetParameters>, TagGetValidator>();
+builder.Services.AddScoped<IValidator<TagsUpdateParameters>, TagUpdateValidator>();
 
 // Init document lib services
 builder.Services.UseDocumentLibShared(sharedConfigSection);

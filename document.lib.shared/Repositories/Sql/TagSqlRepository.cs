@@ -7,22 +7,25 @@ namespace document.lib.shared.Repositories.Sql;
 
 public sealed class TagSqlRepository(DocumentLibContext context) : ITagRepository<EfTag>
 {
-    public async Task<EfTag?> GetTagByIdAsync(int id)
+    public async Task<EfTag?> GetTagAsync(int id)
     {
         var efTag = await context.Tags.SingleOrDefaultAsync(x => x.Id == id);
         return efTag;
     }
 
-    public async Task<EfTag?> GetTagByNameAsync(string name)
+    public async Task<EfTag?> GetTagAsync(string name)
     {
         var efTag = await context.Tags.SingleOrDefaultAsync(x => x.Name == name);
         return efTag;
     }
 
-    public async Task<List<EfTag>> GetTagsAsync()
+    public async Task<List<EfTag>> GetTagsAsync(string[] names)
     {
-        var tags = await context.Tags.ToListAsync();
-        return tags.ToList();
+        var tags =await context.Tags
+            .Where(x => names.Contains(x.Name))
+            .ToListAsync();
+        
+        return tags;
     }
 
     public async Task<(int, List<EfTag>)> GetTagsAsync(int page, int pageSize)
@@ -38,11 +41,18 @@ public sealed class TagSqlRepository(DocumentLibContext context) : ITagRepositor
         return (count, mappedTags);
     }
 
-    public async Task<EfTag> CreateTagAsync(string name, string? displayName)
+    public async Task<List<EfTag>> CreateTagsAsync(params EfTag[] tags)
     {
-        var tag = new EfTag {Name = name, DisplayName = displayName};
-        await context.AddAsync(tag);
+        foreach (var tag in tags)
+        {
+            await context.AddAsync(tag);            
+        }
         await context.SaveChangesAsync();
-        return tag;
-    }    
+        return tags.ToList();
+    }
+
+    public async Task SaveAsync()
+    {
+        await context.SaveChangesAsync();
+    }
 }

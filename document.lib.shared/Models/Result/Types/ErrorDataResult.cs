@@ -2,9 +2,10 @@
 
 namespace document.lib.shared.Models.Result.Types;
 
-internal class ErrorDataResult<TIn>(TIn? data): ITypedServiceResult<TIn>
+internal class ErrorDataResult<TIn>(TIn? data, string? message): ITypedServiceResult<TIn>
 {
     public ServiceResultStatus Status => ServiceResultStatus.Error;
     public bool IsSuccess => false;
     public TIn? Data { get; } = data;
+    public string Message { get; set; } = message ?? "An error occurred";
 }

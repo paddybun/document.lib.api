@@ -92,7 +92,7 @@ namespace document.lib.shared.Services
             foreach (var add in tagsToAdd)
             {
                 // create tag if it doesn't exist
-                var tag = await tagRepository.GetTagByNameAsync(add) ?? await tagRepository.CreateTagAsync(add, add);
+                var tag = await tagRepository.GetTagAsync(add) ?? new EfTag { Name = add, DisplayName = add };
                 document.Tags.Add(new EfTagAssignment { Document = document, Tag = tag });
             }
 
