@@ -45,6 +45,7 @@ builder.Services.AddScoped<IValidator<FolderGetParameters>, FolderGetValidator>(
 builder.Services.AddScoped<IValidator<FolderUpdateParameters>, FolderUpdateValidator>();
 
 // Validators documents
+builder.Services.AddScoped<IValidator<DocumentGetParameters>, DocumentGetValidator>();
 builder.Services.AddScoped<IValidator<DocumentUpdateParameters>, DocumentUpdateValidator>();
 builder.Services.AddScoped<IValidator<DocumentTagParameters>, DocumentTagsValidator>();
 builder.Services.AddScoped<IValidator<DocumentMoveParameters>, DocumentMoveValidator>();

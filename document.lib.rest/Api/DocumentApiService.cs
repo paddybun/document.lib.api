@@ -2,11 +2,16 @@
 using document.lib.shared.Helper;
 using document.lib.shared.Models.Data;
 using FluentValidation;
-using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace document.lib.rest.Api;
 
-public class DocumentApiService(ApiConfig config, IDocumentService documentService, IValidator<DocumentUpdateParameters> updateValidator, IValidator<DocumentTagParameters> tagsValidator)
+public class DocumentApiService(
+    ApiConfig config, 
+    IDocumentService documentService, 
+    IValidator<DocumentGetParameters> getValidator, 
+    IValidator<DocumentUpdateParameters> updateValidator, 
+    IValidator<DocumentMoveParameters> moveValidator, 
+    IValidator<DocumentTagParameters> tagsValidator)
 {
     public async Task<IResult> GetDocumentAsync(int id)
     {
@@ -18,76 +23,38 @@ public class DocumentApiService(ApiConfig config, IDocumentService documentServi
     
     public async Task<IResult> GetDocumentsAsync(DocumentGetParameters parameters, HttpContext http)
     {
-        if (parameters.PageSize.HasValue && parameters.PageSize.Value > config.MaxPageSize)
-        {
-            return Results.BadRequest(string.Format(ErrorMessages.PageSizeExceeded, config.MaxPageSize));
-        }
-        
-        if (PropertyChecker.Values.All(parameters, x => x.Page, x => x.PageSize))
-        {
-            var pagedResult = await documentService.GetDocumentsPagedAsync(parameters.Page!.Value, parameters.PageSize!.Value);
-            if (pagedResult.IsSuccess)
-            {
-                http.Response.Headers.Append("total-results", pagedResult.Data!.Total.ToString());
-                return Results.Ok(pagedResult.Data!.Results);    
-            }
-            return Results.NoContent();
-        }
+        if (ValidationHelper.Validate(getValidator, parameters) is { } validationResult) return validationResult;
 
         if (PropertyChecker.Values.Any(parameters, x => x.Unsorted) && parameters.Unsorted!.Value)
         {
-            int page = 0, pageSize = config.DefaultPageSize;
-            if (PropertyChecker.Values.All(parameters, x => x.Page, x => x.PageSize))
-            {
-                page = parameters.Page!.Value;
-                pageSize = parameters.PageSize!.Value;
-            }
+            var pagedResult = await documentService.GetUnsortedDocuments(parameters.Page!.Value, parameters.PageSize!.Value);
+            if (!pagedResult.IsSuccess) return Results.NoContent();
             
-            var pagedResult = await documentService.GetUnsortedDocuments(page, pageSize);
-            if (pagedResult.IsSuccess)
-            {
-                http.Response.Headers.Append("total-results", pagedResult.Data!.Total.ToString());
-                return Results.Ok(pagedResult.Data!.Results);    
-            }
-            return Results.NoContent();
+            http.Response.Headers.Append("total-results", pagedResult.Data!.Total.ToString());
+            return Results.Ok(pagedResult.Data!.Results);
         }
         
-        var sampleResult = await documentService.GetDocumentsPagedAsync(0, 10);
-        if (sampleResult.IsSuccess)
-        {
-            return Results.Ok(sampleResult.Data!.Results);
-        }
-        
-        return Results.NoContent();
+        var serviceResult = await documentService.GetDocumentsPagedAsync(parameters.Page!.Value, parameters.PageSize!.Value);
+        return serviceResult.IsSuccess ? 
+            Results.Ok(serviceResult.Data!.Results) : 
+            Results.NoContent();
     }
     
     public async Task<IResult> GetDocumentsForFolderAsync(string folderName, DocumentGetParameters parameters, HttpContext http)
     {
-        if (!PropertyChecker.Values.All(parameters, x => x.Page, x => x.PageSize))
-        {
-            return Results.BadRequest("Invalid parameters");
-        }
-        
-        if (parameters.PageSize!.Value > config.MaxPageSize)
-        {
-            return Results.BadRequest(string.Format(ErrorMessages.PageSizeExceeded, config.MaxPageSize));
-        }
+        if (ValidationHelper.Validate(getValidator, parameters) is { } validationResult) return validationResult;
         
         var result = await documentService.GetDocumentsForFolder(folderName, parameters.Page!.Value,  parameters.PageSize!.Value);
-        if (result.IsSuccess)
-        {
-            http.Response.Headers.Append("total-results", result.Data!.Total.ToString());
-            return Results.Ok(result.Data!.Results);
-        }
-
-        return Results.NoContent();
+        if (!result.IsSuccess) 
+            return Results.NoContent();
+        
+        http.Response.Headers.Append("total-results", result.Data!.Total.ToString());
+        return Results.Ok(result.Data!.Results);
     }
 
     public async Task<IResult> UpdateDocumentAsync(int id, DocumentUpdateParameters parameters)
-    {   
-        var validationResult = await updateValidator.ValidateAsync(parameters);
-        if (!validationResult.IsValid)
-            return Results.BadRequest(validationResult.Errors.Select(x => x.ErrorMessage).ToArray());
+    {
+        if (ValidationHelper.Validate(updateValidator, parameters) is { } result) return result;
 
         var updateModel = new DocumentModel
         {
@@ -105,9 +72,7 @@ public class DocumentApiService(ApiConfig config, IDocumentService documentServi
     
     public async Task<IResult> UpdateTagsAsync(int id, DocumentTagParameters parameters)
     {
-        var validationResult = await tagsValidator.ValidateAsync(parameters);
-        if (!validationResult.IsValid)
-            return Results.BadRequest(validationResult.Errors.Select(x => x.ErrorMessage).ToArray());
+        if (ValidationHelper.Validate(tagsValidator, parameters) is { } validationResult) return validationResult;
         
         var document = await documentService.ModifyTagsAsync(id, parameters.ToAdd, parameters.ToDelete);
         return Results.Ok(document);
@@ -115,21 +80,16 @@ public class DocumentApiService(ApiConfig config, IDocumentService documentServi
 
     public async Task<IResult> MoveDocumentsAsync(int id, DocumentMoveParameters parameters)
     {
-        if (!PropertyChecker.Values.All(parameters, x => x.FolderTo, x => x.FolderFrom))
-        {
-            return Results.BadRequest("Invalid parameters");
-        }
-        
+        if (ValidationHelper.Validate(moveValidator, parameters) is { } validationResult) return validationResult;
+                
         await documentService.MoveDocumentAsync(id, parameters.FolderFrom!.Value, parameters.FolderTo!.Value);
         return Results.Ok();
     }
 
     public async Task<IResult> CreateDocumentAsync(int id, DocumentUpdateParameters parameters)
     {
-        var validationResult = await updateValidator.ValidateAsync(parameters);
-        if (!validationResult.IsValid)
-            return Results.BadRequest(validationResult.Errors.Select(x => x.ErrorMessage).ToArray());
-
+        if (ValidationHelper.Validate(updateValidator, parameters) is { } validationResult) return validationResult;
+        
         var model = new DocumentModel
         {
             Id = id,

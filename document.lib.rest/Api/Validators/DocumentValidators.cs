@@ -15,11 +15,11 @@ internal class DocumentUpdateValidator : AbstractValidator<DocumentUpdateParamet
 {
     public DocumentUpdateValidator()
     {
-        RuleFor(x => x.DisplayName).NotNull();
-        RuleFor(x => x.Category).NotEmpty();
-        RuleFor(x => x.Company).NotNull();
-        RuleFor(x => x.DateOfDocument).NotNull();
-        RuleFor(x => x.Description).NotNull();
+        RuleFor(x => x.DisplayName).NotNull().WithName("name");
+        RuleFor(x => x.Category).NotEmpty().WithName("category");
+        RuleFor(x => x.Company).NotNull().WithName("company");
+        RuleFor(x => x.DateOfDocument).NotNull().WithName("dateOfDocument");
+        RuleFor(x => x.Description).NotNull().WithName("description");
     }
 }
 
@@ -27,8 +27,8 @@ internal class DocumentTagsValidator : AbstractValidator<DocumentTagParameters>
 {
     public DocumentTagsValidator()
     {
-        RuleFor(x => x.ToAdd).NotNull();
-        RuleFor(x => x.ToDelete).NotNull();
+        RuleFor(x => x.ToAdd).NotNull().WithName("toAdd");
+        RuleFor(x => x.ToDelete).NotNull().WithName("toDelete");
     }
 }
 
