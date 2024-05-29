@@ -4,20 +4,22 @@ using System.Threading.Tasks;
 using Azure.Storage.Blobs;
 using Azure.Storage.Queues.Models;
 using document.lib.functions.v4.Models;
-using document.lib.shared.Services;
+using document.lib.shared.Interfaces;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+
 // ReSharper disable UnusedMember.Global
 
 namespace document.lib.functions.v4
 {
-    public class IndexUnsortedStorage
+    public class IndexUnsortedStorage(ILogger<IndexUnsortedStorage> logger, IDocumentService service)
     {
-        private readonly ILogger<IndexUnsortedStorage> _logger;
-
-        public IndexUnsortedStorage(ILogger<IndexUnsortedStorage> logger)
+        [Function("TriggerMe")]
+        public IActionResult TriggerMe([HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequest req)
         {
-            _logger = logger;
+            return new OkObjectResult($"Welcome to Azure Functions, {req.Query["name"]}!");
         }
 
         [Function("IndexUnsortedStorage")]
@@ -30,22 +32,23 @@ namespace document.lib.functions.v4
                 var createdEvent = await JsonSerializer.DeserializeAsync<EventGridBlobCreated>(message.Body.ToStream());
                 if (createdEvent == null)
                 {
-                    _logger.LogError("Failed to deserialize queue message");
+                    logger.LogError("Failed to deserialize queue message");
                     return;
                 }
 
                 var blob = new BlobClient(new Uri(createdEvent.Data.Url));
                 var name = blob.Name.Split("/")[^1];
 
-                var indexerService = new IndexerService();
-                _logger.LogInformation($"Processed blob\n Name:{name} \n Size: Bytes");
+                await service.AddDocumentToIndexAsync(blob.Name);
+
+                logger.LogInformation($"Processed blob\n Name:{name} \n Size: Bytes");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                logger.LogError(ex.Message);
                 throw;
             }
-            
+
         }
     }
 }

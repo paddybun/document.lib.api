@@ -15,9 +15,9 @@ public class EfFolder: EfBaseFields
     public string? DisplayName { get; set; }
 
     [NotMapped]
-    public EfRegister CurrentRegister { get; set; } = null!;
+    public EfRegister? CurrentRegister => Registers.OrderBy(x => x.Name).FirstOrDefault(x => x.DocumentCount < MaxDocumentsRegister);
 
-    public ICollection<EfRegister> Registers { get; set; } = [];
+    public ICollection<EfRegister> Registers { get; set; } = null!;
     
     public int TotalDocuments { get; set; }
 

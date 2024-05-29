@@ -1,109 +1,108 @@
 ﻿using document.lib.ef;
 using document.lib.ef.Entities;
-using document.lib.ef.Helpers;
+using document.lib.shared.Helper;
 using document.lib.shared.Interfaces;
-using document.lib.shared.Models.Models;
+using document.lib.shared.Models.Data;
+using document.lib.shared.Models.Update;
 using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.shared.Repositories.Sql;
 
-public sealed class FolderSqlRepository(DocumentLibContext context) : IFolderRepository
+public sealed class FolderSqlRepository(DocumentLibContext context) : SqlRepositoryBase(context), IFolderRepository<EfFolder>
 {
-    public async Task<FolderModel?> GetFolderAsync(FolderModel folderModel)
+    public async Task<EfFolder?> GetFolderAsync(int id)
     {
-        EfFolder? efFolder = null;
-        if (!string.IsNullOrWhiteSpace(folderModel.Id))
-        {
-            // Check if the id is a valid integer, if not a different id was used (e.g. cosmos)
-            if (!int.TryParse(folderModel.Id, out var parsedId))
-            {
-                return null;
-            }
-
-            efFolder = await context.Folders
-                .Include(x => x.Registers)
-                .SingleOrDefaultAsync(x => x.Id == parsedId);
-        }
-        else if (!string.IsNullOrWhiteSpace(folderModel.Name))
-        {
-            efFolder = await context.Folders
-                .Include(x => x.Registers)
-                .SingleOrDefaultAsync(x => x.Name == folderModel.Name);
-        }
-        else if (folderModel.IsActive)
-        {
-            efFolder = await context.Folders
-                .Include(x => x.Registers)
-                .FirstOrDefaultAsync(x => !x.IsFull && (x.Name != "unsorted" || x.Name != "digital"));
-        }
-
-        // Assign current register, if all registers are full, then current register will be null and must be created via the service
-        efFolder = FolderHelpers.AssignCurrentRegister(efFolder);
-
-        return efFolder == null ? null : Map(efFolder);
+        return await context.Folders
+            .Include(x => x.Registers)
+            .ThenInclude(x => x.Documents)
+            .SingleOrDefaultAsync(x => x.Id == id);
     }
 
-    public async Task<List<FolderModel>> GetAllFoldersAsync()
+    public async Task<EfFolder?> GetFolderAsync(string name)
+    {
+        return await context.Folders
+            .Include(x => x.Registers)
+            .ThenInclude(x => x.Documents)
+            .SingleOrDefaultAsync(x => x.Name == name);
+    }
+
+    public async Task<List<EfFolder>> GetActiveFoldersAsync()
+    {
+        return await context.Folders
+            .Include(x => x.Registers)
+            .Where(x => !x.IsFull)
+            .ToListAsync();
+    }
+    
+    public async Task<(int, List<EfFolder>)> GetFolders(int page, int pageSize)
+    {
+        var folders = await context.Folders
+            .OrderBy(x => x.Id)
+            .Skip(page * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        var countFolders = context.Folders.Count();
+        var mapped = folders.ToList();
+
+        return (countFolders, mapped);
+    }
+
+    public async Task<List<EfFolder>> GetAllFoldersAsync()
     {
         var efFolders = await context.Folders
             .Include(x => x.Registers)
             .ToListAsync();
-        var mapped = efFolders.Select(Map).ToList();
-        return mapped;
+        return efFolders;
     }
 
-    public async Task<FolderModel> CreateFolderAsync(FolderModel folder)
+    public async Task<EfFolder> CreateFolderAsync(EfFolder folder)
     {
-        var efFolder = new EfFolder
-        {
-            Name = folder.Name,
-            DisplayName = folder.DisplayName,
-            IsFull = false,
-            MaxDocumentsFolder = folder.DocumentsFolder,
-            MaxDocumentsRegister = folder.DocumentsRegister,
-            TotalDocuments = 0
-        };
-
-        await context.AddAsync(efFolder);
+        await context.AddAsync(folder);
         await context.SaveChangesAsync();
-        return Map(efFolder);
+        return folder;
     }
 
-    public async Task<FolderModel> UpdateFolderAsync(FolderModel folder)
+    public async Task<EfFolder?> UpdateFolderAsync(FolderUpdateModel folder, string? _ = null)
     {
-        var parsedId = int.Parse(folder.Id);
-        var efFolder = await context.Folders.SingleAsync(x => x.Id == parsedId);
-        efFolder.Name = folder.Name;
+        if (!PropertyChecker.Values.Any(folder.Id))
+            return null;
+
+        var efFolder = new EfFolder { Id = folder.Id };
+        context.Attach(efFolder);
         efFolder.DisplayName = folder.DisplayName;
-        efFolder.MaxDocumentsFolder = folder.DocumentsFolder;
-        efFolder.MaxDocumentsRegister = folder.DocumentsRegister;
+        efFolder.MaxDocumentsFolder = folder.DocsPerFolder;
+        efFolder.MaxDocumentsRegister = folder.DocsPerRegister;
         efFolder.TotalDocuments = folder.TotalDocuments;
         efFolder.IsFull = folder.IsFull;
-        context.Update(efFolder);
         await context.SaveChangesAsync();
-        return Map(efFolder);
+        return efFolder;
     }
 
-    public async Task AddDocumentToFolderAsync(FolderModel folder, DocumentModel document)
+    public async Task<EfFolder?> AddDocumentToFolderAsync(FolderModel folder, DocumentModel document)
     {
-        var efDocument = await context.Documents.SingleAsync(x => x.Id == int.Parse(document.Id));
+        if (!PropertyChecker.Values.Any(document, x => x.Id) && !PropertyChecker.Values.Any(folder, x => x.Id))
+        {
+            return null;
+        }
         
-        int.TryParse(document.FolderId, out var id);
-
+        var documentId = (int)document.Id!;
+        var folderId = (int)folder.Id!;
+        
+        var efDocument = await context.Documents.SingleAsync(x => x.Id == documentId);
         var efFolder = await context.Folders
             .Include(x => x.Registers)
-                .ThenInclude(x => x.Documents)
-            .SingleAsync(x => x.Id == id);
+            .ThenInclude(x => x.Documents)
+            .SingleAsync(x => x.Id == folderId);
 
         var efRegister = efFolder.Registers.SingleOrDefault(x => x.DocumentCount <= efFolder.MaxDocumentsRegister);
         if (efRegister == null)
         {
-            var newIx = int.Parse(efFolder.Registers.OrderByDescending(x => x.Name).First().Name);
+            var lastIx = int.Parse(efFolder.Registers.OrderByDescending(x => x.Name).First().Name);
             efRegister = new EfRegister
             {
-                Name = (++newIx).ToString(),
+                Name = (++lastIx).ToString(),
                 Documents = [efDocument],
-                DisplayName = "",
+                DisplayName = lastIx.ToString(),
                 DocumentCount = 1,
                 Folder = efFolder
             };
@@ -116,54 +115,32 @@ public sealed class FolderSqlRepository(DocumentLibContext context) : IFolderRep
 
         efFolder.TotalDocuments++;
         efFolder.IsFull = efFolder.TotalDocuments >= efFolder.MaxDocumentsFolder;
-        efFolder.CurrentRegister = efRegister;
         context.Update(efRegister);
         context.Update(efFolder);
         await context.SaveChangesAsync();
+        
+        return efFolder;
     }
 
     public async Task RemoveDocFromFolderAsync(FolderModel folder, DocumentModel document)
     {
+        if (!PropertyChecker.Values.Any(document.Id) && !PropertyChecker.Values.Any(folder, x => x.Id))
+        {
+            return;
+        }
+        
         var efFolder = await context.Folders
             .Include(x => x.Registers)
-                .ThenInclude(x => x.Documents)
-            .SingleAsync(x => x.Id == int.Parse(document.FolderId));
-        
-        var efRegister = efFolder.Registers.Single(x => x.Name == document.RegisterName);
-        var newList = new List<EfDocument>(efRegister.Documents);
-        newList.RemoveAll(x => x.Id == int.Parse(document.Id));
-        efRegister.Documents = newList;
-        efRegister.DocumentCount--;
+            .ThenInclude(x => x.Documents)
+            .SingleAsync(x => x.Id == (int)folder.Id!);
         efFolder.TotalDocuments--;
+
+        var efRegister = efFolder.Registers.Single(x => x.Name == document.RegisterName);
+        efRegister.Documents.RemoveAll(x => x.Id == (int)document.Id!);
+        efRegister.DocumentCount--;
         context.Update(efRegister);
         context.Update(efFolder);
+        
         await context.SaveChangesAsync();
-    }
-
-    private static FolderModel Map(EfFolder efFolder)
-    {
-        return new FolderModel
-        {
-            Name = efFolder.Name,
-            DisplayName = efFolder.DisplayName,
-            CreatedAt = efFolder.DateCreated,
-            CurrentRegisterName = efFolder.CurrentRegister?.Name ?? string.Empty,
-            DocumentsFolder = efFolder.MaxDocumentsFolder,
-            DocumentsRegister = efFolder.MaxDocumentsRegister,
-            Id = efFolder.Id.ToString(),
-            IsFull = efFolder.IsFull,
-            Registers = efFolder.Registers?.Select(Map).ToList() ?? []
-        };
-    }
-
-    private static RegisterModel Map(EfRegister efRegister)
-    {
-        return new RegisterModel
-        {
-            Name = efRegister.Name,
-            DisplayName = efRegister.DisplayName,
-            DocumentCount = efRegister.DocumentCount,
-            Id = efRegister.Id.ToString()
-        };
     }
 }

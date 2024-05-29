@@ -1,57 +1,58 @@
 ﻿using document.lib.ef;
 using document.lib.ef.Entities;
-using document.lib.shared.Exceptions;
 using document.lib.shared.Interfaces;
-using document.lib.shared.Models.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.shared.Repositories.Sql;
 
-// Scoped injection 
-public sealed class TagSqlRepository(DocumentLibContext context) : ITagRepository
+public sealed class TagSqlRepository(DocumentLibContext context) : ITagRepository<EfTag>
 {
-    public async Task<TagModel?> GetTagAsync(TagModel model)
+    public async Task<EfTag?> GetTagAsync(int id)
     {
-        if (string.IsNullOrWhiteSpace(model.Id) && string.IsNullOrWhiteSpace(model.Name))
-            throw new InvalidParameterException(model.GetType());
-
-        EfTag? efTag;
-        if (!string.IsNullOrWhiteSpace(model.Id))
-        {
-            var id = int.Parse(model.Id);
-            efTag = await context.Tags
-                .SingleOrDefaultAsync(x => x.Id == id);    
-        }
-        else
-        {
-            efTag = await context.Tags
-                .SingleOrDefaultAsync(x => x.Name == model.Name);
-        }
-
-        return efTag == null ? null : Map(efTag);
+        var efTag = await context.Tags.SingleOrDefaultAsync(x => x.Id == id);
+        return efTag;
     }
 
-    public async Task<List<TagModel>> GetTagsAsync()
+    public async Task<EfTag?> GetTagAsync(string name)
     {
-        var tags = await context.Tags.ToListAsync();
-        return tags.Select(Map).ToList();
+        var efTag = await context.Tags.SingleOrDefaultAsync(x => x.Name == name);
+        return efTag;
     }
 
-    public async Task<TagModel> CreateTagAsync(TagModel tagModel)
+    public async Task<List<EfTag>> GetTagsAsync(string[] names)
     {
-        var tag = new EfTag {Name = tagModel.Name, DisplayName = tagModel.DisplayName};
-        await context.AddAsync(tag);
+        var tags =await context.Tags
+            .Where(x => names.Contains(x.Name))
+            .ToListAsync();
+        
+        return tags;
+    }
+
+    public async Task<(int, List<EfTag>)> GetTagsAsync(int page, int pageSize)
+    {
+        var count = await context.Tags.CountAsync();
+        var tags = await context.Tags
+            .OrderBy(x => x.Id)
+            .Skip(page * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var mappedTags = tags.ToList();
+        return (count, mappedTags);
+    }
+
+    public async Task<List<EfTag>> CreateTagsAsync(params EfTag[] tags)
+    {
+        foreach (var tag in tags)
+        {
+            await context.AddAsync(tag);            
+        }
         await context.SaveChangesAsync();
-        return Map(tag);
+        return tags.ToList();
     }
 
-    private static TagModel Map(EfTag efTag)
+    public async Task SaveAsync()
     {
-        return new TagModel
-        {
-            Id = efTag.Id.ToString(),
-            Name = efTag.Name,
-            DisplayName = efTag.DisplayName
-        };
+        await context.SaveChangesAsync();
     }
 }

@@ -4,9 +4,9 @@ namespace document.lib.shared.TableEntities
 {
     public class DocLibFolder
     {
-        [JsonProperty("id")] public string Id { get; set; }
-        [JsonProperty("name")] public string Name { get; set; }
-        [JsonProperty("displayName")] public string DisplayName { get; set; }
+        [JsonProperty("id")] public string Id { get; set; } = null!;
+        [JsonProperty("name")] public string Name { get; set; } = null!;
+        [JsonProperty("displayName")] public string? DisplayName { get; set; }
         [JsonProperty("currentRegister")] public string CurrentRegister { get; set; }
         [JsonProperty("registers")] public Dictionary<string, int> Registers { get; set; } = new Dictionary<string, int>();
         [JsonProperty("totalDocuments")] public int TotalDocuments { get; set; }

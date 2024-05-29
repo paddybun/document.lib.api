@@ -2,7 +2,7 @@
 @using document.lib.shared.Services
 @using System.Web
 @using document.lib.shared.Interfaces
-@using document.lib.shared.Models.Models
+@using document.lib.shared.Models.Data
 
 @inject CosmosQueryService _cosmosQueryService
 @inject NavigationManager NavigationManager
@@ -67,7 +67,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _documents = await _documentService.GetAllDocumentsAsync();
+        _documents = []; // await _documentService.GetAllDocumentsAsync();
     }
 
     private void Edit(MouseEventArgs args, string physicalName)

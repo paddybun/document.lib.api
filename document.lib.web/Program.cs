@@ -1,6 +1,7 @@
 using System.Globalization;
 using Azure.Storage.Blobs;
 using document.lib.ef;
+using document.lib.shared.Enums;
 using document.lib.shared.Extensions;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
@@ -10,6 +11,7 @@ using document.lib.shared.Services;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Azure;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 
@@ -33,27 +35,20 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor().AddMicrosoftIdentityConsentHandler();
 
 // ----- Dependency Injection -----
-var config = builder.Configuration.GetSection("Config");
-builder.Services.Configure<AppConfiguration>(config);
+var configSection = builder.Configuration.GetSection("Config");
+var appConfig = configSection.Get<SharedConfig>();
 
-builder.Services.ConfigureDocumentLibShared(
-    config["DatabaseProvider"],
-    config["CosmosDbConnection"],
-    config["BlobServiceConnectionString"],
-    config["BlobContainer"]);
+builder.Services.Configure<SharedConfig>(configSection);
+builder.Services.UseDocumentLibShared(configSection);
+var provider = appConfig.DatabaseProvider;
 
-var provider = config["DatabaseProvider"];
-switch (provider)
+if (provider == DatabaseProvider.Sql)
 {
-    case "Sql":
-        builder.Services.AddDbContext<DocumentLibContext>(opts =>
-        {
-            opts.UseSqlServer(config["DbConnectionString"], x => x.MigrationsAssembly("document.lib.ef"));
-        });
-        break;
+    builder.Services.AddDbContext<DocumentLibContext>(opts =>
+    {
+        opts.UseSqlServer(appConfig.DbConnectionString, x => x.MigrationsAssembly("document.lib.ef"));
+    });
 }
-
-
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.
@@ -72,8 +67,5 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
-
-var setup = app.Services.GetService<OneTimeSetup>();
-await setup!.CreateDefaultsAsync();
 
 app.Run();

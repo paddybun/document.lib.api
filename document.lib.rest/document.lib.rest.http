@@ -1,0 +1,6 @@
+@document.lib.rest_HostAddress = https://localhost:7279
+
+GET {{document.lib.rest_HostAddress}}/tags
+Accept: application/json
+
+###

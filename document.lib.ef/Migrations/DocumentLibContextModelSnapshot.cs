@@ -263,13 +263,13 @@ namespace document.lib.ef.Migrations
                     b.HasOne("document.lib.ef.Entities.EfCategory", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("document.lib.ef.Entities.EfRegister", "Register")
                         .WithMany("Documents")
                         .HasForeignKey("RegisterId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Category");
@@ -281,7 +281,8 @@ namespace document.lib.ef.Migrations
                 {
                     b.HasOne("document.lib.ef.Entities.EfFolder", "Folder")
                         .WithMany("Registers")
-                        .HasForeignKey("FolderId");
+                        .HasForeignKey("FolderId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Folder");
                 });
@@ -297,7 +298,7 @@ namespace document.lib.ef.Migrations
                     b.HasOne("document.lib.ef.Entities.EfTag", "Tag")
                         .WithMany()
                         .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Document");

@@ -1,57 +1,70 @@
 ﻿using Azure.Storage.Blobs;
+using document.lib.ef.Entities;
 using document.lib.shared.Enums;
 using document.lib.shared.Interfaces;
+using document.lib.shared.Models;
 using document.lib.shared.Repositories.Cosmos;
 using document.lib.shared.Repositories.Sql;
 using document.lib.shared.Services;
+using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace document.lib.shared.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static void ConfigureDocumentLibShared(this IServiceCollection me, string databaseProvider, string cosmosDbConnection, string blobstorageConnectionString, string blobContainer)
+    
+    public static void UseDocumentLibShared(this IServiceCollection services, IConfigurationSection? configSection)
     {
-        if (me == null) throw new ArgumentNullException();
-        if (string.IsNullOrWhiteSpace(databaseProvider)) throw new ArgumentNullException(nameof(databaseProvider));
-        if (string.IsNullOrWhiteSpace(cosmosDbConnection)) throw new ArgumentNullException(nameof(cosmosDbConnection));
-        if (string.IsNullOrWhiteSpace(blobstorageConnectionString)) throw new ArgumentNullException(nameof(blobstorageConnectionString));
-        if (string.IsNullOrWhiteSpace(blobContainer)) throw new ArgumentNullException(nameof(blobContainer));
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configSection);
+        
+        var appConfig = configSection.Get<SharedConfig>();
+        if (appConfig == null)
+        {
+            throw new Exception("Config section not found!");
+        }
+        
+        ArgumentNullException.ThrowIfNull(appConfig.DatabaseProvider);
+        ArgumentException.ThrowIfNullOrEmpty(appConfig.CosmosDbConnection, nameof(appConfig.CosmosDbConnection));
+        ArgumentException.ThrowIfNullOrEmpty(appConfig.BlobServiceConnectionString, nameof(appConfig.BlobServiceConnectionString));
+        ArgumentException.ThrowIfNullOrEmpty(appConfig.BlobContainer, nameof(appConfig.BlobContainer));
 
-        var dbProvider = Enum.Parse<DatabaseProvider>(databaseProvider);
-
-            // Repositories
-        switch (dbProvider)
+        
+        // Repositories
+        switch (appConfig.DatabaseProvider)
         {
             case DatabaseProvider.Sql:
-                me.AddScoped<IDocumentRepository, DocumentSqlRepository>();
-                me.AddScoped<ICategoryRepository, CategorySqlRepository>();
-                me.AddScoped<ITagRepository, TagSqlRepository>();
-                me.AddScoped<IFolderRepository, FolderSqlRepository>();
+                services.AddScoped<IDocumentRepository<EfDocument>, DocumentSqlRepository>();
+                services.AddScoped<ICategoryRepository<EfCategory>, CategorySqlRepository>();
+                services.AddScoped<ITagRepository<EfTag>, TagSqlRepository>();
+                services.AddScoped<IFolderRepository<EfFolder>, FolderSqlRepository>();
+                services.AddScoped<IDocumentService, DocumentSqlService>();
+                services.AddScoped<ICategoryService, CategorySqlService>();
+                services.AddScoped<IFolderService, FolderSqlService>();
                 break;
             case DatabaseProvider.Cosmos:
-                me.AddSingleton(new CosmosClient(cosmosDbConnection));
-                me.AddScoped<IDocumentRepository, DocumentCosmosRepository>();
-                me.AddScoped<ICategoryRepository, CategoryCosmosRepository>();
-                me.AddScoped<ITagRepository, TagCosmosRepository>();
-                me.AddScoped<IFolderRepository, FolderCosmosRepository>();
-                me.AddScoped(typeof(CosmosQueryService));
-                me.AddScoped(typeof(CosmosMetadataService));
+                services.AddSingleton(new CosmosClient(appConfig.CosmosDbConnection));
+                services.AddScoped<IDocumentRepository<DocLibDocument>, DocumentCosmosRepository>();
+                services.AddScoped<ICategoryRepository<DocLibCategory>, CategoryCosmosRepository>();
+                services.AddScoped<ITagRepository<DocLibTag>, TagCosmosRepository>();
+                services.AddScoped<IFolderRepository<DocLibFolder>, FolderCosmosRepository>();
+                services.AddScoped(typeof(CosmosQueryService));
+                services.AddScoped(typeof(CosmosMetadataService));
                 break;
+            default:
+                throw new Exception("Database provider not supported!");
         }
 
         // Services
-        me.AddScoped<ICategoryService, CategoryService>();
-        me.AddScoped<IDocumentService, DocumentService>();
-        me.AddScoped<ITagService, TagService>();
-        me.AddScoped<IFolderService, FolderService>();
-        me.AddScoped<OneTimeSetup>();
-        me.AddScoped<IndexerService>();
+        services.AddScoped<ITagService, TagSqlService>();
+        services.AddScoped<IndexerService>();
 
-        me.AddSingleton<BlobClientHelper>();
-
-        var blobContainerClient = new BlobContainerClient(blobstorageConnectionString, blobContainer);
-        me.AddSingleton(blobContainerClient);
+        var blobContainerClient = new BlobContainerClient(appConfig.BlobServiceConnectionString, appConfig.BlobContainer);
+        services.AddSingleton(blobContainerClient);
+        services.AddSingleton(appConfig!);
+        services.AddSingleton<BlobClientHelper>();
     }
 }

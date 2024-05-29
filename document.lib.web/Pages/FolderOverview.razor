@@ -1,6 +1,6 @@
 ﻿@page "/folderoverview"
 @using document.lib.shared.Interfaces
-@using document.lib.shared.Models.Models
+@using document.lib.shared.Models.Data
 
 @inject IFolderService _folderService;
 
@@ -62,7 +62,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _folders = await _folderService.GetAllAsync();
+        _folders = []; // await _folderService.GetAllAsync();
         await base.OnInitializedAsync();
     }
 
