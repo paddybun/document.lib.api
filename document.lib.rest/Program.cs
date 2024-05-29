@@ -51,8 +51,8 @@ builder.Services.AddScoped<IValidator<DocumentTagParameters>, DocumentTagsValida
 builder.Services.AddScoped<IValidator<DocumentMoveParameters>, DocumentMoveValidator>();
 
 // Validators categories
-builder.Services.AddScoped<IValidator<CategoryGetParams>, CategoryGetValidator>();
-builder.Services.AddScoped<IValidator<CategoryUpdateParams>, CategoryUpdateValidator>();
+builder.Services.AddScoped<IValidator<CategoryGetParameters>, CategoryGetValidator>();
+builder.Services.AddScoped<IValidator<CategoryUpdateParameters>, CategoryUpdateValidator>();
 
 // Validators tags
 builder.Services.AddScoped<IValidator<TagsGetParameters>, TagGetValidator>();

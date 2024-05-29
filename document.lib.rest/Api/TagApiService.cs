@@ -4,7 +4,7 @@ using FluentValidation;
 
 namespace document.lib.rest.Api;
 
-internal class TagApiService(ITagService tagService, IValidator<TagsGetParameters> getValidator, IValidator<TagsUpdateParameters> updateValidator, ApiConfig config)
+internal sealed class TagApiService(ITagService tagService, IValidator<TagsGetParameters> getValidator, IValidator<TagsUpdateParameters> updateValidator, ApiConfig config)
 {
     public async Task<IResult> GetTagsAsync(TagsGetParameters parameters, HttpContext http)
     {

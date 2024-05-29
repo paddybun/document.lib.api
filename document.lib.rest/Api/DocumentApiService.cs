@@ -1,10 +1,9 @@
-﻿using document.lib.shared.Helper;
-using document.lib.shared.Models.Data;
+﻿using document.lib.shared.Models.Data;
 using FluentValidation;
 
 namespace document.lib.rest.Api;
 
-public class DocumentApiService(
+internal sealed class DocumentApiService(
     IDocumentService documentService, 
     IValidator<DocumentGetParameters> getValidator, 
     IValidator<DocumentUpdateParameters> updateValidator, 

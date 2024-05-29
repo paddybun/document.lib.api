@@ -2,7 +2,7 @@
 
 namespace document.lib.rest.Api;
 
-public class ValidationHelper {
+public static class ValidationHelper {
     public static IResult? Validate<T>(IValidator<T> validator, T obj)
     {
         var validationResult = validator.Validate(obj);

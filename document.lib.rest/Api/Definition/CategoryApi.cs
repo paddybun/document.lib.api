@@ -4,7 +4,7 @@ public static class CategoryApi
 {
     public static void UseCatergoryApi(this WebApplication? app)
     {
-        app?.MapGet("/categories", async ([AsParameters]CategoryGetParams parameters, CategoryApiService svc, HttpContext http) => await svc.GetCategoriesAsync(parameters, http))
+        app?.MapGet("/categories", async ([AsParameters]CategoryGetParameters parameters, CategoryApiService svc, HttpContext http) => await svc.GetCategoriesAsync(parameters, http))
             .WithName("GetCategories")
             .WithTags("Category")
             .WithOpenApi();
@@ -14,12 +14,12 @@ public static class CategoryApi
             .WithTags("Category")
             .WithOpenApi();
         
-        app?.MapPut("/categories", async ([FromBody]CategoryUpdateParams parameters, CategoryApiService svc) => await svc.CreateCategoryAsync(parameters))
+        app?.MapPut("/categories", async ([FromBody]CategoryUpdateParameters parameters, CategoryApiService svc) => await svc.CreateCategoryAsync(parameters))
             .WithName("CreateCategory")
             .WithTags("Category")
             .WithOpenApi();
         
-        app?.MapPost("/categories/{id}", async ([FromRoute] int id, [FromBody]CategoryUpdateParams parameters, CategoryApiService svc) => await svc.UpdateCategoryAsync(id, parameters))
+        app?.MapPost("/categories/{id}", async ([FromRoute] int id, [FromBody]CategoryUpdateParameters parameters, CategoryApiService svc) => await svc.UpdateCategoryAsync(id, parameters))
             .WithName("UpdateCategory")
             .WithTags("Category")
             .WithOpenApi();

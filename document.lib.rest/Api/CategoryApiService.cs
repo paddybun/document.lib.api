@@ -1,10 +1,12 @@
-﻿using System.Text;
-using document.lib.shared.Models.Data;
+﻿using document.lib.shared.Models.Data;
 using FluentValidation;
 
 namespace document.lib.rest.Api;
 
-internal sealed class CategoryApiService(ICategoryService categoryService, IValidator<CategoryGetParams> getValidator, IValidator<CategoryUpdateParams> updateValidator)
+internal sealed class CategoryApiService(
+    ICategoryService categoryService, 
+    IValidator<CategoryGetParameters> getValidator, 
+    IValidator<CategoryUpdateParameters> updateValidator)
 {
     public async Task<IResult> GetCategoryAsync(int id)
     {
@@ -14,20 +16,11 @@ internal sealed class CategoryApiService(ICategoryService categoryService, IVali
             : Results.NotFound();
     }
     
-    public async Task<IResult> GetCategoriesAsync(CategoryGetParams parameters, HttpContext http)
+    public async Task<IResult> GetCategoriesAsync(CategoryGetParameters parameters, HttpContext http)
     {
-        var validationResult = await getValidator.ValidateAsync(parameters);
-        if (!validationResult.IsValid)
-        {
-            var message = string.Join(";", validationResult.Errors.Select(x => x.ErrorMessage));
-            return Results.BadRequest(message);
-        }
+        if (ValidationHelper.Validate(getValidator, parameters) is { } validationResult) return validationResult;
 
         var categories = await categoryService.GetCategoriesPagedAsync(parameters.Page!.Value, parameters.PageSize!.Value);
-        if (!categories.IsSuccess)
-        {
-            return Results.StatusCode(500);
-        }
         
         http.Response.Headers.Append("total-results", categories.Data!.Total.ToString());
         return categories.IsSuccess
@@ -35,34 +28,25 @@ internal sealed class CategoryApiService(ICategoryService categoryService, IVali
             : Results.NotFound();
     }
 
-    public async Task<IResult> CreateCategoryAsync(CategoryUpdateParams parameters)
+    public async Task<IResult> CreateCategoryAsync(CategoryUpdateParameters parameters)
     {
-        var validationResult = await updateValidator.ValidateAsync(parameters);
-        if (!validationResult.IsValid)
-        {
-            var message = string.Join(Environment.NewLine, validationResult.Errors.Select(x => x.ErrorMessage));
-            return Results.BadRequest(message);
-        }
+        if (ValidationHelper.Validate(updateValidator, parameters) is { } validationResult) return validationResult;
 
         var updateModel = new CategoryModel
         {
             DisplayName = parameters.DisplayName,
             Description = parameters.Description
         };
+        
         var category = await categoryService.CreateCategoryAsync(updateModel);
         return category.IsSuccess
             ? Results.Ok(category.Data!)
             : Results.StatusCode(500);
     }
     
-    public async Task<IResult> UpdateCategoryAsync(int id, CategoryUpdateParams parameters)
+    public async Task<IResult> UpdateCategoryAsync(int id, CategoryUpdateParameters parameters)
     {
-        var validationResult = await updateValidator.ValidateAsync(parameters);
-        if (!validationResult.IsValid)
-        {
-            var message = string.Join(Environment.NewLine, validationResult.Errors.Select(x => x.ErrorMessage));
-            return Results.BadRequest(message);
-        }
+        if (ValidationHelper.Validate(updateValidator, parameters) is { } validationResult) return validationResult;
 
         var updateModel = new CategoryModel
         {
@@ -70,6 +54,7 @@ internal sealed class CategoryApiService(ICategoryService categoryService, IVali
             DisplayName = parameters.DisplayName,
             Description = parameters.Description
         };
+        
         var category = await categoryService.UpdateCategory(updateModel);
         return category.IsSuccess
             ? Results.Ok(category.Data!)
