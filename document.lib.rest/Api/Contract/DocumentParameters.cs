@@ -2,12 +2,7 @@
 
 namespace document.lib.rest.Api.Contract;
 
-public record DocumentGetPagedParameters(
-    [FromQuery(Name = "page")] int? Page,
-    [FromQuery(Name = "pageSize")] int? PageSize
-);
-
-public record DocumentGetQueryParameters(
+public record DocumentGetParameters(
     [FromQuery(Name = "page")] int? Page,
     [FromQuery(Name = "pageSize")] int? PageSize,
     [FromQuery(Name = "unsorted")] bool? Unsorted
@@ -26,7 +21,7 @@ public record DocumentUpdateParameters(
     [property: JsonPropertyName("description")] string? Description
 );
 
-public record DocumentTagsParameters(
+public record DocumentTagParameters(
     [property: JsonPropertyName("toAdd")] string[] ToAdd,
     [property: JsonPropertyName("toDelete")] string[] ToDelete
 );

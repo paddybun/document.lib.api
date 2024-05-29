@@ -5,12 +5,12 @@ public static class FolderApi
     public static void UseFolderApi(this WebApplication? app)
     {
         app?.MapGet("/folders",
-                async ([AsParameters] FolderGetParameters parameters, FolderApiService svc, HttpContext http) => await svc.GetFolderModel(parameters, http))
+                async ([AsParameters] FolderGetParameters parameters, FolderApiService svc, HttpContext http) => await svc.GetFolders(parameters, http))
             .WithName("GetFolders")
             .WithTags("Folders")
             .WithOpenApi();
 
-        app?.MapGet("/folders/{id}", async (int id, FolderApiService svc) => await svc.GetFolderModel(id))
+        app?.MapGet("/folders/{id}", async (int id, FolderApiService svc) => await svc.GetFolder(id))
             .WithName("GetFolder")
             .WithTags("Folders")
             .WithOpenApi();

@@ -65,17 +65,17 @@ public class FolderSqlService(IFolderRepository<EfFolder> folderRepository)
         }
     }
 
-    public async Task<ITypedServiceResult<(int, List<FolderModel>)>> GetFoldersPaged(int page, int pageSize)
+    public async Task<ITypedServiceResult<PagedResult<FolderModel>>> GetFoldersPaged(int page, int pageSize)
     {
         try
         {
             var (count, folders) = await folderRepository.GetFolders(page, pageSize);
             var mapped = folders.Select(MapShallow).ToList();
-            return ServiceResult.Ok((count, mapped));
+            return ServiceResult.Ok(new PagedResult<FolderModel>(mapped, count));
         }
         catch
         {
-            return ServiceResult.DefaultError<(int, List<FolderModel>)>();
+            return ServiceResult.DefaultError<PagedResult<FolderModel>>();
         }
     }
 

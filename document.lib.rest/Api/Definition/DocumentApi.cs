@@ -5,7 +5,7 @@ public static class DocumentApi
     public static void UseDocumentApi(this WebApplication? app)
     {
         app?.MapGet("/documents",
-                async ([AsParameters] DocumentGetQueryParameters parameters, DocumentApiService svc,
+                async ([AsParameters] DocumentGetParameters parameters, DocumentApiService svc,
                     HttpContext http) => await svc.GetDocumentsAsync(parameters, http))
             .WithName("GetDocumentsByQuery")
             .WithTags("Documents")
@@ -18,7 +18,7 @@ public static class DocumentApi
             .WithOpenApi();
         
         app?.MapGet("documents/folder/{name}",
-                async ([AsParameters] DocumentGetPagedParameters parameters, [FromRoute] string name, DocumentApiService svc, HttpContext http) 
+                async ([AsParameters] DocumentGetParameters parameters, [FromRoute] string name, DocumentApiService svc, HttpContext http) 
                     => await svc.GetDocumentsForFolderAsync(name, parameters, http))
             .WithName("GetDocumentsForFolder")
             .WithTags("Documents")
@@ -46,7 +46,7 @@ public static class DocumentApi
             .WithOpenApi();
 
         app?.MapPost("/documents/{id}/tags",
-                async ([FromBody] DocumentTagsParameters parameters, [FromRoute] int id, DocumentApiService svc) =>
+                async ([FromBody] DocumentTagParameters parameters, [FromRoute] int id, DocumentApiService svc) =>
                 await svc.UpdateTagsAsync(id, parameters))
             .WithName("UpdateTags")
             .WithTags("Documents")

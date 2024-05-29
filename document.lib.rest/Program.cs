@@ -37,13 +37,23 @@ builder.Services.AddScoped<TagApiService>();
 builder.Services.AddScoped<DocumentApiService>();
 builder.Services.AddScoped<CategoryApiService>();
 
-// Validators
+// Validators global
 ValidatorOptions.Global.LanguageManager.Enabled = false; // Disable validation localization
-builder.Services.AddScoped<IValidator<FolderUpdateParameters>, FolderPutValidator>();
-builder.Services.AddScoped<IValidator<DocumentUpdateParameters>, DocumentPostValidator>();
-builder.Services.AddScoped<IValidator<DocumentTagsParameters>, DocumentTagsValidator>();
+
+// Validators folders
+builder.Services.AddScoped<IValidator<FolderGetParameters>, FolderGetValidator>();
+builder.Services.AddScoped<IValidator<FolderUpdateParameters>, FolderUpdateValidator>();
+
+// Validators documents
+builder.Services.AddScoped<IValidator<DocumentUpdateParameters>, DocumentUpdateValidator>();
+builder.Services.AddScoped<IValidator<DocumentTagParameters>, DocumentTagsValidator>();
+builder.Services.AddScoped<IValidator<DocumentMoveParameters>, DocumentMoveValidator>();
+
+// Validators categories
 builder.Services.AddScoped<IValidator<CategoryGetParams>, CategoryGetValidator>();
 builder.Services.AddScoped<IValidator<CategoryUpdateParams>, CategoryUpdateValidator>();
+
+// Validators tags
 builder.Services.AddScoped<IValidator<TagsGetParameters>, TagGetValidator>();
 builder.Services.AddScoped<IValidator<TagsUpdateParameters>, TagUpdateValidator>();
 

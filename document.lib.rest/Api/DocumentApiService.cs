@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace document.lib.rest.Api;
 
-public class DocumentApiService(ApiConfig config, IDocumentService documentService, IValidator<DocumentUpdateParameters> updateValidator, IValidator<DocumentTagsParameters> tagsValidator)
+public class DocumentApiService(ApiConfig config, IDocumentService documentService, IValidator<DocumentUpdateParameters> updateValidator, IValidator<DocumentTagParameters> tagsValidator)
 {
     public async Task<IResult> GetDocumentAsync(int id)
     {
@@ -16,7 +16,7 @@ public class DocumentApiService(ApiConfig config, IDocumentService documentServi
             : Results.NotFound();
     }
     
-    public async Task<IResult> GetDocumentsAsync(DocumentGetQueryParameters parameters, HttpContext http)
+    public async Task<IResult> GetDocumentsAsync(DocumentGetParameters parameters, HttpContext http)
     {
         if (parameters.PageSize.HasValue && parameters.PageSize.Value > config.MaxPageSize)
         {
@@ -61,7 +61,7 @@ public class DocumentApiService(ApiConfig config, IDocumentService documentServi
         return Results.NoContent();
     }
     
-    public async Task<IResult> GetDocumentsForFolderAsync(string folderName, DocumentGetPagedParameters parameters, HttpContext http)
+    public async Task<IResult> GetDocumentsForFolderAsync(string folderName, DocumentGetParameters parameters, HttpContext http)
     {
         if (!PropertyChecker.Values.All(parameters, x => x.Page, x => x.PageSize))
         {
@@ -103,7 +103,7 @@ public class DocumentApiService(ApiConfig config, IDocumentService documentServi
         return Results.Ok(res);
     }
     
-    public async Task<IResult> UpdateTagsAsync(int id, DocumentTagsParameters parameters)
+    public async Task<IResult> UpdateTagsAsync(int id, DocumentTagParameters parameters)
     {
         var validationResult = await tagsValidator.ValidateAsync(parameters);
         if (!validationResult.IsValid)

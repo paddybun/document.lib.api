@@ -2,19 +2,18 @@
 
 namespace document.lib.rest.Api.Validators;
 
-internal class FolderPostValidator : AbstractValidator<FolderUpdateParameters>
+internal class FolderGetValidator : AbstractValidator<FolderGetParameters>
 {
-    public FolderPostValidator()
+    public FolderGetValidator(ApiConfig config)
     {
-        RuleFor(x => x.DisplayName).NotNull();
-        RuleFor(x => x.DocumentsPerFolder).NotNull().GreaterThan(0);
-        RuleFor(x => x.DocumentsPerRegister).NotNull().GreaterThan(0);
+        RuleFor(x => x.Page).NotNull().InclusiveBetween(0, int.MaxValue).WithName("page");
+        RuleFor(x => x.PageSize).NotNull().InclusiveBetween(1, config.MaxPageSize).WithName("pageSize");
     }
 }
 
-internal class FolderPutValidator: AbstractValidator<FolderUpdateParameters>
+internal class FolderUpdateValidator: AbstractValidator<FolderUpdateParameters>
 {
-    public FolderPutValidator()
+    public FolderUpdateValidator()
     {
         RuleFor(x => x.DisplayName).NotNull();
         RuleFor(x => x.DocumentsPerFolder).GreaterThan(0);

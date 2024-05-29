@@ -7,10 +7,11 @@ namespace document.lib.rest.Api;
 
 internal class FolderApiService(
     IFolderService folderService, 
+    IValidator<FolderGetParameters> getValidator,
     IValidator<FolderUpdateParameters> updateValidator,
     ApiConfig config)
 {
-    public async Task<IResult> GetFolderModel(int id)
+    public async Task<IResult> GetFolder(int id)
     {
         var result = await folderService.GetFolderAsync(id);
         return result.IsSuccess 
@@ -18,22 +19,13 @@ internal class FolderApiService(
             : Results.NotFound(id);
     }
 
-    public async Task<IResult> GetFolderModel(FolderGetParameters folderGetParameters, HttpContext http)
+    public async Task<IResult> GetFolders(FolderGetParameters parameters, HttpContext http)
     {   
-        if (!PropertyChecker.Values.All(folderGetParameters, 
-                x => x.Page, 
-                x => x.PageSize))
-        {
-            var sample = await folderService.GetFoldersPaged(0, config.DefaultPageSize);
-            return sample.IsSuccess
-                ? Results.Ok(sample.Data.Item2)
-                : Results.StatusCode(500);    
-        }
-
-        if (folderGetParameters.PageSize >= config.MaxPageSize) 
-            return Results.BadRequest(string.Format(ErrorMessages.PageSizeExceeded, config.MaxPageSize));
+        var validationResult = await getValidator.ValidateAsync(parameters);
+        if (!validationResult.IsValid)
+            return Results.BadRequest(validationResult.Errors.Select(x => x.ErrorMessage).ToArray());
             
-        var result = await folderService.GetFoldersPaged(folderGetParameters.Page!.Value, folderGetParameters.PageSize!.Value);
+        var result = await folderService.GetFoldersPaged(parameters.Page!.Value, parameters.PageSize!.Value);
         if (result.IsSuccess)
         {
             var (count, folders) = result.Data;
