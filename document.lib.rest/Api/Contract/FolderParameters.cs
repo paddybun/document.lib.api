@@ -2,16 +2,11 @@
 
 namespace document.lib.rest.Api.Contract;
 
-internal record FolderGetQueryParameters(
+internal record FolderGetParameters(
     [FromQuery(Name = "page")] int? Page,
     [FromQuery(Name = "pageSize")] int? PageSize);
 
-internal record FolderPutParameters(
+internal record FolderUpdateParameters(
     [property: JsonPropertyName("name")] string DisplayName, 
     int DocumentsPerFolder, 
     int DocumentsPerRegister);
-
-internal record FolderPostParameters(
-    string? DisplayName, 
-    int? DocumentsPerFolder, 
-    int? DocumentsPerRegister);

@@ -39,8 +39,7 @@ builder.Services.AddScoped<CategoryApiService>();
 
 // Validators
 ValidatorOptions.Global.LanguageManager.Enabled = false; // Disable validation localization
-builder.Services.AddScoped<IValidator<FolderPutParameters>, FolderPutValidator>();
-builder.Services.AddScoped<IValidator<FolderPostParameters>, FolderPostValidator>();
+builder.Services.AddScoped<IValidator<FolderUpdateParameters>, FolderPutValidator>();
 builder.Services.AddScoped<IValidator<DocumentUpdateParameters>, DocumentPostValidator>();
 builder.Services.AddScoped<IValidator<DocumentTagsParameters>, DocumentTagsValidator>();
 builder.Services.AddScoped<IValidator<CategoryGetParams>, CategoryGetValidator>();

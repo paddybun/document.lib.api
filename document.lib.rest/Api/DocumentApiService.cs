@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace document.lib.rest.Api;
 
-public class DocumentApiService(ApiConfig config, IDocumentService documentService, IValidator<DocumentUpdateParameters> documentPostValidator, IValidator<DocumentTagsParameters> documentTagsValidator)
+public class DocumentApiService(ApiConfig config, IDocumentService documentService, IValidator<DocumentUpdateParameters> updateValidator, IValidator<DocumentTagsParameters> tagsValidator)
 {
     public async Task<IResult> GetDocumentAsync(int id)
     {
@@ -84,13 +84,10 @@ public class DocumentApiService(ApiConfig config, IDocumentService documentServi
     }
 
     public async Task<IResult> UpdateDocumentAsync(int id, DocumentUpdateParameters parameters)
-    {
-        var validationResults = await documentPostValidator.ValidateAsync(parameters);
-        if (!validationResults.IsValid)
-        {
-            var validationErrors = validationResults.Errors.Select(x => new ValidationError(x.PropertyName,x.ErrorMessage)).ToList();
-            return Results.BadRequest(validationErrors);
-        }
+    {   
+        var validationResult = await updateValidator.ValidateAsync(parameters);
+        if (!validationResult.IsValid)
+            return Results.BadRequest(validationResult.Errors.Select(x => x.ErrorMessage).ToArray());
 
         var updateModel = new DocumentModel
         {
@@ -108,12 +105,9 @@ public class DocumentApiService(ApiConfig config, IDocumentService documentServi
     
     public async Task<IResult> UpdateTagsAsync(int id, DocumentTagsParameters parameters)
     {
-        var validationResults = await documentTagsValidator.ValidateAsync(parameters);
-        if (!validationResults.IsValid)
-        {
-            var validationErrors = validationResults.Errors.Select(x => new ValidationError(x.PropertyName,x.ErrorMessage)).ToList();
-            return Results.BadRequest(validationErrors);
-        }
+        var validationResult = await tagsValidator.ValidateAsync(parameters);
+        if (!validationResult.IsValid)
+            return Results.BadRequest(validationResult.Errors.Select(x => x.ErrorMessage).ToArray());
         
         var document = await documentService.ModifyTagsAsync(id, parameters.ToAdd, parameters.ToDelete);
         return Results.Ok(document);
@@ -132,12 +126,9 @@ public class DocumentApiService(ApiConfig config, IDocumentService documentServi
 
     public async Task<IResult> CreateDocumentAsync(int id, DocumentUpdateParameters parameters)
     {
-        var validationResults = await documentPostValidator.ValidateAsync(parameters);
-        if (!validationResults.IsValid)
-        {
-            var validationErrors = validationResults.Errors.Select(x => new ValidationError(x.PropertyName, x.ErrorMessage)).ToList();
-            return Results.BadRequest(validationErrors);
-        }
+        var validationResult = await updateValidator.ValidateAsync(parameters);
+        if (!validationResult.IsValid)
+            return Results.BadRequest(validationResult.Errors.Select(x => x.ErrorMessage).ToArray());
 
         var model = new DocumentModel
         {

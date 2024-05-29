@@ -7,8 +7,7 @@ namespace document.lib.rest.Api;
 
 internal class FolderApiService(
     IFolderService folderService, 
-    IValidator<FolderPutParameters> folderPutValidator, 
-    IValidator<FolderPostParameters> folderPostValidator,
+    IValidator<FolderUpdateParameters> updateValidator,
     ApiConfig config)
 {
     public async Task<IResult> GetFolderModel(int id)
@@ -19,9 +18,9 @@ internal class FolderApiService(
             : Results.NotFound(id);
     }
 
-    public async Task<IResult> GetFolderModel(FolderGetQueryParameters folderGetQueryParameters, HttpContext http)
+    public async Task<IResult> GetFolderModel(FolderGetParameters folderGetParameters, HttpContext http)
     {   
-        if (!PropertyChecker.Values.All(folderGetQueryParameters, 
+        if (!PropertyChecker.Values.All(folderGetParameters, 
                 x => x.Page, 
                 x => x.PageSize))
         {
@@ -31,10 +30,10 @@ internal class FolderApiService(
                 : Results.StatusCode(500);    
         }
 
-        if (folderGetQueryParameters.PageSize >= config.MaxPageSize) 
+        if (folderGetParameters.PageSize >= config.MaxPageSize) 
             return Results.BadRequest(string.Format(ErrorMessages.PageSizeExceeded, config.MaxPageSize));
             
-        var result = await folderService.GetFoldersPaged(folderGetQueryParameters.Page!.Value, folderGetQueryParameters.PageSize!.Value);
+        var result = await folderService.GetFoldersPaged(folderGetParameters.Page!.Value, folderGetParameters.PageSize!.Value);
         if (result.IsSuccess)
         {
             var (count, folders) = result.Data;
@@ -45,23 +44,18 @@ internal class FolderApiService(
         return Results.StatusCode(500);
     }
 
-    public async Task<IResult> CreateFolder(FolderPutParameters folderPutParameters)
+    public async Task<IResult> CreateFolder(FolderUpdateParameters parameters)
     {
         try
-        {
-            var res = await folderPutValidator.ValidateAsync(folderPutParameters);
-            if (!res.IsValid)
-            {
-                var validationErrors = res.Errors
-                    .GroupBy(x => x.PropertyName)
-                    .Select(g => new ValidationError(g.Key, string.Join(" | ", g.Select(x => x.ErrorMessage)))).ToList();
-                return Results.BadRequest(validationErrors);
-            }
+        {   
+            var validationResult = await updateValidator.ValidateAsync(parameters);
+            if (!validationResult.IsValid)
+                return Results.BadRequest(validationResult.Errors.Select(x => x.ErrorMessage).ToArray());
             
             var newFolder = await folderService.CreateNewFolderAsync(
-                folderPutParameters.DocumentsPerFolder, 
-                folderPutParameters.DocumentsPerRegister, 
-                folderPutParameters.DisplayName);
+                parameters.DocumentsPerFolder, 
+                parameters.DocumentsPerRegister, 
+                parameters.DisplayName);
             return Results.Ok(newFolder);
         }
         catch
@@ -71,24 +65,22 @@ internal class FolderApiService(
         }
     }
 
-    public async Task<IResult> UpdateFolder(int folderId, FolderPostParameters parameters)
+    public async Task<IResult> UpdateFolder(int folderId, FolderUpdateParameters parameters)
     {
         try
         {
             if (folderId <= 0) return Results.BadRequest(folderId);
-            var validationResults = await folderPostValidator.ValidateAsync(parameters);
-            if (!validationResults.IsValid)
-            {
-                var validationErrors = validationResults.Errors.Select(x => new ValidationError(x.PropertyName,x.ErrorMessage)).ToList();
-                return Results.BadRequest(validationErrors);
-            }
-
+            
+            var validationResult = await updateValidator.ValidateAsync(parameters);
+            if (!validationResult.IsValid)
+                return Results.BadRequest(validationResult.Errors.Select(x => x.ErrorMessage).ToArray());
+            
             var folderResult = await folderService.UpdateFolderAsync(new FolderModel
             {
                 Id = folderId,
                 DisplayName = parameters.DisplayName,
-                DocumentsFolder = parameters.DocumentsPerFolder!.Value,
-                DocumentsRegister = parameters.DocumentsPerRegister!.Value
+                DocumentsFolder = parameters.DocumentsPerFolder,
+                DocumentsRegister = parameters.DocumentsPerRegister
             });
             
             return folderResult.IsSuccess

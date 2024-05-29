@@ -13,3 +13,12 @@ internal class DocumentPostValidator : AbstractValidator<DocumentUpdateParameter
         RuleFor(x => x.Description).NotNull();
     }
 }
+
+internal class DocumentTagsValidator : AbstractValidator<DocumentTagsParameters>
+{
+    public DocumentTagsValidator()
+    {
+        RuleFor(x => x.ToAdd).NotNull();
+        RuleFor(x => x.ToDelete).NotNull();
+    }
+}
