@@ -1,5 +1,4 @@
-﻿using document.lib.shared.Enums;
-using document.lib.shared.Models.Data;
+﻿using document.lib.shared.Models.Data;
 using document.lib.shared.Models.Result;
 
 namespace document.lib.shared.Interfaces;

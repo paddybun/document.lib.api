@@ -82,8 +82,10 @@ internal sealed class DocumentApiService(
     {
         if (ValidationHelper.Validate(moveValidator, parameters) is { } validationResult) return validationResult;
                 
-        await documentService.MoveDocumentAsync(id, parameters.FolderFrom!.Value, parameters.FolderTo!.Value);
-        return Results.Ok();
+        var result = await documentService.MoveDocumentAsync(id, parameters.FolderFrom!.Value, parameters.FolderTo!.Value);
+        return result.IsSuccess ? 
+            Results.Ok() : 
+            Results.StatusCode(500);
     }
 
     public async Task<IResult> CreateDocumentAsync(int id, DocumentUpdateParameters parameters)

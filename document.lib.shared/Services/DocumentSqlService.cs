@@ -52,12 +52,12 @@ namespace document.lib.shared.Services
             return ServiceResult.Ok(toReturn);
         }
 
-        public async Task MoveDocumentAsync(int documentId, int folderFromId, int toFolderId)
+        public async Task<IServiceResult> MoveDocumentAsync(int documentId, int folderFromId, int toFolderId)
         {
             var document = await documentRepository.GetDocumentAsync(documentId);
             var folderFrom = await folderRepository.GetFolderAsync(folderFromId);
             var folderTo = await folderRepository.GetFolderAsync(toFolderId);
-            if (document == null || folderTo == null || folderFrom == null) return;
+            if (document == null || folderTo == null || folderFrom == null) return ServiceResult.Error();
         
             // remove document from old folder
             var registerFrom = folderFrom.Registers.Single(reg => reg.Documents.Any(doc => doc.Id == documentId));
@@ -72,6 +72,7 @@ namespace document.lib.shared.Services
             await MoveBlob(document.BlobLocation, newBlobLocation);
             document.BlobLocation = newBlobLocation;
             await documentRepository.SaveAsync();
+            return ServiceResult.Ok();
         }
 
         public async Task<ITypedServiceResult<PagedResult<DocumentModel>>> GetDocumentsPagedAsync(int page, int pageSize)
