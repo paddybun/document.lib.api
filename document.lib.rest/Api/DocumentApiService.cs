@@ -1,12 +1,10 @@
-﻿using document.lib.rest.Api.Constants;
-using document.lib.shared.Helper;
+﻿using document.lib.shared.Helper;
 using document.lib.shared.Models.Data;
 using FluentValidation;
 
 namespace document.lib.rest.Api;
 
 public class DocumentApiService(
-    ApiConfig config, 
     IDocumentService documentService, 
     IValidator<DocumentGetParameters> getValidator, 
     IValidator<DocumentUpdateParameters> updateValidator, 
@@ -15,6 +13,9 @@ public class DocumentApiService(
 {
     public async Task<IResult> GetDocumentAsync(int id)
     {
+        if (id <= 0) 
+            return Results.BadRequest("Parameter 'id' must be greater than 0");
+        
         var result = await documentService.GetDocumentAsync(id);
         return result.IsSuccess 
             ? Results.Ok(result.Data) 
@@ -25,7 +26,7 @@ public class DocumentApiService(
     {
         if (ValidationHelper.Validate(getValidator, parameters) is { } validationResult) return validationResult;
 
-        if (PropertyChecker.Values.Any(parameters, x => x.Unsorted) && parameters.Unsorted!.Value)
+        if (parameters.Unsorted is true)
         {
             var pagedResult = await documentService.GetUnsortedDocuments(parameters.Page!.Value, parameters.PageSize!.Value);
             if (!pagedResult.IsSuccess) return Results.NoContent();
