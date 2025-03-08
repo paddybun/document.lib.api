@@ -10,5 +10,6 @@ public class SharedConfig
     public string? BlobServiceConnectionString { get; init; }
     public string? BlobContainer { get; init; }
     public string? DbConnectionString { get; init; }
+    public string? StorageAccount { get; init; }
     public DatabaseProvider? DatabaseProvider { get; init; }
 }

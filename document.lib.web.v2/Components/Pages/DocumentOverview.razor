@@ -1,0 +1,28 @@
+﻿@page "/DocumentOverview"
+@using document.lib.ef
+@using document.lib.ef.Entities
+
+@inject DocumentLibContext Context
+
+@rendermode InteractiveServer
+
+<RadzenRow>
+    <RadzenColumn Size="12">
+        <RadzenDataGrid
+            AllowFiltering="true"
+            AllowColumnResize="true"
+            AllowVirtualization="true"
+            FilterMode="FilterMode.Simple"
+            TItem="EfDocument"
+            Count="@_count"
+            Data="@_documents"
+            LoadData="@LoadData">
+            <Columns>
+                @foreach (var prop in typeof(EfDocument).GetProperties())
+                {
+                    <RadzenDataGridColumn Property="@prop.Name" Title="@prop.Name"/>
+                }
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenColumn>
+</RadzenRow>

@@ -1,9 +1,12 @@
-using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+using Azure.Identity;
+using Azure.Storage.Blobs;
+using document.lib.ef;
+using document.lib.shared.Models;
 using document.lib.web.v2.Components;
-using document.lib.web.v2.Components.Account;
-using document.lib.web.v2.Data;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Azure;
 using Radzen;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,31 +15,22 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddCascadingAuthenticationState();
-builder.Services.AddScoped<IdentityUserAccessor>();
-builder.Services.AddScoped<IdentityRedirectManager>();
-builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
-builder.Services.AddAuthentication(options =>
-    {
-        options.DefaultScheme = IdentityConstants.ApplicationScheme;
-        options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
-    })
-    .AddIdentityCookies();
-
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
-builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddSignInManager()
-    .AddDefaultTokenProviders();
-
-builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
 builder.Services.AddRadzenComponents();
+
+var configSection = builder.Configuration.GetSection("Config");
+var appConfig = configSection.Get<SharedConfig>();
+builder.Services.AddDbContext<DocumentLibContext>(opts =>
+{
+    opts.UseSqlServer(appConfig!.DbConnectionString, x => x.MigrationsAssembly("document.lib.ef"));
+});
+builder.Services.AddAzureClients(config =>
+{
+    config.AddBlobServiceClient(new Uri(appConfig!.StorageAccount!));
+    DefaultAzureCredential credential = new();
+    config.UseCredential(credential);
+});
 
 var app = builder.Build();
 
@@ -57,10 +51,17 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
+app.MapGet("/api/upload/test", async () =>
+{
+    return await Task.FromResult(TypedResults.Ok("Working"));
+});
+app.MapPost("/api/upload/single", async (BlobServiceClient bsc, [FromForm]IFormFile file) =>
+{
+    await Task.CompletedTask;
+    return TypedResults.Ok();
+}).DisableAntiforgery();
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-
-// Add additional endpoints required by the Identity /Account Razor components.
-app.MapAdditionalIdentityEndpoints();
 
 app.Run();

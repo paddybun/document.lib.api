@@ -1,0 +1,17 @@
+﻿@page "/NewDocument"
+@using document.lib.ef
+@using document.lib.ef.Entities
+
+@inject DocumentLibContext Context
+
+@rendermode InteractiveServer
+
+<RadzenRow>
+    <RadzenColumn Size="12">
+        <RadzenCard>
+            <RadzenText TextStyle="TextStyle.Subtitle2" Text="Upload New Document"/>
+            <RadzenUpload Url="/api/upload/single" Progress="@OnProgress" Error="@OnError" />
+        </RadzenCard>
+        
+    </RadzenColumn>
+</RadzenRow>
