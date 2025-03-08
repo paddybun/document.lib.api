@@ -29,6 +29,7 @@ if (sharedConfig == null || apiConfig == null)
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+// builder.Services.AddAntiforgery();
 
 // Init api services
 builder.Services.AddSingleton(apiConfig);
@@ -72,6 +73,7 @@ if (sharedConfig.DatabaseProvider == DatabaseProvider.Sql)
 var app = builder.Build();
 
 // Add apis
+// app.UseAntiforgery();
 app.UseFolderApi();
 app.UseTagApi();
 app.UseDocumentApi();

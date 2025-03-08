@@ -35,9 +35,9 @@ internal sealed class DocumentApiService(
         }
         
         var serviceResult = await documentService.GetDocumentsPagedAsync(parameters.Page!.Value, parameters.PageSize!.Value);
-        return serviceResult.IsSuccess ? 
-            Results.Ok(serviceResult.Data!.Results) : 
-            Results.NoContent();
+        return serviceResult.IsSuccess 
+            ? Results.Ok(serviceResult.Data!.Results) 
+            : Results.NoContent();
     }
     
     public async Task<IResult> GetDocumentsForFolderAsync(string folderName, DocumentGetParameters parameters, HttpContext http)
@@ -50,6 +50,22 @@ internal sealed class DocumentApiService(
         
         http.Response.Headers.Append("total-results", result.Data!.Total.ToString());
         return Results.Ok(result.Data!.Results);
+    }
+
+    public async Task<IResult> UploadDocumentAsync(IFormFile file)
+    {
+        DocumentModel? model;
+        using (var memStream = new MemoryStream())
+        {
+            await file.CopyToAsync(memStream);
+            memStream.Position = 0;
+            var result = await documentService.UploadDocumentAsync(file.FileName, memStream); 
+            model = result.IsSuccess ? result.Data! : null;
+        }
+        
+        return model is not null
+            ? Results.Ok(model) 
+            : Results.BadRequest();
     }
 
     public async Task<IResult> UpdateDocumentAsync(int id, DocumentUpdateParameters parameters)

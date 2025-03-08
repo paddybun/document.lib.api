@@ -24,6 +24,15 @@ public static class DocumentApi
             .WithTags("Documents")
             .WithOpenApi();
 
+        app?.MapPut("/documents/upload",
+                async ([FromForm] IFormFile file, DocumentApiService svc) =>
+                await svc.UploadDocumentAsync(file))
+            .WithName("CreateDocument")
+#if DEBUG
+            .DisableAntiforgery()
+#endif
+            .WithTags("Documents");
+        
         app?.MapPost("/documents/{id}",
                 async ([FromBody] DocumentUpdateParameters parameters, [FromRoute] int id, DocumentApiService svc) =>
                 await svc.UpdateDocumentAsync(id, parameters))
@@ -34,7 +43,7 @@ public static class DocumentApi
         app?.MapPost("/documents/{id}/create",
                 async ([FromBody] DocumentUpdateParameters parameters, [FromRoute] int id, DocumentApiService svc) =>
                 await svc.CreateDocumentAsync(id, parameters))
-            .WithName("CreateDocument")
+            .WithName("AddDocument")
             .WithTags("Documents")
             .WithOpenApi();
         

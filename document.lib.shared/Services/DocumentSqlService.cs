@@ -9,6 +9,7 @@ using document.lib.shared.Models.Update;
 namespace document.lib.shared.Services
 {
     public class DocumentSqlService(
+        BlobClientHelper blobHelper,
         BlobContainerClient blobContainerClient,
         IFolderRepository<EfFolder> folderRepository,
         IDocumentRepository<EfDocument> documentRepository,
@@ -126,6 +127,20 @@ namespace document.lib.shared.Services
 
             await documentRepository.SaveAsync();
             return Map(document);
+        }
+
+        public async Task<ITypedServiceResult<DocumentModel>> UploadDocumentAsync(string filename, MemoryStream fileStream)
+        {
+            var blobPath = $"{NewDocumentRegister}/{filename}";
+            var bc = blobContainerClient.GetBlobClient(blobPath);
+            var exists = await bc.ExistsAsync(); 
+            if (!exists)
+            {
+                await bc.UploadAsync(fileStream);
+            }
+
+            var model = await AddDocumentToIndexAsync(blobPath);
+            return ServiceResult.Ok(model);
         }
 
         public async Task<DocumentModel> AddDocumentToIndexAsync(string blobPath)

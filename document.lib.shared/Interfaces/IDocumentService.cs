@@ -14,6 +14,7 @@ public interface IDocumentService
     Task DeleteDocumentAsync(DocumentModel doc);
     Task<DocumentModel?> ModifyTagsAsync(int id, string[] toAdd, string[] toRemove);
     Task<DocumentModel?> UpdateDocumentAsync(DocumentModel doc);
+    Task<ITypedServiceResult<DocumentModel>> UploadDocumentAsync(string fileName, MemoryStream fileStream);
     Task<DocumentModel> AddDocumentToIndexAsync(string blobPath);
     Task<ITypedServiceResult<DocumentModel>> CreateDocumentAsync(DocumentModel doc);
 }
