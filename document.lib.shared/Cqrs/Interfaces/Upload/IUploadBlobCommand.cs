@@ -2,5 +2,5 @@
 
 public interface IUploadBlobCommand
 {
-    Task<bool> ExecuteAsync(string name, MemoryStream blob);
+    Task<bool> ExecuteAsync(string blobPath, MemoryStream blob);
 }

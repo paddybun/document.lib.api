@@ -1,6 +1,8 @@
 using Azure.Identity;
 using Azure.Storage.Blobs;
 using document.lib.ef;
+using document.lib.shared.Cqrs;
+using document.lib.shared.Cqrs.Interfaces;
 using document.lib.shared.Models;
 using document.lib.web.v2.Components;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -27,10 +29,12 @@ builder.Services.AddDbContext<DocumentLibContext>(opts =>
 });
 builder.Services.AddAzureClients(config =>
 {
-    config.AddBlobServiceClient(new Uri(appConfig!.StorageAccount!));
+    // config.AddBlobServiceClient(new Uri(appConfig!.StorageAccount!));
+    config.AddBlobServiceClient(appConfig!.BlobServiceConnectionString);
     DefaultAzureCredential credential = new();
     config.UseCredential(credential);
 });
+builder.Services.AddCqrs();
 
 var app = builder.Build();
 
@@ -51,13 +55,17 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
-app.MapGet("/api/upload/test", async () =>
+app.MapGet("/api/upload/health", async Task<Ok> () => await Task.FromResult(TypedResults.Ok()));
+
+app.MapPost("/api/upload/single", async (IUploadBlobUseCase uploadBlobUse, [FromForm]IFormFile file) =>
 {
-    return await Task.FromResult(TypedResults.Ok("Working"));
-});
-app.MapPost("/api/upload/single", async (BlobServiceClient bsc, [FromForm]IFormFile file) =>
-{
-    await Task.CompletedTask;
+    using (var memStream = new MemoryStream())
+    {
+        await file.CopyToAsync(memStream);
+        memStream.Position = 0;
+        await uploadBlobUse.ExecuteAsync(file.FileName, memStream);        
+    }
+
     return TypedResults.Ok();
 }).DisableAntiforgery();
 

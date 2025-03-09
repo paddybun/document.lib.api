@@ -17,7 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Cqrs\Commands\" />
     <Folder Include="Models\Data\" />
     <Folder Include="Extensions\" />
   </ItemGroup>
