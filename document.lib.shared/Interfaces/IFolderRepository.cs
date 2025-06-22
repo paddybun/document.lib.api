@@ -1,5 +1,4 @@
-﻿using document.lib.ef.Entities;
-using document.lib.shared.Models.Data;
+﻿using document.lib.shared.Models.Data;
 using document.lib.shared.Models.Update;
 
 namespace document.lib.shared.Interfaces;

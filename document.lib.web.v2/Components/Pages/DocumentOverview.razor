@@ -1,8 +1,9 @@
 ﻿@page "/DocumentOverview"
+@using document.lib.data.context
+@using document.lib.data.entities
 @using document.lib.ef
-@using document.lib.ef.Entities
 
-@inject DocumentLibContext Context
+@inject DatabaseContext Context
 
 @rendermode InteractiveServer
 
@@ -14,12 +15,12 @@
             AllowColumnResize="true"
             AllowVirtualization="true"
             FilterMode="FilterMode.Simple"
-            TItem="EfDocument"
+            TItem="Document"
             Count="@_count"
             Data="@_documents"
             LoadData="@LoadData">
             <Columns>
-                @foreach (var prop in typeof(EfDocument).GetProperties())
+                @foreach (var prop in typeof(Document).GetProperties())
                 {
                     <RadzenDataGridColumn Property="@prop.Name" Title="@prop.Name"/>
                 }

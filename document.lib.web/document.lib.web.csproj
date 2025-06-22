@@ -35,7 +35,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\document.lib.ef\document.lib.ef.csproj" />
     <ProjectReference Include="..\document.lib.shared\document.lib.shared.csproj" />
   </ItemGroup>
 

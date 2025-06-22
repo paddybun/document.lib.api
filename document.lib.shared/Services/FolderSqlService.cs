@@ -1,4 +1,4 @@
-﻿using document.lib.ef.Entities;
+﻿using document.lib.data.entities;
 using document.lib.shared.Enums;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Data;
@@ -6,7 +6,7 @@ using document.lib.shared.Models.Result;
 
 namespace document.lib.shared.Services;
 
-public class FolderSqlService(IFolderRepository<EfFolder> folderRepository)
+public class FolderSqlService(IFolderRepository<Folder> folderRepository)
     : IFolderService
 {
     public async Task<ITypedServiceResult<FolderModel?>> GetFolderAsync(int id)
@@ -85,13 +85,13 @@ public class FolderSqlService(IFolderRepository<EfFolder> folderRepository)
         {
             var name = Guid.NewGuid().ToString();
             var regName = 1.ToString();
-            var efRegister = new EfRegister
+            var efRegister = new Register
             {
                 Name = regName,
                 DisplayName = regName
             };
 
-            var efFolder = new EfFolder
+            var efFolder = new Folder
             {
                 Name = name,
                 DisplayName = displayName,
@@ -149,53 +149,53 @@ public class FolderSqlService(IFolderRepository<EfFolder> folderRepository)
         }
     }
     
-    private static FolderModel MapShallow(EfFolder efFolder)
+    private static FolderModel MapShallow(Folder folder)
     {
         return new FolderModel
         {
-            Id = efFolder.Id.ToString(),
-            Name = efFolder.Name,
-            DisplayName = efFolder.DisplayName,
-            CreatedAt = efFolder.DateCreated,
+            Id = folder.Id.ToString(),
+            Name = folder.Name,
+            DisplayName = folder.DisplayName,
+            CreatedAt = folder.DateCreated,
             IsActive = false,
-            DocumentsFolder = efFolder.MaxDocumentsFolder,
-            DocumentsRegister = efFolder.MaxDocumentsRegister,
-            IsFull = efFolder.IsFull,
-            TotalDocuments = efFolder.TotalDocuments
+            DocumentsFolder = folder.MaxDocumentsFolder,
+            DocumentsRegister = folder.MaxDocumentsRegister,
+            IsFull = folder.IsFull,
+            TotalDocuments = folder.TotalDocuments
         };
     }
 
-    private static FolderModel Map(EfFolder efFolder)
+    private static FolderModel Map(Folder folder)
     {
         return new FolderModel
         {
-            Name = efFolder.Name,
-            DisplayName = efFolder.DisplayName,
-            CreatedAt = efFolder.DateCreated,
+            Name = folder.Name,
+            DisplayName = folder.DisplayName,
+            CreatedAt = folder.DateCreated,
             IsActive = false,
-            CurrentRegisterName = efFolder.CurrentRegister?.Name ?? string.Empty,
-            DocumentsFolder = efFolder.MaxDocumentsFolder,
-            DocumentsRegister = efFolder.MaxDocumentsRegister,
-            Id = efFolder.Id.ToString(),
-            IsFull = efFolder.IsFull,
-            Registers = efFolder
-                .Registers?.Select(x => Map(x, efFolder))
+            CurrentRegisterName = folder.CurrentRegister?.Name ?? string.Empty,
+            DocumentsFolder = folder.MaxDocumentsFolder,
+            DocumentsRegister = folder.MaxDocumentsRegister,
+            Id = folder.Id.ToString(),
+            IsFull = folder.IsFull,
+            Registers = folder
+                .Registers?.Select(x => Map(x, folder))
                 .ToList() ?? [],
-            TotalDocuments = efFolder.TotalDocuments,
-            CurrentRegister = Map(efFolder.CurrentRegister!, efFolder)
+            TotalDocuments = folder.TotalDocuments,
+            CurrentRegister = Map(folder.CurrentRegister!, folder)
         };
     }
 
-    private static RegisterModel Map(EfRegister efRegister, EfFolder efFolder)
+    private static RegisterModel Map(Register register, Folder folder)
     {
         return new RegisterModel
         {
-            Name = efRegister.Name,
-            DisplayName = efRegister.DisplayName,
-            DocumentCount = efRegister.DocumentCount,
-            Id = efRegister.Id.ToString(),
-            FolderId = efFolder.Id.ToString(),
-            FolderName = efFolder.Name
+            Name = register.Name,
+            DisplayName = register.DisplayName,
+            DocumentCount = register.DocumentCount,
+            Id = register.Id.ToString(),
+            FolderId = folder.Id.ToString(),
+            FolderName = folder.Name
         };
     }
 }

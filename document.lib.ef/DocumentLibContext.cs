@@ -1,16 +1,16 @@
-﻿using document.lib.ef.Entities;
+﻿using document.lib.data.entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.ef;
 
 public class DocumentLibContext : DbContext
 {
-    public DbSet<EfCategory> Categories { get; set; }
-    public DbSet<EfDocument> Documents { get; set; }
-    public DbSet<EfFolder> Folders { get; set; }
-    public DbSet<EfRegister> Registers { get; set; }
-    public DbSet<EfTag> Tags { get; set; }
-    public DbSet<EfTagAssignment> TagAssignments { get; set; }
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<Document> Documents { get; set; }
+    public DbSet<Folder> Folders { get; set; }
+    public DbSet<Register> Registers { get; set; }
+    public DbSet<Tag> Tags { get; set; }
+    public DbSet<TagAssignment> TagAssignments { get; set; }
 
     public DocumentLibContext()
     {
@@ -54,7 +54,7 @@ public class DocumentLibContext : DbContext
         base.OnModelCreating(modelBuilder);
         
         modelBuilder
-            .Entity<EfCategory>()
+            .Entity<Category>()
             .HasIndex(x => x.Name)
             .IsUnique();
         
@@ -65,7 +65,7 @@ public class DocumentLibContext : DbContext
         }
         
         // enable cascade delete for tag assignments
-        modelBuilder.Entity<EfTagAssignment>()
+        modelBuilder.Entity<TagAssignment>()
             .HasOne(x => x.Document)
             .WithMany(x => x.Tags)
             .OnDelete(DeleteBehavior.Cascade);
@@ -82,7 +82,7 @@ public class DocumentLibContext : DbContext
         {
             //If the inserted object is an BaseField. 
             
-            if (insertedEntry is EfBaseFields bf)
+            if (insertedEntry is BaseFields bf)
             {
                 bf.DateCreated = now;
                 bf.DateModified = now;
@@ -98,7 +98,7 @@ public class DocumentLibContext : DbContext
         foreach (var modifiedEntry in modifiedEntries)
         {
             //If the inserted object is an BaseField. 
-            if (modifiedEntry is EfBaseFields bf)
+            if (modifiedEntry is BaseFields bf)
             {
                 bf.DateModified = DateTimeOffset.Now;
             }

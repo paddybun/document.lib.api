@@ -1,5 +1,4 @@
-﻿using document.lib.ef.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Radzen;
 using System;
 using Radzen.Blazor;

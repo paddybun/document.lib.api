@@ -1,25 +1,25 @@
-﻿using document.lib.ef;
-using document.lib.ef.Entities;
+﻿using document.lib.data.entities;
+using document.lib.ef;
 using document.lib.shared.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.shared.Repositories.Sql;
 
-public sealed class TagSqlRepository(DocumentLibContext context) : ITagRepository<EfTag>
+public sealed class TagSqlRepository(DocumentLibContext context) : ITagRepository<Tag>
 {
-    public async Task<EfTag?> GetTagAsync(int id)
+    public async Task<Tag?> GetTagAsync(int id)
     {
         var efTag = await context.Tags.SingleOrDefaultAsync(x => x.Id == id);
         return efTag;
     }
 
-    public async Task<EfTag?> GetTagAsync(string name)
+    public async Task<Tag?> GetTagAsync(string name)
     {
         var efTag = await context.Tags.SingleOrDefaultAsync(x => x.Name == name);
         return efTag;
     }
 
-    public async Task<List<EfTag>> GetTagsAsync(string[] names)
+    public async Task<List<Tag>> GetTagsAsync(string[] names)
     {
         var tags =await context.Tags
             .Where(x => names.Contains(x.Name))
@@ -28,7 +28,7 @@ public sealed class TagSqlRepository(DocumentLibContext context) : ITagRepositor
         return tags;
     }
 
-    public async Task<(int, List<EfTag>)> GetTagsAsync(int page, int pageSize)
+    public async Task<(int, List<Tag>)> GetTagsAsync(int page, int pageSize)
     {
         var count = await context.Tags.CountAsync();
         var tags = await context.Tags
@@ -41,7 +41,7 @@ public sealed class TagSqlRepository(DocumentLibContext context) : ITagRepositor
         return (count, mappedTags);
     }
 
-    public async Task<List<EfTag>> CreateTagsAsync(params EfTag[] tags)
+    public async Task<List<Tag>> CreateTagsAsync(params Tag[] tags)
     {
         foreach (var tag in tags)
         {

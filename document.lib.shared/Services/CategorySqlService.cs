@@ -1,11 +1,11 @@
-﻿using document.lib.ef.Entities;
+﻿using document.lib.data.entities;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Data;
 using document.lib.shared.Models.Result;
 
 namespace document.lib.shared.Services;
 
-public class CategorySqlService(ICategoryRepository<EfCategory> categoryRepository) : ICategoryService
+public class CategorySqlService(ICategoryRepository<Category> categoryRepository) : ICategoryService
 {
     public async Task<ITypedServiceResult<CategoryModel>> GetCategoryAsync(int id)
     {
@@ -33,7 +33,7 @@ public class CategorySqlService(ICategoryRepository<EfCategory> categoryReposito
     public async Task<ITypedServiceResult<CategoryModel>> CreateCategoryAsync(CategoryModel model)
     {
         var name = Guid.NewGuid().ToString();
-        var category = new EfCategory
+        var category = new Category
         {
             Name = name,
             DisplayName = model.DisplayName,
@@ -58,16 +58,16 @@ public class CategorySqlService(ICategoryRepository<EfCategory> categoryReposito
         return ServiceResult.Ok(Map(category));
     }
 
-    private static CategoryModel Map(EfCategory efCategory)
+    private static CategoryModel Map(Category category)
     {
         return new CategoryModel
         {
-            Id = efCategory.Id,
-            Name = efCategory.Name,
-            Description = efCategory.Description,
-            DateCreated = efCategory.DateCreated,
-            DateModified = efCategory.DateModified,
-            DisplayName = efCategory.DisplayName
+            Id = category.Id,
+            Name = category.Name,
+            Description = category.Description,
+            DateCreated = category.DateCreated,
+            DateModified = category.DateModified,
+            DisplayName = category.DisplayName
         };
     }
 }

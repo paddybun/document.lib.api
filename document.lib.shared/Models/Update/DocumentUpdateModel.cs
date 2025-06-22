@@ -1,4 +1,4 @@
-﻿using document.lib.ef.Entities;
+﻿using document.lib.data.entities;
 using document.lib.shared.Models.Data;
 
 namespace document.lib.shared.Models.Update;
@@ -17,7 +17,7 @@ public record DocumentUpdateModel (
             model.Description);
     }
     
-    public static DocumentUpdateModel CreateFromEntity(EfDocument doc)
+    public static DocumentUpdateModel CreateFromEntity(Document doc)
     {
         return new DocumentUpdateModel(doc.Category?.DisplayName ?? string.Empty, doc.DisplayName, doc.Company,
             doc.DateOfDocument, doc.Description);

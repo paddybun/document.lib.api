@@ -1,5 +1,5 @@
-﻿using document.lib.ef;
-using document.lib.ef.Entities;
+﻿using document.lib.data.entities;
+using document.lib.ef;
 using document.lib.shared.Helper;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Data;
@@ -8,9 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.shared.Repositories.Sql;
 
-public sealed class FolderSqlRepository(DocumentLibContext context) : SqlRepositoryBase(context), IFolderRepository<EfFolder>
+public sealed class FolderSqlRepository(DocumentLibContext context) : SqlRepositoryBase(context), IFolderRepository<Folder>
 {
-    public async Task<EfFolder?> GetFolderAsync(int id)
+    public async Task<Folder?> GetFolderAsync(int id)
     {
         return await context.Folders
             .Include(x => x.Registers)
@@ -18,7 +18,7 @@ public sealed class FolderSqlRepository(DocumentLibContext context) : SqlReposit
             .SingleOrDefaultAsync(x => x.Id == id);
     }
 
-    public async Task<EfFolder?> GetFolderAsync(string name)
+    public async Task<Folder?> GetFolderAsync(string name)
     {
         return await context.Folders
             .Include(x => x.Registers)
@@ -26,7 +26,7 @@ public sealed class FolderSqlRepository(DocumentLibContext context) : SqlReposit
             .SingleOrDefaultAsync(x => x.Name == name);
     }
 
-    public async Task<List<EfFolder>> GetActiveFoldersAsync()
+    public async Task<List<Folder>> GetActiveFoldersAsync()
     {
         return await context.Folders
             .Include(x => x.Registers)
@@ -34,7 +34,7 @@ public sealed class FolderSqlRepository(DocumentLibContext context) : SqlReposit
             .ToListAsync();
     }
     
-    public async Task<(int, List<EfFolder>)> GetFolders(int page, int pageSize)
+    public async Task<(int, List<Folder>)> GetFolders(int page, int pageSize)
     {
         var folders = await context.Folders
             .OrderBy(x => x.Id)
@@ -47,7 +47,7 @@ public sealed class FolderSqlRepository(DocumentLibContext context) : SqlReposit
         return (countFolders, mapped);
     }
 
-    public async Task<List<EfFolder>> GetAllFoldersAsync()
+    public async Task<List<Folder>> GetAllFoldersAsync()
     {
         var efFolders = await context.Folders
             .Include(x => x.Registers)
@@ -55,19 +55,19 @@ public sealed class FolderSqlRepository(DocumentLibContext context) : SqlReposit
         return efFolders;
     }
 
-    public async Task<EfFolder> CreateFolderAsync(EfFolder folder)
+    public async Task<Folder> CreateFolderAsync(Folder folder)
     {
         await context.AddAsync(folder);
         await context.SaveChangesAsync();
         return folder;
     }
 
-    public async Task<EfFolder?> UpdateFolderAsync(FolderUpdateModel folder, string? _ = null)
+    public async Task<Folder?> UpdateFolderAsync(FolderUpdateModel folder, string? _ = null)
     {
         if (!PropertyChecker.Values.Any(folder.Id))
             return null;
 
-        var efFolder = new EfFolder { Id = folder.Id };
+        var efFolder = new Folder { Id = folder.Id };
         context.Attach(efFolder);
         efFolder.DisplayName = folder.DisplayName;
         efFolder.MaxDocumentsFolder = folder.DocsPerFolder;
@@ -78,7 +78,7 @@ public sealed class FolderSqlRepository(DocumentLibContext context) : SqlReposit
         return efFolder;
     }
 
-    public async Task<EfFolder?> AddDocumentToFolderAsync(FolderModel folder, DocumentModel document)
+    public async Task<Folder?> AddDocumentToFolderAsync(FolderModel folder, DocumentModel document)
     {
         if (!PropertyChecker.Values.Any(document, x => x.Id) && !PropertyChecker.Values.Any(folder, x => x.Id))
         {
@@ -98,7 +98,7 @@ public sealed class FolderSqlRepository(DocumentLibContext context) : SqlReposit
         if (efRegister == null)
         {
             var lastIx = int.Parse(efFolder.Registers.OrderByDescending(x => x.Name).First().Name);
-            efRegister = new EfRegister
+            efRegister = new Register
             {
                 Name = (++lastIx).ToString(),
                 Documents = [efDocument],

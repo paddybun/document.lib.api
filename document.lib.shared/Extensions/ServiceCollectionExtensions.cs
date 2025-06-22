@@ -1,5 +1,5 @@
 ﻿using Azure.Storage.Blobs;
-using document.lib.ef.Entities;
+using document.lib.data.entities;
 using document.lib.shared.Enums;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
@@ -37,10 +37,10 @@ public static class ServiceCollectionExtensions
         switch (appConfig.DatabaseProvider)
         {
             case DatabaseProvider.Sql:
-                services.AddScoped<IDocumentRepository<EfDocument>, DocumentSqlRepository>();
-                services.AddScoped<ICategoryRepository<EfCategory>, CategorySqlRepository>();
-                services.AddScoped<ITagRepository<EfTag>, TagSqlRepository>();
-                services.AddScoped<IFolderRepository<EfFolder>, FolderSqlRepository>();
+                services.AddScoped<IDocumentRepository<Document>, DocumentSqlRepository>();
+                services.AddScoped<ICategoryRepository<Category>, CategorySqlRepository>();
+                services.AddScoped<ITagRepository<Tag>, TagSqlRepository>();
+                services.AddScoped<IFolderRepository<Folder>, FolderSqlRepository>();
                 services.AddScoped<IDocumentService, DocumentSqlService>();
                 services.AddScoped<ICategoryService, CategorySqlService>();
                 services.AddScoped<IFolderService, FolderSqlService>();

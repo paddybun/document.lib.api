@@ -1,6 +1,6 @@
 ﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
-using document.lib.ef.Entities;
+using document.lib.data.entities;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Data;
 using document.lib.shared.Models.Result;
@@ -11,10 +11,10 @@ namespace document.lib.shared.Services
     public class DocumentSqlService(
         BlobClientHelper blobHelper,
         BlobContainerClient blobContainerClient,
-        IFolderRepository<EfFolder> folderRepository,
-        IDocumentRepository<EfDocument> documentRepository,
-        ICategoryRepository<EfCategory> categoryRepository,
-        ITagRepository<EfTag> tagRepository)
+        IFolderRepository<Folder> folderRepository,
+        IDocumentRepository<Document> documentRepository,
+        ICategoryRepository<Category> categoryRepository,
+        ITagRepository<Tag> tagRepository)
         : IDocumentService
     {
         const string NewDocumentCategory = "uncategorized";
@@ -94,8 +94,8 @@ namespace document.lib.shared.Services
             foreach (var add in tagsToAdd)
             {
                 // create tag if it doesn't exist
-                var tag = await tagRepository.GetTagAsync(add) ?? new EfTag { Name = add, DisplayName = add };
-                document.Tags.Add(new EfTagAssignment { Document = document, Tag = tag });
+                var tag = await tagRepository.GetTagAsync(add) ?? new Tag { Name = add, DisplayName = add };
+                document.Tags.Add(new TagAssignment { Document = document, Tag = tag });
             }
 
             var tagsToRemove = document.Tags.Where(ta => toRemove.Contains(ta.Tag.Name)).ToList();
@@ -153,7 +153,7 @@ namespace document.lib.shared.Services
             var category = await categoryRepository.GetCategoryAsync(NewDocumentCategory);
             if (folder == null) throw new Exception("Uncategorized category not found. Please make sure a folder with the name \"uncategorized\" exists");
             
-            var doc = new EfDocument
+            var doc = new Document
             {
                 Name = name,
                 PhysicalName = filename,
@@ -225,7 +225,7 @@ namespace document.lib.shared.Services
             }
         }
 
-        private void AddDocumentToFolder(EfDocument doc, EfFolder folder)
+        private void AddDocumentToFolder(Document doc, Folder folder)
         {
             var register = folder.CurrentRegister ?? CreateRegister(folder);
             register.Documents.Add(doc);
@@ -234,11 +234,11 @@ namespace document.lib.shared.Services
             folder.IsFull = folder.TotalDocuments >= folder.MaxDocumentsFolder;
         }
     
-        private EfRegister CreateRegister(EfFolder folder)
+        private Register CreateRegister(Folder folder)
         {
             var lastIx = int.Parse(folder.Registers.OrderByDescending(x => x.Name).First().Name);
             var newIx = (lastIx++).ToString();
-            var register = new EfRegister
+            var register = new Register
             {
                 Name = newIx,
                 Documents = [],
@@ -250,29 +250,29 @@ namespace document.lib.shared.Services
             return register;
         }
         
-        private DocumentModel Map(EfDocument efDocument)
+        private DocumentModel Map(Document document)
         {
-            var tags = efDocument.Tags?.Select(x => x.Tag?.Name ?? "").ToList() ?? [];
+            var tags = document.Tags?.Select(x => x.Tag?.Name ?? "").ToList() ?? [];
 
             return new DocumentModel
             {
-                Id = efDocument.Id.ToString(),
-                Name = efDocument.Name,
-                DisplayName = efDocument.DisplayName,
-                Description = efDocument.Description,
-                CategoryName = efDocument.Category?.DisplayName ?? string.Empty,
-                BlobLocation = efDocument.BlobLocation,
-                FolderName = efDocument.Register?.Folder?.Name ?? string.Empty,
-                Company = efDocument.Company,
-                DateOfDocument = efDocument.DateOfDocument,
-                DateModified = efDocument.DateModified,
-                UploadDate = efDocument.DateCreated,
-                Digital = efDocument.Digital,
-                PhysicalName = efDocument.PhysicalName,
+                Id = document.Id.ToString(),
+                Name = document.Name,
+                DisplayName = document.DisplayName,
+                Description = document.Description,
+                CategoryName = document.Category?.DisplayName ?? string.Empty,
+                BlobLocation = document.BlobLocation,
+                FolderName = document.Register?.Folder?.Name ?? string.Empty,
+                Company = document.Company,
+                DateOfDocument = document.DateOfDocument,
+                DateModified = document.DateModified,
+                UploadDate = document.DateCreated,
+                Digital = document.Digital,
+                PhysicalName = document.PhysicalName,
                 Tags = tags,
-                RegisterName = efDocument.Register?.Name ?? string.Empty,
-                FolderId = efDocument.Register?.Folder?.Id.ToString() ?? string.Empty,
-                Unsorted = efDocument.Unsorted
+                RegisterName = document.Register?.Name ?? string.Empty,
+                FolderId = document.Register?.Folder?.Id.ToString() ?? string.Empty,
+                Unsorted = document.Unsorted
             };
         }
 

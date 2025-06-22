@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\document.lib.data.entities\document.lib.data.entities.csproj" />
     <ProjectReference Include="..\document.lib.shared\document.lib.shared.csproj" />
   </ItemGroup>
 

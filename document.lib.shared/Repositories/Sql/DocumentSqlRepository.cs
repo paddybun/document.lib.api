@@ -1,14 +1,14 @@
-﻿using document.lib.ef;
-using document.lib.ef.Entities;
+﻿using document.lib.data.entities;
+using document.lib.ef;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.shared.Repositories.Sql;
 
-public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumentRepository<EfDocument>
+public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumentRepository<Document>
 {
-    public async Task<EfDocument?> GetDocumentAsync(int id)
+    public async Task<Document?> GetDocumentAsync(int id)
     {
         var doc = await context
             .Documents
@@ -21,7 +21,7 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
         return doc;
     }
 
-    public async Task<EfDocument?> GetDocumentAsync(string name)
+    public async Task<Document?> GetDocumentAsync(string name)
     {
         var doc = await context.
             Documents
@@ -34,7 +34,7 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
         return doc;
     }
 
-    public async Task<PagedResult<EfDocument>> GetDocumentsPagedAsync(int page, int pageSize)
+    public async Task<PagedResult<Document>> GetDocumentsPagedAsync(int page, int pageSize)
     {
         var count = await context.Documents.CountAsync();
         var efDocuments = await context.Documents
@@ -45,10 +45,10 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
             .Take(pageSize)
             .ToListAsync();
         
-        return new PagedResult<EfDocument>(efDocuments, count);
+        return new PagedResult<Document>(efDocuments, count);
     }
 
-    public async Task<PagedResult<EfDocument>> GetUnsortedDocumentsAsync(int page, int pageSize)
+    public async Task<PagedResult<Document>> GetUnsortedDocumentsAsync(int page, int pageSize)
     {
         var count = await context.Documents.Where(x => x.Unsorted).CountAsync();
         var efDocuments = await context
@@ -59,10 +59,10 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
             .Take(pageSize)
             .ToListAsync();
 
-        return new PagedResult<EfDocument>(efDocuments, count);
+        return new PagedResult<Document>(efDocuments, count);
     }
 
-    public async Task<PagedResult<EfDocument>> GetDocumentsForFolderAsync(string folderName, int page, int pageSize)
+    public async Task<PagedResult<Document>> GetDocumentsForFolderAsync(string folderName, int page, int pageSize)
     {
         var folder = await context
             .Folders
@@ -81,10 +81,10 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
             .Take(pageSize)
             .ToListAsync();
         
-        return new PagedResult<EfDocument>(efDocuments, folder?.TotalDocuments ?? 0);
+        return new PagedResult<Document>(efDocuments, folder?.TotalDocuments ?? 0);
     }
 
-    public async Task<EfDocument> CreateDocumentAsync(EfDocument document)
+    public async Task<Document> CreateDocumentAsync(Document document)
     {
         await context.Documents.AddAsync(document);
         await context.SaveChangesAsync();
@@ -96,7 +96,7 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
         return await context.Documents.CountAsync();
     }
 
-    public async Task<EfDocument> UpdateDocumentAsync(DocumentModel document, int? category = null, FolderModel? folder = null,
+    public async Task<Document> UpdateDocumentAsync(DocumentModel document, int? category = null, FolderModel? folder = null,
         TagModel[]? tags = null)
     {
         var efDoc = context
@@ -115,7 +115,7 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
         if (tags != null)
         {
             var efTags = await context.Tags.Where(x => tags.Select(y => (int)y.Id!).Contains(x.Id)).ToListAsync();
-            var efTagAssignments = efTags.Select(x => new EfTagAssignment
+            var efTagAssignments = efTags.Select(x => new TagAssignment
             {
                 Tag = x
             }).ToList();
@@ -147,7 +147,7 @@ public sealed class DocumentSqlRepository(DocumentLibContext context) : IDocumen
         return efDoc;
     }
 
-    public async Task DeleteDocumentAsync(EfDocument doc)
+    public async Task DeleteDocumentAsync(Document doc)
     {
         context.Documents.Remove(doc);
         await context.SaveChangesAsync();

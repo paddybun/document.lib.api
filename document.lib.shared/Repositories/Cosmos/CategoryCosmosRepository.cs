@@ -1,4 +1,4 @@
-﻿using document.lib.ef.Entities;
+﻿using document.lib.data.entities;
 using document.lib.shared.Constants;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
@@ -42,7 +42,7 @@ public class CategoryCosmosRepository : ICategoryRepository<DocLibCategory>
         throw new NotImplementedException();
     }
 
-    public Task<DocLibCategory> CreateCategoryAsync(EfCategory category)
+    public Task<DocLibCategory> CreateCategoryAsync(Category category)
     {
         throw new NotImplementedException();
     }

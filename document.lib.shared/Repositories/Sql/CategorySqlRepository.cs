@@ -1,13 +1,13 @@
-﻿using document.lib.ef;
-using document.lib.ef.Entities;
+﻿using document.lib.data.entities;
+using document.lib.ef;
 using document.lib.shared.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.shared.Repositories.Sql;
 
-public sealed class CategorySqlRepository(DocumentLibContext context) : ICategoryRepository<EfCategory>
+public sealed class CategorySqlRepository(DocumentLibContext context) : ICategoryRepository<Category>
 {
-    public async Task<EfCategory?> GetCategoryAsync(int id)
+    public async Task<Category?> GetCategoryAsync(int id)
     {
         var efCategory = await context
             .Categories
@@ -15,7 +15,7 @@ public sealed class CategorySqlRepository(DocumentLibContext context) : ICategor
         return efCategory;
     }
 
-    public async Task<EfCategory?> GetCategoryAsync(string name)
+    public async Task<Category?> GetCategoryAsync(string name)
     {
         var efCategory = await context
             .Categories
@@ -23,7 +23,7 @@ public sealed class CategorySqlRepository(DocumentLibContext context) : ICategor
         return efCategory;
     }
 
-    public async Task<PagedResult<EfCategory>> GetCategoriesPagedAsync(int page, int pageSize)
+    public async Task<PagedResult<Category>> GetCategoriesPagedAsync(int page, int pageSize)
     {
         var count = context.Categories.Count();
         var categories = await context
@@ -33,10 +33,10 @@ public sealed class CategorySqlRepository(DocumentLibContext context) : ICategor
             .Take(pageSize)
             .ToListAsync();
 
-        return new PagedResult<EfCategory>(categories, count);
+        return new PagedResult<Category>(categories, count);
     }
 
-    public async Task<EfCategory> CreateCategoryAsync(EfCategory category)
+    public async Task<Category> CreateCategoryAsync(Category category)
     {
         await context.Categories.AddAsync(category);
         await context.SaveChangesAsync();

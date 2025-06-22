@@ -1,4 +1,4 @@
-﻿using document.lib.ef.Entities;
+﻿using document.lib.data.entities;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using Radzen;
@@ -8,9 +8,9 @@ namespace document.lib.web.v2.Components.Pages;
 
 public partial class DocumentOverview : ComponentBase
 {
-    private ICollection<EfDocument> _documents = null!;
+    private ICollection<Document> _documents = null!;
     private int _count;
-    private RadzenDataGrid<EfDocument> _grid;
+    private RadzenDataGrid<Document> _grid;
     private string _lastFilter = string.Empty;
 
     protected override async Task OnInitializedAsync()

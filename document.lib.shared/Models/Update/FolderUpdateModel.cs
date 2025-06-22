@@ -1,4 +1,4 @@
-﻿using document.lib.ef.Entities;
+﻿using document.lib.data.entities;
 using document.lib.shared.Models.Data;
 
 namespace document.lib.shared.Models.Update;
@@ -11,7 +11,7 @@ public record FolderUpdateModel (
     int DocsPerFolder = 150,
     string? DisplayName = null)
 {
-    public static FolderUpdateModel CreateFromEntity(EfFolder folder)
+    public static FolderUpdateModel CreateFromEntity(Folder folder)
     {
         return new FolderUpdateModel(folder.Id, folder.IsFull, folder.TotalDocuments, folder.MaxDocumentsRegister,
             folder.MaxDocumentsFolder, folder.DisplayName);

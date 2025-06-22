@@ -1,11 +1,11 @@
-﻿using document.lib.ef.Entities;
+﻿using document.lib.data.entities;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models.Data;
 using document.lib.shared.Models.Result;
 
 namespace document.lib.shared.Services;
 
-public class TagSqlService(ITagRepository<EfTag> repository) : ITagService
+public class TagSqlService(ITagRepository<Tag> repository) : ITagService
 {
     public async Task<ITypedServiceResult<TagModel>> GetTagAsync(int id)
     {
@@ -58,7 +58,7 @@ public class TagSqlService(ITagRepository<EfTag> repository) : ITagService
         var tag = await repository.GetTagAsync(model.Name);
         if (tag != null) return ServiceResult.Ok(Map(tag));
         
-        var efTag = new EfTag
+        var efTag = new Tag
         {
             Name = model.Name,
             DisplayName = model.Name
@@ -74,7 +74,7 @@ public class TagSqlService(ITagRepository<EfTag> repository) : ITagService
         var existing = tags.Select(x => x.Name);
         var newTags = models
             .Where(x => !existing.Contains(x.Name))
-            .Select(x => new EfTag{ Name = x.Name, DisplayName = x.DisplayName});
+            .Select(x => new Tag{ Name = x.Name, DisplayName = x.DisplayName});
         
         var createdTags = await repository.CreateTagsAsync(newTags.ToArray());
         var toReturn = tags.Concat(createdTags);
@@ -96,13 +96,13 @@ public class TagSqlService(ITagRepository<EfTag> repository) : ITagService
         throw new NotImplementedException();
     }
 
-    private static TagModel Map(EfTag efTag)
+    private static TagModel Map(Tag tag)
     {
         return new TagModel
         {
-            Id = efTag.Id,
-            Name = efTag.Name,
-            DisplayName = efTag.DisplayName
+            Id = tag.Id,
+            Name = tag.Name,
+            DisplayName = tag.DisplayName
         };
     }
 }

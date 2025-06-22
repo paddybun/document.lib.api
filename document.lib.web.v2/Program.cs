@@ -1,8 +1,7 @@
 using Azure.Identity;
-using Azure.Storage.Blobs;
-using document.lib.ef;
-using document.lib.shared.Cqrs;
-using document.lib.shared.Cqrs.Interfaces;
+using document.lib.bl.contracts.Upload;
+using document.lib.bl.shared;
+using document.lib.data.context;
 using document.lib.shared.Models;
 using document.lib.web.v2.Components;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -23,18 +22,18 @@ builder.Services.AddRadzenComponents();
 
 var configSection = builder.Configuration.GetSection("Config");
 var appConfig = configSection.Get<SharedConfig>();
-builder.Services.AddDbContext<DocumentLibContext>(opts =>
+builder.Services.AddDbContext<DatabaseContext>(opts =>
 {
     opts.UseSqlServer(appConfig!.DbConnectionString, x => x.MigrationsAssembly("document.lib.ef"));
 });
+ 
 builder.Services.AddAzureClients(config =>
 {
-    // config.AddBlobServiceClient(new Uri(appConfig!.StorageAccount!));
     config.AddBlobServiceClient(appConfig!.BlobServiceConnectionString);
     DefaultAzureCredential credential = new();
     config.UseCredential(credential);
 });
-builder.Services.AddCqrs();
+builder.Services.AddBusinessShared();
 
 var app = builder.Build();
 

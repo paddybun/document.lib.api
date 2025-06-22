@@ -457,3 +457,4 @@ document.lib.functions.v4/Properties/serviceDependencies.documentlibfunctions-v4
 document.lib.functions.v4/Properties/ServiceDependencies/documentlibfunctions-v4 - Zip Deploy/storage1.arm.json
 document.lib.functions.v4/Properties/serviceDependencies.documentlibfunctions-v4 - Zip Deploy.json
 document.lib.web/Properties/ServiceDependencies/document-lib-website - Web Deploy/profile.arm.json
+document.lib.bl.tests/appsettings.Test.json

@@ -1,12 +1,10 @@
-﻿using document.lib.ef.Entities;
-using document.lib.shared.Constants;
+﻿using document.lib.shared.Constants;
 using document.lib.shared.Interfaces;
 using document.lib.shared.Models;
 using document.lib.shared.Models.Data;
 using document.lib.shared.Models.Update;
 using document.lib.shared.TableEntities;
 using Microsoft.Azure.Cosmos;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace document.lib.shared.Repositories.Cosmos;
