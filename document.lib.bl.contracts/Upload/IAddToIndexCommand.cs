@@ -4,5 +4,5 @@ namespace document.lib.bl.contracts.Upload;
 
 public interface IAddToIndexCommand
 {
-    Task<Document> ExecuteAsync(string fileName, string blobPath);
+    Task<Document> ExecuteAsync(string originalFilename, string blobName, string blobPath);
 }

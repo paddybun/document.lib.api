@@ -25,7 +25,6 @@
     <ProjectReference Include="..\document.lib.bl.shared\document.lib.bl.shared.csproj" />
     <ProjectReference Include="..\document.lib.data.context\document.lib.data.context.csproj" />
     <ProjectReference Include="..\document.lib.data.entities\document.lib.data.entities.csproj" />
-    <ProjectReference Include="..\document.lib.shared\document.lib.shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

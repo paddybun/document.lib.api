@@ -1,8 +1,8 @@
 using Azure.Identity;
 using document.lib.bl.contracts.Upload;
 using document.lib.bl.shared;
+using document.lib.core;
 using document.lib.data.context;
-using document.lib.shared.Models;
 using document.lib.web.v2.Components;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -16,17 +16,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-
-
 builder.Services.AddRadzenComponents();
 
 var configSection = builder.Configuration.GetSection("Config");
 var appConfig = configSection.Get<SharedConfig>();
 builder.Services.AddDbContext<DatabaseContext>(opts =>
 {
-    opts.UseSqlServer(appConfig!.DbConnectionString, x => x.MigrationsAssembly("document.lib.ef"));
+    opts.UseSqlServer(appConfig!.DbConnectionString, x => x.MigrationsAssembly("document.lib.data.context"));
 });
- 
+
 builder.Services.AddAzureClients(config =>
 {
     config.AddBlobServiceClient(appConfig!.BlobServiceConnectionString);

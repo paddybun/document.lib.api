@@ -16,6 +16,10 @@ public class Document: BaseFields
     [Required]
     [MaxLength(500)]
     public string PhysicalName { get; set; } = null!;
+    
+    [Required]
+    [MaxLength(500)]
+    public string OriginalFileName { get; set; } = string.Empty;
 
     [Required]
     [MaxLength(500)]

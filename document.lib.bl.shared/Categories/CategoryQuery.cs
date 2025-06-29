@@ -25,6 +25,8 @@ public class CategoryQuery(ILogger<CategoriesQuery> logger, DatabaseContext cont
                 logger.LogDebug("CategoryQuery no result for category name: {CategoryName}", categoryName);
                 return Result<Category>.Warning($"Category '{categoryName}' not found.");
             }
+            
+            return Result<Category>.Success(category);
         }
         catch (Exception ex)
         {
