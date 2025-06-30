@@ -3,17 +3,20 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using document.lib.data.context;
 
 #nullable disable
 
-namespace document.lib.ef.Migrations
+namespace document.lib.data.context.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DocumentLibContextModelSnapshot : ModelSnapshot
+    [Migration("20250630035906_AddDefaultFlagForFolder")]
+    partial class AddDefaultFlagForFolder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -54,7 +57,7 @@ namespace document.lib.ef.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("document.lib.data.entities.Document", b =>
@@ -127,7 +130,7 @@ namespace document.lib.ef.Migrations
 
                     b.HasIndex("RegisterId");
 
-                    b.ToTable("Documents", (string)null);
+                    b.ToTable("Documents");
                 });
 
             modelBuilder.Entity("document.lib.data.entities.Folder", b =>
@@ -170,7 +173,7 @@ namespace document.lib.ef.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Folders", (string)null);
+                    b.ToTable("Folders");
                 });
 
             modelBuilder.Entity("document.lib.data.entities.Register", b =>
@@ -206,7 +209,7 @@ namespace document.lib.ef.Migrations
 
                     b.HasIndex("FolderId");
 
-                    b.ToTable("Registers", (string)null);
+                    b.ToTable("Registers");
                 });
 
             modelBuilder.Entity("document.lib.data.entities.Tag", b =>
@@ -234,7 +237,7 @@ namespace document.lib.ef.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tags", (string)null);
+                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("document.lib.data.entities.TagAssignment", b =>
@@ -263,7 +266,7 @@ namespace document.lib.ef.Migrations
 
                     b.HasIndex("TagId");
 
-                    b.ToTable("TagAssignments", (string)null);
+                    b.ToTable("TagAssignments");
                 });
 
             modelBuilder.Entity("document.lib.data.entities.Document", b =>

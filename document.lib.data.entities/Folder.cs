@@ -27,5 +27,7 @@ public class Folder: BaseFields
     [Required]
     public int MaxDocumentsFolder { get; set; }
 
+    public bool IsDefault { get; set; } = false;
+
     public bool IsFull { get; set; }
 }

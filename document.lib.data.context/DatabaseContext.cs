@@ -58,6 +58,17 @@ public class DatabaseContext : DbContext
             .HasIndex(x => x.Name)
             .IsUnique();
         
+        modelBuilder
+            .Entity<Register>()
+            .HasOne(x => x.Folder)
+            .WithMany(x => x.Registers)
+            .HasForeignKey(x => x.FolderId);
+        
+        modelBuilder.Entity<Register>()
+            .HasMany(x => x.Documents)
+            .WithOne(x => x.Register)
+            .HasForeignKey(x => x.RegisterId);
+        
         // remove cascade delete
         foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
         {

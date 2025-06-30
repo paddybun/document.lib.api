@@ -5,5 +5,5 @@ namespace document.lib.bl.contracts.Documents;
 
 public interface ISaveDocumentUseCase
 {
-    public Task<Result<Document>> ExecuteAsync(Document document);
+    public Task<Result<Document>> ExecuteAsync(Document document, int folderId);
 }

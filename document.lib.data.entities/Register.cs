@@ -15,6 +15,7 @@ public class Register: BaseFields
 
     public List<Document> Documents { get; set; } = [];
 
+    public int? FolderId { get; set; }
     public Folder? Folder { get; set; }
 
     [Required]

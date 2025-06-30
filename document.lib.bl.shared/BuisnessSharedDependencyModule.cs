@@ -1,4 +1,6 @@
-﻿using document.lib.bl.contracts.Upload;
+﻿using document.lib.bl.contracts.Folders;
+using document.lib.bl.contracts.Upload;
+using document.lib.bl.shared.Folders;
 using document.lib.bl.shared.Upload;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,6 +16,10 @@ public static class CqrsDependencyModule
         serviceCollection.AddTransient<IAddToIndexCommand, AddToIndexCommand>();
         serviceCollection.AddTransient<IUploadBlobUseCase, UploadBlobUseCase>();
         serviceCollection.AddTransient<IDeleteBlobCommand, DeleteBlobCommand>();
+        
+        // Folders
+        serviceCollection.AddTransient<IFolderQuery, FolderQuery>();
+        serviceCollection.AddTransient<IFoldersQuery, FoldersQuery>();
 
         return serviceCollection;
     }

@@ -32,9 +32,15 @@ public class Document: BaseFields
 
     [MaxLength(2000)]
     public string? Description { get; set; }
+    
+    public int RegisterId { get; set; }
     public Register Register { get; set; } = null!;
+    
     public List<TagAssignment> Tags { get; set; } = null!;
     public bool Unsorted { get; set; }
+    
+    public int CategoryId { get; set; }
     public Category Category { get; set; } = null!;
+    
     public bool Digital { get; set; }
 }
