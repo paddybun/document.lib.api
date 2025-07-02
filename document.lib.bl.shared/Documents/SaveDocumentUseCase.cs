@@ -30,7 +30,12 @@ public class SaveDocumentUseCase(
 
             if (moveToNewFolder)
             {
-                // Transfer document to new folder
+                serverDoc.Register.DocumentCount--;
+                var register = folder.CurrentRegister ?? new Register
+                {
+                };
+                register.DocumentCount++;
+                serverDoc.Register = register;
             }
             
             

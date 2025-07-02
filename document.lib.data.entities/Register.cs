@@ -20,4 +20,7 @@ public class Register: BaseFields
 
     [Required]
     public int DocumentCount { get; set; }
+
+    public int DescriptionId { get; set; }
+    public RegisterDescription Description { get; set; } = null!;
 }

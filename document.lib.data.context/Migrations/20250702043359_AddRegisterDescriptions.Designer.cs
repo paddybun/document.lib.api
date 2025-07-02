@@ -3,17 +3,20 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using document.lib.data.context;
 
 #nullable disable
 
-namespace document.lib.ef.Migrations
+namespace document.lib.data.context.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DocumentLibContextModelSnapshot : ModelSnapshot
+    [Migration("20250702043359_AddRegisterDescriptions")]
+    partial class AddRegisterDescriptions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -187,7 +190,7 @@ namespace document.lib.ef.Migrations
                     b.Property<DateTimeOffset>("DateModified")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("DescriptionId")
+                    b.Property<int?>("DescriptionId")
                         .HasColumnType("int");
 
                     b.Property<string>("DisplayName")
@@ -332,8 +335,7 @@ namespace document.lib.ef.Migrations
                     b.HasOne("document.lib.data.entities.RegisterDescription", "Description")
                         .WithMany()
                         .HasForeignKey("DescriptionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("document.lib.data.entities.Folder", "Folder")
                         .WithMany("Registers")
