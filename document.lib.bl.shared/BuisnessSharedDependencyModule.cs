@@ -20,7 +20,10 @@ public static class CqrsDependencyModule
         // Folders
         serviceCollection.AddTransient<IFolderQuery, FolderQuery>();
         serviceCollection.AddTransient<IFoldersQuery, FoldersQuery>();
-
+        serviceCollection.AddTransient<IRegisterDescriptionsQuery, RegisterDescriptionsQuery>();
+        serviceCollection.AddTransient<INextRegisterUseCase, NextRegisterUseCase>();
+        serviceCollection.AddTransient<INextDescriptionQuery, NextDescriptionQuery>();
+        
         return serviceCollection;
     }
 }

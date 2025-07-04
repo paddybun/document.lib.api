@@ -1,0 +1,43 @@
+﻿@page "/Descriptions"
+@using document.lib.bl.contracts.Folders
+
+@rendermode InteractiveServer
+
+@inject IRegisterDescriptionsQuery RegisterDescriptionsQuery
+@inject NavigationManager NavigationManager
+
+<RadzenRow>
+    <RadzenColumn Size="6">
+        @if (_registerDescriptions.Any() && string.IsNullOrWhiteSpace(_selectedGroup))
+        {
+            <RadzenStack Gap="1rem" Orientation="Orientation.Vertical">
+                <RadzenDataList Data="_registerDescriptionsGroups">
+                    <Template>
+                        <RadzenCard>
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem">
+                                <RadzenText TextStyle="TextStyle.Body1" Text="@context.Key"/>
+                                <RadzenText TextStyle="TextStyle.Body1" Text="@context.Value.ToString()"/>
+                                <RadzenButton Click="@(_ => { Edit(context.Key); })" Text="Edit"/>
+                            </RadzenStack>
+                        </RadzenCard>
+                    </Template>
+                </RadzenDataList>
+            </RadzenStack>
+        }
+        else if (_registerDescriptions.Any() && !string.IsNullOrWhiteSpace(_selectedGroup))
+        {
+            foreach (var group in _registerDescriptions.Where(x => x.Group == _selectedGroup).OrderBy(x => x.Order))
+            {
+                <RadzenStack Gap="1rem" Orientation="Orientation.Horizontal">
+                    <RadzenText Text="@group.Name"/>
+                    <RadzenText Text="@group.DisplayName"/>
+                    <RadzenText Text="@group.Group"/>
+                </RadzenStack>
+            }
+        }
+        else
+        {
+            <p>Loading ...</p>
+        }
+    </RadzenColumn >
+</RadzenRow>

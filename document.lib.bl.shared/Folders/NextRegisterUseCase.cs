@@ -31,7 +31,7 @@ public class NextRegisterUseCase(
             // first document in folder
             if (registers.Count == 0 && toReturn == null)
             {
-                var d = await nextDescription.ExecuteAsync(new(){ Group = "default", Id = -1 });
+                var d = await nextDescription.ExecuteAsync(new() { Group = "default", Id = -1 });
                 if (!d.IsSuccess) return Result<Register>.Warning("Could not get first description");
                 toReturn = new Register
                 {

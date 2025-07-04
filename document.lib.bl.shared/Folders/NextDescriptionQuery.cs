@@ -13,7 +13,7 @@ public class NextDescriptionQuery(ILogger<NextDescriptionQuery> logger, Database
     {
         try
         {
-            if (parameters.Id == -1)
+            if (parameters.Id < 0)
             {
                 var first = await context.RegisterDescriptions
                     .AsNoTracking()
