@@ -1,4 +1,4 @@
-﻿@page "/FolderOverview"
+﻿@page "/Folder"
 @using document.lib.bl.contracts.Folders
 @using document.lib.data.entities
 
@@ -15,4 +15,19 @@
             <RadzenDataGridColumn Property="@nameof(Folder.Name)" Title="Name"/>
         </Columns>
     </RadzenDataGrid>
+}
+
+@code {
+    private List<Folder> _folders = null!;
+    private IList<Folder> _selectedFolders = new List<Folder>();
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var foldersResult = await FoldersQuery.ExecuteAsync();
+            _folders = foldersResult.IsSuccess ? foldersResult.Value! : [];
+            StateHasChanged();
+        }
+    }
 }

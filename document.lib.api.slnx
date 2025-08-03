@@ -1,0 +1,9 @@
+﻿<Solution>
+  <Project Path="document.lib.bl.contracts\document.lib.bl.contracts.csproj" Type="Classic C#" />
+  <Project Path="document.lib.bl.shared\document.lib.bl.shared.csproj" Type="Classic C#" />
+  <Project Path="document.lib.bl.tests\document.lib.bl.tests.csproj" Type="Classic C#" />
+  <Project Path="document.lib.core\document.lib.core.csproj" Type="Classic C#" />
+  <Project Path="document.lib.data.context\document.lib.data.context.csproj" Type="Classic C#" />
+  <Project Path="document.lib.data.entities\document.lib.data.entities.csproj" Type="Classic C#" />
+  <Project Path="document.lib.web.v2\document.lib.web.v2.csproj" Type="Classic C#" />
+</Solution>

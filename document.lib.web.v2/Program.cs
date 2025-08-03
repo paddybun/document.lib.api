@@ -49,7 +49,7 @@ else
 
 app.UseHttpsRedirection();
 
-app.UseStaticFiles();
+app.MapStaticAssets();
 app.UseAntiforgery();
 
 app.MapGet("/api/upload/health", async Task<Ok> () => await Task.FromResult(TypedResults.Ok()));
