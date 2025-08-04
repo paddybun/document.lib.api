@@ -11,5 +11,6 @@ public interface INextDescriptionQuery
 public class NextDescriptionQueryParameters
 {
     public required int Id { get; set; }
+    public required bool IsNew { get; set; }
     public required string Group { get; set; }
 }

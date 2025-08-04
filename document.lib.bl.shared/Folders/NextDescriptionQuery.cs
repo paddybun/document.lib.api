@@ -13,7 +13,7 @@ public class NextDescriptionQuery(ILogger<NextDescriptionQuery> logger, Database
     {
         try
         {
-            if (parameters.Id < 0)
+            if (parameters.IsNew)
             {
                 var first = await context.RegisterDescriptions
                     .AsNoTracking()
@@ -27,6 +27,8 @@ public class NextDescriptionQuery(ILogger<NextDescriptionQuery> logger, Database
                 
                 return Result<RegisterDescription>.Success(first);
             }
+
+            if (parameters.Id <= 0) return Result<RegisterDescription>.Failure(errorMessage: "Please supply a valid id");
             
             var description = await context.RegisterDescriptions
                 .AsNoTracking()

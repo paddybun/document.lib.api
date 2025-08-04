@@ -1,8 +1,9 @@
-﻿@page "/NewDocument"
+﻿@page "/Document/create"
 @using document.lib.data.context
-@using document.lib.ef
+@using Microsoft.EntityFrameworkCore
 
-@inject DatabaseContext Context
+@inject IDbContextFactory<DatabaseContext> DbContextFactory
+
 
 @rendermode InteractiveServer
 
