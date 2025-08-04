@@ -1,15 +1,14 @@
 ﻿using document.lib.bl.contracts.Folders;
 using document.lib.core;
-using document.lib.data.context;
 using document.lib.data.entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace document.lib.bl.shared.Folders;
 
-public class FolderQuery(ILogger<FolderQuery> logger, DatabaseContext context): IFolderQuery
+public class FolderQuery(ILogger<FolderQuery> logger): IFolderQuery<UnitOfWork>
 {
-    public async Task<Result<Folder>> ExecuteAsync(FolderQueryParameters parameters)
+    public async Task<Result<Folder>> ExecuteAsync(UnitOfWork uow, FolderQueryParameters parameters)
     {
         try
         {
@@ -21,7 +20,7 @@ public class FolderQuery(ILogger<FolderQuery> logger, DatabaseContext context): 
             
             if (getByName)
             {
-                var f = await context.Folders
+                var f = await uow.Connection.Folders
                     .AsNoTracking()
                     .Include(x => x.Registers)
                     .ThenInclude(x => x.Documents)
@@ -31,7 +30,7 @@ public class FolderQuery(ILogger<FolderQuery> logger, DatabaseContext context): 
             }
             else
             {
-                folder = await context.Folders
+                folder = await uow.Connection.Folders
                     .Include(x => x.Registers)
                     .ThenInclude(x => x.Documents)
                     .SingleAsync();

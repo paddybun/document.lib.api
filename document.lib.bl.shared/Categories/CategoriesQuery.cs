@@ -1,25 +1,29 @@
-﻿using document.lib.data.context;
+﻿using document.lib.bl.contracts.Categories;
+using document.lib.core;
+using document.lib.data.context;
 using document.lib.data.entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace document.lib.bl.shared.Categories;
 
-public class CategoriesQuery(DatabaseContext context) : ICategoriesQuery
+public class CategoriesQuery(ILogger<CategoriesQuery> logger) : ICategoriesQuery<UnitOfWork>
 {
-    public async Task<List<Category>> ExecuteAsync(int? skip = null, int? take = null)
+    public async Task<Result<List<Category>>> ExecuteAsync(UnitOfWork uow, CategoriesQueryParameters parameters)
     {
-        var query = context.Categories.AsQueryable();
+        var query = uow.Connection.Categories.AsQueryable();
 
-        if (skip.HasValue)
+        if (parameters.Skip is {} skip)
         {
-            query = query.Skip(skip.Value);
+            query = query.Skip(skip);
         }
 
-        if (take.HasValue)
+        if (parameters.Take is {} take)
         {
-            query = query.Take(take.Value);
+            query = query.Take(take);
         }
 
-        return await query.ToListAsync();
+        var categories = await query.ToListAsync();
+        return Result<List<Category>>.Success(categories);
     }
 }

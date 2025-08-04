@@ -8,17 +8,16 @@ using Microsoft.Extensions.Logging;
 namespace document.lib.bl.shared.Folders;
 
 public class FoldersQuery(
-    ILogger<FoldersQuery> logger,
-    DatabaseContext context): IFoldersQuery
+    ILogger<FoldersQuery> logger): IFoldersQuery<UnitOfWork>
 {
-    public async Task<Result<List<Folder>>> ExecuteAsync()
+    public async Task<Result<List<Folder>>> ExecuteAsync(UnitOfWork uow)
     {
         try
         {
             logger.LogDebug("Retrieving folders");
             logger.LogInformation("FoldersQuery running...");
 
-            var folders = await context.Folders
+            var folders = await uow.Connection.Folders
                 .AsNoTracking()
                 .ToListAsync();
 
