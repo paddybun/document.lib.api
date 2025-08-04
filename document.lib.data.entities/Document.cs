@@ -27,6 +27,7 @@ public class Document: BaseFields
 
     [MaxLength(250)]
     public string? Company { get; set; }
+    
     public DateTimeOffset? DateOfDocument { get; set; }
     public DateTimeOffset UploadDate { get; set; }
 

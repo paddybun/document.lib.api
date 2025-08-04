@@ -11,6 +11,7 @@
     <ProjectReference Include="../document.lib.data.context/document.lib.data.context.csproj" />
     <ProjectReference Include="../document.lib.data.entities/document.lib.data.entities.csproj" />
     <ProjectReference Include="../document.lib.core/document.lib.core.csproj" />
+    <ProjectReference Include="..\document.lib.data.models\document.lib.data.models.csproj" />
   </ItemGroup>
 
   <ItemGroup>

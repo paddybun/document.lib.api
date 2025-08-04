@@ -13,24 +13,25 @@ public class SaveDocumentUseCase(
     DatabaseContext context,
     IGetRegisterUseCase getRegisterUseCase): ISaveDocumentUseCase
 {
-    public async Task<Result<Document>> ExecuteAsync(Document document, int folderId)
+    public async Task<Result<Document>> ExecuteAsync(SaveDocumentUseCaseParameters parameters)
     {
         try
         {
-            logger.LogInformation("Saving document {id}", document.Id);
+            logger.LogInformation("Saving document {id}", parameters.DocumentId);
             
-            var serverDoc = await context.Documents.AsNoTracking()
+            var serverDoc = await context.Documents
                 .Include(x => x.Register)
                 .ThenInclude(x => x.Folder)
-                .SingleAsync(x => x.Id == document.Id);
+                .Include(x => x.Tags)
+                .ThenInclude(x => x.Tag)
+                .SingleAsync(x => x.Id == parameters.DocumentId);
             
             var folder = await context.Folders
                 .AsNoTracking()
                 .Include(x => x.Registers)
-                .SingleAsync(x => x.Id == folderId);
+                .SingleAsync(x => x.Id == parameters.FolderId);
             
             var moveToNewFolder = folder.Registers.All(x => x.Id != serverDoc.Register.Id);
-
             if (moveToNewFolder)
             {
                 serverDoc.Register.DocumentCount--;
@@ -41,11 +42,17 @@ public class SaveDocumentUseCase(
                 serverDoc.Register = register.Value;
             }
             
-            return Result<Document>.Failure();
+            serverDoc = parameters.Document.ToEntity(serverDoc);
+            
+            // TODO: compare tags and update accordingly
+            
+            await context.SaveChangesAsync();
+            
+            return Result<Document>.Success(serverDoc);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error saving document {id}", document.Id);
+            logger.LogError(ex, "Error saving document {id}", parameters.DocumentId);
             return Result<Document>.Failure();
         }
     }

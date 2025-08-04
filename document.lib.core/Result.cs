@@ -17,7 +17,7 @@ public class Result<T>
         };
     }
     
-    public static Result<T> Failure(Exception? exception = null, string? errorMessage = "")
+    public static Result<T> Failure(string? errorMessage = "", Exception? exception = null)
     {
         return new Result<T>
         {

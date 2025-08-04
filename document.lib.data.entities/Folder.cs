@@ -1,8 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace document.lib.data.entities;
 
+[Index(nameof(Name), IsUnique = true)]
 public class Folder: BaseFields
 {
     public int Id { get; set; }
