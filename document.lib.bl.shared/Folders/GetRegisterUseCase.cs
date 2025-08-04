@@ -7,10 +7,10 @@ using Microsoft.Extensions.Logging;
 
 namespace document.lib.bl.shared.Folders;
 
-public class NextRegisterUseCase(
-    ILogger<NextRegisterUseCase> logger, 
+public class GetRegisterUseCase(
+    ILogger<GetRegisterUseCase> logger, 
     DatabaseContext context,
-    INextDescriptionQuery nextDescription): INextRegisterUseCase
+    INextDescriptionQuery nextDescription): IGetRegisterUseCase
 {
     public async Task<Result<Register>> ExecuteAsync(int folderId)
     {
@@ -25,27 +25,27 @@ public class NextRegisterUseCase(
                 .OrderBy(x => x.Description.Order)
                 .ToListAsync();
 
-            var toReturn = registers
+            var nextRegister = registers
                 .FirstOrDefault(x => x.DocumentCount < folder.MaxDocumentsRegister);
 
-            // first document in folder
-            if (registers.Count == 0 && toReturn == null)
+            if (registers.Count == 0 && nextRegister == null)
             {
-                var d = await nextDescription.ExecuteAsync(new() { Group = "default", Id = -1 });
+                var d = await nextDescription.ExecuteAsync(new() { Group = "default", Id = default, IsNew = true});
                 if (!d.IsSuccess) return Result<Register>.Warning("Could not get first description");
-                toReturn = new Register
+                nextRegister = new Register
                 {
                     DescriptionId = d.Value!.Id,
                     FolderId = folderId,
                     DocumentCount = 1
                 };
             }
-            else if (toReturn == null)
+            else if (registers.Count > 0 && nextRegister == null)
             {
                 var nextDescriptionResult = await nextDescription.ExecuteAsync(new()
                 {
                     Id = registers.Last().Description.Id,
-                    Group = registers.Last().Description.Group
+                    Group = registers.Last().Description.Group,
+                    IsNew = false
                 });
                 if (!nextDescriptionResult.IsSuccess) return Result<Register>.Warning("Could not get next description");
                 var newRegister = new Register
@@ -54,10 +54,14 @@ public class NextRegisterUseCase(
                     FolderId = folderId,
                     DocumentCount = 1
                 };
-                toReturn = newRegister;
+                nextRegister = newRegister;
             }
-            
-            return Result<Register>.Success(toReturn);
+            else
+            {
+                throw new InvalidOperationException("Could not get register");
+            }
+
+            return Result<Register>.Success(nextRegister);
         }
         catch (Exception ex)
         {

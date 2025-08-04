@@ -1,9 +1,9 @@
-﻿@page "/DocumentOverview"
+﻿@page "/Documents"
 @using document.lib.data.context
 @using document.lib.data.entities
-@using document.lib.ef
+@using Microsoft.EntityFrameworkCore
 
-@inject DatabaseContext Context
+@inject IDbContextFactory<DatabaseContext> DbContextFactory
 
 @rendermode InteractiveServer
 

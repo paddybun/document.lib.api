@@ -1,8 +1,10 @@
 ﻿using document.lib.bl.shared;
+using document.lib.bl.shared.Folders;
 using document.lib.data.context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace document.lib.bl.tests;
@@ -39,4 +41,13 @@ public abstract class DatabaseTest
 
 public class IntegrationTests: DatabaseTest
 {
+
+    [Fact]
+    public async Task Test()
+    {
+        var sut = new GetRegisterUseCase(new NullLogger<GetRegisterUseCase>(), DatabaseContext,
+            new NextDescriptionQuery(new NullLogger<NextDescriptionQuery>(), DatabaseContext));
+        var res = await sut.ExecuteAsync(10);
+    }
+    
 }

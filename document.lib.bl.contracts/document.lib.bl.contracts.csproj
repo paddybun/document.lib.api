@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\document.lib.core\document.lib.core.csproj" />
-    <ProjectReference Include="..\document.lib.data.entities\document.lib.data.entities.csproj" />
+    <ProjectReference Include="../document.lib.core/document.lib.core.csproj" />
+    <ProjectReference Include="../document.lib.data.entities/document.lib.data.entities.csproj" />
   </ItemGroup>
 
 </Project>

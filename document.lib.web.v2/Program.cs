@@ -20,7 +20,7 @@ builder.Services.AddRadzenComponents();
 
 var configSection = builder.Configuration.GetSection("Config");
 var appConfig = configSection.Get<SharedConfig>();
-builder.Services.AddDbContext<DatabaseContext>(opts =>
+builder.Services.AddDbContextFactory<DatabaseContext>(opts =>
 {
     opts.UseSqlServer(appConfig!.DbConnectionString, x => x.MigrationsAssembly("document.lib.data.context"));
 });
@@ -49,7 +49,7 @@ else
 
 app.UseHttpsRedirection();
 
-app.UseStaticFiles();
+app.MapStaticAssets();
 app.UseAntiforgery();
 
 app.MapGet("/api/upload/health", async Task<Ok> () => await Task.FromResult(TypedResults.Ok()));

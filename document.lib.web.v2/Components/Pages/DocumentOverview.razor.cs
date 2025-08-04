@@ -1,26 +1,21 @@
-﻿using document.lib.data.entities;
-using Microsoft.AspNetCore.Components;
+using document.lib.data.entities;
 using Microsoft.EntityFrameworkCore;
 using Radzen;
 using Radzen.Blazor;
 
 namespace document.lib.web.v2.Components.Pages;
 
-public partial class DocumentOverview : ComponentBase
+public partial class DocumentOverview
 {
     private ICollection<Document> _documents = null!;
     private int _count;
-    private RadzenDataGrid<Document> _grid;
+    private RadzenDataGrid<Document> _grid = null!;
     private string _lastFilter = string.Empty;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await base.OnInitializedAsync();
-    }
 
     private async Task LoadData(LoadDataArgs arg)
     {
-        var query = Context.Documents.AsQueryable().AsNoTracking();
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        var query = context.Documents.AsQueryable().AsNoTracking();
         if (!string.IsNullOrEmpty(arg.Filter))
         {
             _lastFilter = arg.Filter;
@@ -29,7 +24,7 @@ public partial class DocumentOverview : ComponentBase
         }
         else
         {
-            _count = await Context.Documents.CountAsync();
+            _count = await context.Documents.CountAsync();
         }
         
         query = query.OrderBy(x => x.Id);
