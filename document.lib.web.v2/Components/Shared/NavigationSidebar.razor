@@ -1,6 +1,8 @@
-﻿<RadzenPanelMenu>
-    <RadzenPanelMenuItem Text="Home" Icon="home" Path=""/>
-    <RadzenPanelMenuItem Text="Folder Management" Icon="folder_managed" Path=@ManagedPages.Folder />
+﻿@inject IStringLocalizer<Resources> L
+
+<RadzenPanelMenu>
+    <RadzenPanelMenuItem Text=@L["Pages.Home"] Icon="home" Path=""/>
+    <RadzenPanelMenuItem Text=@L["Pages.FolderManagement"] Icon="folder_managed" Path=@ManagedPages.Folder />
     <RadzenPanelMenuItem Text="Docs" Icon="home" Path=@ManagedPages.Documents />
     <RadzenPanelMenuItem Text="New Doc" Icon="home" Path=@ManagedPages.NewDocument />
     <RadzenPanelMenuItem Text="Register descriptions" Icon="home_storage" Path=@ManagedPages.Description />

@@ -10,23 +10,22 @@ namespace document.lib.bl.shared.Documents;
 
 public class SaveDocumentUseCase(
     ILogger<SaveDocumentUseCase> logger,
-    DatabaseContext context,
-    IGetRegisterUseCase getRegisterUseCase): ISaveDocumentUseCase
+    IGetRegisterUseCase getRegisterUseCase): ISaveDocumentUseCase<UnitOfWork>
 {
-    public async Task<Result<Document>> ExecuteAsync(SaveDocumentUseCaseParameters parameters)
+    public async Task<Result<Document>> ExecuteAsync(UnitOfWork uow, SaveDocumentUseCaseParameters parameters)
     {
         try
         {
             logger.LogInformation("Saving document {id}", parameters.DocumentId);
             
-            var serverDoc = await context.Documents
+            var serverDoc = await uow.Connection.Documents
                 .Include(x => x.Register)
                 .ThenInclude(x => x.Folder)
                 .Include(x => x.Tags)
                 .ThenInclude(x => x.Tag)
                 .SingleAsync(x => x.Id == parameters.DocumentId);
             
-            var folder = await context.Folders
+            var folder = await uow.Connection.Folders
                 .AsNoTracking()
                 .Include(x => x.Registers)
                 .SingleAsync(x => x.Id == parameters.FolderId);
@@ -46,7 +45,7 @@ public class SaveDocumentUseCase(
             
             // TODO: compare tags and update accordingly
             
-            await context.SaveChangesAsync();
+            await uow.Connection.SaveChangesAsync();
             
             return Result<Document>.Success(serverDoc);
         }

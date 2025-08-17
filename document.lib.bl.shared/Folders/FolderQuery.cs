@@ -33,7 +33,7 @@ public class FolderQuery(ILogger<FolderQuery> logger): IFolderQuery<UnitOfWork>
                 folder = await uow.Connection.Folders
                     .Include(x => x.Registers)
                     .ThenInclude(x => x.Documents)
-                    .SingleAsync();
+                    .SingleAsync(x => x.Id == parameters.Id);
             }
             
             return Result<Folder>.Success(folder);
@@ -43,7 +43,5 @@ public class FolderQuery(ILogger<FolderQuery> logger): IFolderQuery<UnitOfWork>
             logger.LogError(ex, "Error executing folder query with parameters {@Parameters}", parameters);
             return Result<Folder>.Failure("An error occurred while executing the folder query");
         }
-        
-        
     }
 }

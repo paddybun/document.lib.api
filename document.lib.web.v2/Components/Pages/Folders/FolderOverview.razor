@@ -1,0 +1,23 @@
+﻿@page "/Folder"
+@using document.lib.bl.contracts.Folders
+@using document.lib.bl.shared
+@using document.lib.data.context
+@using document.lib.data.entities
+@using Microsoft.EntityFrameworkCore
+
+@rendermode InteractiveServer
+
+@inject IFoldersQuery<UnitOfWork> FoldersQuery
+@inject IDbContextFactory<DatabaseContext> DbContextFactory
+@inject IStringLocalizer<Resources> L
+
+@if (_folders != null!)
+{
+    <RadzenDataGrid @bind-Value="@_selectedFolders" Data="_folders" TItem="Folder">
+        <Columns>
+            <RadzenDataGridColumn Property="@nameof(Folder.Id)" Title=@L[$"{nameof(Folder)}.{nameof(Folder.Id)}"] />
+            <RadzenDataGridColumn Property="@nameof(Folder.DisplayName)" Title=@L[$"{nameof(Folder)}.{nameof(Folder.DisplayName)}"]/>
+            <RadzenDataGridColumn Property="@nameof(Folder.Name)" Title=@L[$"{nameof(Folder)}.{nameof(Folder.Name)}"]/>
+        </Columns>
+    </RadzenDataGrid>
+}

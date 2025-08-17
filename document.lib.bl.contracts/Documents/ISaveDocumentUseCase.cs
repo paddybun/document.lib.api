@@ -4,9 +4,10 @@ using document.lib.data.models.Documents;
 
 namespace document.lib.bl.contracts.Documents;
 
-public interface ISaveDocumentUseCase
+public interface ISaveDocumentUseCase<in T>
+    where T: IUnitOfWork
 {
-    public Task<Result<Document>> ExecuteAsync(SaveDocumentUseCaseParameters parameters);
+    public Task<Result<Document>> ExecuteAsync(T uow, SaveDocumentUseCaseParameters parameters);
 }
 
 public class SaveDocumentUseCaseParameters

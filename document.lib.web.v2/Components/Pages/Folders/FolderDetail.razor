@@ -1,0 +1,49 @@
+@page "/Folder/{Id:int}"
+@using document.lib.bl.contracts.Folders
+@using document.lib.bl.shared
+@using document.lib.data.context
+@using Microsoft.EntityFrameworkCore
+
+@rendermode InteractiveServer
+
+@inject IDbContextFactory<DatabaseContext> DbContextFactory
+@inject IFolderQuery<UnitOfWork> FolderQuery
+@inject NotificationService NotificationService
+
+@if (_folder != null!)
+{
+    <RadzenRow>
+        <RadzenColumn Size="6">
+            <RadzenFieldset Text="Folder Details">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                    <RadzenFormField Text="Id">
+                        <RadzenNumeric Value="@_folder.Id" ReadOnly="true" Disabled="true"/>
+                    </RadzenFormField>
+                    <RadzenFormField Text="Name">
+                        <RadzenTextBox Value="@_folder.Name" ReadOnly="true" Disabled="true"/>
+                    </RadzenFormField>
+                    <RadzenFormField Text="Display Name">
+                        <RadzenTextBox @bind-Value="_folder.DisplayName"/>
+                    </RadzenFormField>
+                    <RadzenRow>
+                        <RadzenColumn Size="3">
+                            <RadzenFormField Text="Total Documents">
+                                <RadzenNumeric Value="@_folder.TotalDocuments"/>
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="3">
+                            <RadzenFormField Text="Max Documents">
+                                <RadzenNumeric Value="@_folder.MaxDocumentsFolder"/>
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="3">
+                            <RadzenFormField Text="Max Documents in Register">
+                                <RadzenNumeric Value="@_folder.MaxDocumentsRegister"/>
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+                </RadzenStack>
+            </RadzenFieldset>
+        </RadzenColumn>
+    </RadzenRow>
+}
