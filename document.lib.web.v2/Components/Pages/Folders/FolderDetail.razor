@@ -1,7 +1,10 @@
 @page "/Folder/{Id:int}"
+@using System.Text.Json
 @using document.lib.bl.contracts.Folders
 @using document.lib.bl.shared
+@using document.lib.core.System
 @using document.lib.data.context
+@using document.lib.data.models.Folders
 @using Microsoft.EntityFrameworkCore
 
 @rendermode InteractiveServer
@@ -9,9 +12,20 @@
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
 @inject IFolderQuery<UnitOfWork> FolderQuery
 @inject NotificationService NotificationService
+@inject IGetFolderOverviewUseCase<UnitOfWork> GetFolderOverviewUseCase
+@inject IStringLocalizer<Resources> L
 
 @if (_folder != null!)
 {
+    <div class="rz-m-12">
+        <RadzenBreadCrumb>
+            <ChildContent>
+                <RadzenBreadCrumbItem Path="/" Text="Home" />
+                <RadzenBreadCrumbItem Path="/folder" Text="Folder" />
+                <RadzenBreadCrumbItem Text="@_folder.Id.ToString()" />
+            </ChildContent>
+        </RadzenBreadCrumb>
+    </div>
     <RadzenRow>
         <RadzenColumn Size="6">
             <RadzenFieldset Text="Folder Details">
@@ -44,6 +58,20 @@
                     </RadzenRow>
                 </RadzenStack>
             </RadzenFieldset>
+        </RadzenColumn>
+    </RadzenRow>
+    <RadzenRow>
+        <RadzenColumn Size="6">
+            <RadzenButton Text="@L["Button.Show"]" Click="@LoadFolderOverview"/>
+            @if (_folderView is { Items.Count: >0 } )
+            {
+                <RadzenDataGrid Data="@_folderView.Items" @ref=grid AllowGrouping="true" Render="@OnRender" TItem="FolderViewItem">
+                    <Columns>
+                        <RadzenDataGridColumn Property="@nameof(FolderViewItem.Document)" Title="@L["Document"]"/>
+                        <RadzenDataGridColumn Property="@nameof(FolderViewItem.Register)" Title="@L["Register"]"/>    
+                    </Columns>
+                </RadzenDataGrid>
+            }
         </RadzenColumn>
     </RadzenRow>
 }

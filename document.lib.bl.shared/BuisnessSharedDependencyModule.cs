@@ -28,6 +28,8 @@ public static class CqrsDependencyModule
         serviceCollection.AddTransient<IRegisterDescriptionsQuery, RegisterDescriptionsQuery>();
         serviceCollection.AddTransient<IGetRegisterUseCase, GetRegisterUseCase>();
         serviceCollection.AddTransient<INextDescriptionQuery, NextDescriptionQuery>();
+        serviceCollection.AddTransient<IGetFolderOverviewUseCase<UnitOfWork>, GetFolderOverviewUseCase>();
+        
         
         return serviceCollection;
     }

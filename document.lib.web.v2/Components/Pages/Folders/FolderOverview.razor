@@ -10,6 +10,16 @@
 @inject IFoldersQuery<UnitOfWork> FoldersQuery
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
 @inject IStringLocalizer<Resources> L
+@inject NavigationManager NavigationManager
+
+<div class="rz-m-12">
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="/" Text="Home" />
+            <RadzenBreadCrumbItem Path="/folder" Text="Folder" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+</div>
 
 @if (_folders != null!)
 {
@@ -18,6 +28,11 @@
             <RadzenDataGridColumn Property="@nameof(Folder.Id)" Title=@L[$"{nameof(Folder)}.{nameof(Folder.Id)}"] />
             <RadzenDataGridColumn Property="@nameof(Folder.DisplayName)" Title=@L[$"{nameof(Folder)}.{nameof(Folder.DisplayName)}"]/>
             <RadzenDataGridColumn Property="@nameof(Folder.Name)" Title=@L[$"{nameof(Folder)}.{nameof(Folder.Name)}"]/>
+            <RadzenDataGridColumn>
+                <Template Context="f">
+                    <RadzenButton Text="..." Click="@(() => { NavigateTo(f); })"/>
+                </Template>
+            </RadzenDataGridColumn>
         </Columns>
     </RadzenDataGrid>
 }

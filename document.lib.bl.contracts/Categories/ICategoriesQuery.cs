@@ -9,8 +9,4 @@ public interface ICategoriesQuery<in T>
     Task<Result<List<Category>>> ExecuteAsync(T uow, CategoriesQueryParameters parameters);
 }
 
-public class CategoriesQueryParameters
-{
-    public int? Skip { get; set; }
-    public int? Take { get; set; }
-}
+public record CategoriesQueryParameters(int? Skip, int? Take);

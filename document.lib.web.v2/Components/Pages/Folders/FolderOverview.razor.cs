@@ -1,5 +1,6 @@
 using document.lib.bl.shared;
 using document.lib.data.entities;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace document.lib.web.v2.Components.Pages.Folders;
 
@@ -17,5 +18,10 @@ public partial class FolderOverview
             _folders = foldersResult.IsSuccess ? foldersResult.Value! : [];
             StateHasChanged();
         }
+    }
+
+    private void NavigateTo(Folder folder)
+    {
+        NavigationManager.NavigateTo($"{ManagedPages.Folder}/{folder.Id}");
     }
 }

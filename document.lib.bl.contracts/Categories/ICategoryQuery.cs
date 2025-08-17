@@ -9,7 +9,4 @@ public interface ICategoryQuery<in T>
     Task<Result<Category>> ExecuteAsync(T uow, CategoryQueryParameters parameters);
 }
 
-public class CategoryQueryParameters
-{
-    public required string CategoryName { get; set; }
-}
+public record CategoryQueryParameters(string CategoryName);
