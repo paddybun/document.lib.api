@@ -11,7 +11,7 @@ public class Folder: BaseFields
 
     [Required]
     [MaxLength(250)]
-    public string Name { get; set; } = null!;
+    public required string Name { get; set; } = null!;
 
     [MaxLength(1000)]
     public string? DisplayName { get; set; }
@@ -19,17 +19,19 @@ public class Folder: BaseFields
     [NotMapped]
     public Register? CurrentRegister => Registers.OrderBy(x => x.Name).FirstOrDefault(x => x.DocumentCount < MaxDocumentsRegister);
 
-    public ICollection<Register> Registers { get; set; } = null!;
+    public ICollection<Register> Registers { get; set; } = [];
     
     public int TotalDocuments { get; set; }
 
     [Required]
-    public int MaxDocumentsRegister { get; set; }
+    public required int MaxDocumentsRegister { get; set; }
 
     [Required]
-    public int MaxDocumentsFolder { get; set; }
+    public required int MaxDocumentsFolder { get; set; }
 
-    public bool IsDefault { get; set; } = false;
+    [Required]
+    [MaxLength(250)]
+    public string DescriptionGroup { get; set; } = "default";
 
     public bool IsFull { get; set; }
 }

@@ -3,17 +3,20 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using document.lib.data.context;
 
 #nullable disable
 
-namespace document.lib.ef.Migrations
+namespace document.lib.data.context.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DocumentLibContextModelSnapshot : ModelSnapshot
+    [Migration("20250818080108_AddDescriptionToFolder")]
+    partial class AddDescriptionToFolder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -252,10 +255,6 @@ namespace document.lib.ef.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Group", "Order")
-                        .IsUnique()
-                        .IsDescending();
 
                     b.ToTable("RegisterDescriptions");
                 });

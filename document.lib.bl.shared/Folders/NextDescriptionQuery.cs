@@ -29,18 +29,18 @@ public class NextDescriptionQuery(ILogger<NextDescriptionQuery> logger) : INextD
 
             if (parameters.Id <= 0) return Result<RegisterDescription>.Failure(errorMessage: "Please supply a valid id");
             
-            var description = await uow.Connection.RegisterDescriptions
+            var currentDescription = await uow.Connection.RegisterDescriptions
                 .AsNoTracking()
                 .SingleOrDefaultAsync(x => x.Id == parameters.Id && x.Group == parameters.Group);
 
-            if (description == null) return Result<RegisterDescription>.Warning("Description not found");
+            if (currentDescription == null) return Result<RegisterDescription>.Warning("Description not found");
 
             // Get the next description in the same group
             var nextDescription = await uow.Connection.RegisterDescriptions
                 .AsNoTracking()
-                .Where(x => x.Group == parameters.Group && x.Order > description.Order)
+                .Where(x => x.Group == parameters.Group)
                 .OrderBy(x => x.Order)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(x => x.Order == currentDescription.Order + 1);
             
             if (nextDescription == null) return Result<RegisterDescription>.Warning("No next description found in the group");
 

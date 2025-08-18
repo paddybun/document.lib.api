@@ -12,5 +12,6 @@
   </Folder>
   <Folder Name="ui">
     <Project Path="document.lib.web.v2\document.lib.web.v2.csproj" Type="Classic C#" />
+    <Project Path="document.lib.ef.startup\document.lib.ef.startup.csproj" Type="Classic C#" />
   </Folder>
 </Solution>

@@ -14,6 +14,8 @@ public class GetRegisterUseCase(
     {
         try
         {
+            await uow.BeginTransactionAsync();
+            
             var folder = await uow.Connection.Folders.FindAsync(parameters.FolderId);
             if (folder == null) return Result<Register>.Warning("Folder not found");
             
@@ -26,43 +28,62 @@ public class GetRegisterUseCase(
             var nextRegister = registers
                 .FirstOrDefault(x => x.DocumentCount < folder.MaxDocumentsRegister);
 
-            if (registers.Count == 0 && nextRegister == null)
+            var shouldSave = nextRegister == null;
+            if (registers.Count <= 0 && nextRegister == null)
             {
-                var d = await nextDescription.ExecuteAsync(uow, new() { Group = "default", Id = default, IsNew = true});
-                if (!d.IsSuccess) return Result<Register>.Warning("Could not get first description");
+                var newFolderDescriptionResult = await nextDescription.ExecuteAsync(uow,
+                    new() { Group = folder.DescriptionGroup, Id = default, IsNew = true });
+                
+                if (newFolderDescriptionResult is not { IsSuccess: true, Value: { } })
+                    return Result<Register>.Warning("Could not get first description");
+                
                 nextRegister = new Register
                 {
-                    DescriptionId = d.Value!.Id,
+                    Name = newFolderDescriptionResult.Value.Name,
+                    DisplayName = newFolderDescriptionResult.Value.DisplayName,
+                    DescriptionId = newFolderDescriptionResult.Value!.Id,
                     FolderId = parameters.FolderId,
                     DocumentCount = 1
                 };
             }
             else if (registers.Count > 0 && nextRegister == null)
             {
-                var nextDescriptionResult = await nextDescription.ExecuteAsync(uow, new()
+                var existingFolderDescriptionResult = await nextDescription.ExecuteAsync(uow, new()
                 {
                     Id = registers.Last().Description.Id,
-                    Group = registers.Last().Description.Group,
+                    Group = folder.DescriptionGroup,
                     IsNew = false
                 });
-                if (!nextDescriptionResult.IsSuccess) return Result<Register>.Warning("Could not get next description");
+                
+                if (existingFolderDescriptionResult is not { IsSuccess: true, Value: { } })
+                    return Result<Register>.Warning("Could not get next description");
+                
                 var newRegister = new Register
                 {
-                    DescriptionId = nextDescriptionResult.Value!.Id,
+                    Name = existingFolderDescriptionResult.Value.Name,
+                    DisplayName = existingFolderDescriptionResult.Value.DisplayName,
+                    DescriptionId = existingFolderDescriptionResult.Value!.Id,
                     FolderId = parameters.FolderId,
                     DocumentCount = 1
                 };
                 nextRegister = newRegister;
             }
-            else
+            else if (nextRegister == null)
             {
-                throw new InvalidOperationException("Could not get register");
+                return Result<Register>.Warning("No more definitions available for this folder");
             }
 
+            if (shouldSave)
+            {
+                uow.Connection.Registers.Add(nextRegister);
+                await uow.CommitAsync();
+            }
+            
             return Result<Register>.Success(nextRegister);
         }
         catch (Exception ex)
         {
+            await uow.RollbackTransactionAsync();
             logger.LogError(ex, "Error getting next register for folder {FolderId}", parameters.FolderId);
             return Result<Register>.Failure();
         }

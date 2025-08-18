@@ -24,15 +24,21 @@ public class UnitOfWork(DatabaseContext context): IUnitOfWork<DatabaseContext>
         await Connection.Database.BeginTransactionAsync();
     }
 
-    public async Task CommitTransactionAsync()
+    public async Task CommitAsync()
     {
         await Connection.SaveChangesAsync();
-        await Connection.Database.CommitTransactionAsync();
+        if (Connection.Database.CurrentTransaction != null)
+        {
+            await Connection.Database.CommitTransactionAsync();
+        }
     }
 
     public async Task RollbackTransactionAsync()
     {
-        await Connection.Database.RollbackTransactionAsync();
+        if (Connection.Database.CurrentTransaction != null)
+        {
+            await Connection.Database.RollbackTransactionAsync();
+        }
     }
 
     public void Dispose()
