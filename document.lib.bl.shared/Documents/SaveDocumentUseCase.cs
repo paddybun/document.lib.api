@@ -41,7 +41,7 @@ public class SaveDocumentUseCase(
                 serverDoc.Register = register.Value;
             }
             
-            serverDoc = parameters.Document.ToEntity(serverDoc);
+            serverDoc = parameters.Document.ApplyToEntity(serverDoc);
             
             // TODO: compare tags and update accordingly
             

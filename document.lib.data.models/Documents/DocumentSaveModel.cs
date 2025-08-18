@@ -28,7 +28,7 @@ public sealed class DocumentSaveModel
         return model;
     }
     
-    public Document ToEntity(Document document)
+    public Document ApplyToEntity(Document document)
     {
         this.Adapt(document);
         return document;

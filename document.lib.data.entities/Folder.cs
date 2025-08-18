@@ -24,14 +24,14 @@ public class Folder: BaseFields
     public int TotalDocuments { get; set; }
 
     [Required]
-    public required int MaxDocumentsRegister { get; set; }
+    public int MaxDocumentsRegister { get; set; }
 
     [Required]
-    public required int MaxDocumentsFolder { get; set; }
+    public int MaxDocumentsFolder { get; set; }
 
     [Required]
     [MaxLength(250)]
-    public string DescriptionGroup { get; set; } = "default";
+    public required string DescriptionGroup { get; set; } = "default";
 
-    public bool IsFull { get; set; }
+    public bool IsActive { get; set; } = false;
 }

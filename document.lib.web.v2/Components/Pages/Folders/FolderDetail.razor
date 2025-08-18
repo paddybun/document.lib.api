@@ -5,6 +5,7 @@
 @using document.lib.bl.shared
 @using document.lib.core.System
 @using document.lib.data.context
+@using document.lib.data.entities
 @using document.lib.data.models.Folders
 @using Microsoft.EntityFrameworkCore
 
@@ -57,6 +58,9 @@
                             </RadzenFormField>
                         </RadzenColumn>
                     </RadzenRow>
+                    <RadzenFormField Text=@L[$"{nameof(Folder)}.{nameof(Folder.DescriptionGroup)}"]>
+                        <RadzenTextBox @bind-Value="_folder.DescriptionGroup" ReadOnly="true" Disabled="true"/>
+                    </RadzenFormField>
                 </RadzenStack>
             </RadzenFieldset>
         </RadzenColumn>
