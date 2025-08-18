@@ -1,4 +1,5 @@
 using document.lib.bl.shared;
+using document.lib.bl.shared.DocumentHandling;
 using document.lib.bl.shared.Folders;
 using document.lib.data.context;
 using document.lib.data.entities;
@@ -32,7 +33,7 @@ public class GetRegisterUseCaseTests
         var sut = new GetRegisterUseCase(NullLogger<GetRegisterUseCase>.Instance, new NextDescriptionQuery(NullLogger<NextDescriptionQuery>.Instance));
         var result = await sut.ExecuteAsync(uow, new(1));
         var expectedName = "2";
-        var expectedDisplayName = "2";
+        var expectedDisplayName = "anyExistingString";
         Assert.Equal(expectedName, result.Value!.Name);
         Assert.Equal(expectedDisplayName, result.Value!.DisplayName);
     }
@@ -78,7 +79,7 @@ public class GetRegisterUseCaseTests
         // Folder 1
         _context.Folders.Add(new Folder { Id = 1, Name = "UnitTest", MaxDocumentsRegister = 2, MaxDocumentsFolder = 10, DescriptionGroup = "default" });
         _context.Registers.Add(new (){ Name = "1", DocumentCount = 2, FolderId = 1, DescriptionId = 1 });
-        _context.Registers.Add(new (){ Name = "2", DocumentCount = 1, FolderId = 1, DescriptionId = 2 });
+        _context.Registers.Add(new (){ Name = "2", DisplayName = "anyExistingString", DocumentCount = 1, FolderId = 1, DescriptionId = 2 });
         
         // Folder 2
         _context.Folders.Add(new Folder { Id = 2, Name = "UnitTest", MaxDocumentsRegister = 2, MaxDocumentsFolder = 10, DescriptionGroup = "default" });

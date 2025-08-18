@@ -1,3 +1,4 @@
+using document.lib.bl.contracts.DocumentHandling;
 using document.lib.bl.contracts.Folders;
 using document.lib.bl.shared;
 using document.lib.data.entities;

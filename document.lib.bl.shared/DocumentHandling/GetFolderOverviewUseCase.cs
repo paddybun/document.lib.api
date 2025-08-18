@@ -1,10 +1,10 @@
-using document.lib.bl.contracts.Folders;
+using document.lib.bl.contracts.DocumentHandling;
 using document.lib.core;
 using document.lib.data.models.Folders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace document.lib.bl.shared.Folders;
+namespace document.lib.bl.shared.DocumentHandling;
 
 public class GetFolderOverviewUseCase(
     ILogger<GetFolderOverviewUseCase> logger) : IGetFolderOverviewUseCase<UnitOfWork>

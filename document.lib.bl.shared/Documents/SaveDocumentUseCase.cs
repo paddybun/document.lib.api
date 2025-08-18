@@ -1,4 +1,5 @@
-﻿using document.lib.bl.contracts.Documents;
+﻿using document.lib.bl.contracts.DocumentHandling;
+using document.lib.bl.contracts.Documents;
 using document.lib.bl.contracts.Folders;
 using document.lib.core;
 using document.lib.data.entities;

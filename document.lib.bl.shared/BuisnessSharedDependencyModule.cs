@@ -1,7 +1,9 @@
 ﻿using document.lib.bl.contracts.Categories;
+using document.lib.bl.contracts.DocumentHandling;
 using document.lib.bl.contracts.Folders;
 using document.lib.bl.contracts.Upload;
 using document.lib.bl.shared.Categories;
+using document.lib.bl.shared.DocumentHandling;
 using document.lib.bl.shared.Folders;
 using document.lib.bl.shared.Upload;
 using Microsoft.Extensions.DependencyInjection;
