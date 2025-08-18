@@ -3,9 +3,10 @@ using document.lib.data.entities;
 
 namespace document.lib.bl.contracts.Folders;
 
-public interface INextDescriptionQuery
+public interface INextDescriptionQuery<in T>
+    where T : IUnitOfWork
 {
-    Task<Result<RegisterDescription>> ExecuteAsync(NextDescriptionQueryParameters parameters);
+    Task<Result<RegisterDescription>> ExecuteAsync(T uow, NextDescriptionQueryParameters parameters);
 }
 
 public class NextDescriptionQueryParameters

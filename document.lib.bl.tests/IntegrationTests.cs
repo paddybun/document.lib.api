@@ -45,9 +45,10 @@ public class IntegrationTests: DatabaseTest
     [Fact]
     public async Task Test()
     {
-        var sut = new GetRegisterUseCase(new NullLogger<GetRegisterUseCase>(), DatabaseContext,
-            new NextDescriptionQuery(new NullLogger<NextDescriptionQuery>(), DatabaseContext));
-        var res = await sut.ExecuteAsync(10);
+        using var uow = new UnitOfWork(DatabaseContext);
+        var sut = new GetRegisterUseCase(new NullLogger<GetRegisterUseCase>(),
+            new NextDescriptionQuery(new NullLogger<NextDescriptionQuery>()));
+        var res = await sut.ExecuteAsync(uow, new(10));
     }
     
 }

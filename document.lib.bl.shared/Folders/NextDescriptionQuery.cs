@@ -1,21 +1,20 @@
 ﻿using document.lib.bl.contracts.Folders;
 using document.lib.core;
-using document.lib.data.context;
 using document.lib.data.entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace document.lib.bl.shared.Folders;
 
-public class NextDescriptionQuery(ILogger<NextDescriptionQuery> logger, DatabaseContext context) : INextDescriptionQuery
+public class NextDescriptionQuery(ILogger<NextDescriptionQuery> logger) : INextDescriptionQuery<UnitOfWork>
 {
-    public async Task<Result<RegisterDescription>> ExecuteAsync(NextDescriptionQueryParameters parameters)
+    public async Task<Result<RegisterDescription>> ExecuteAsync(UnitOfWork uow, NextDescriptionQueryParameters parameters)
     {
         try
         {
             if (parameters.IsNew)
             {
-                var first = await context.RegisterDescriptions
+                var first = await uow.Connection.RegisterDescriptions
                     .AsNoTracking()
                     .Where(x => x.Group == parameters.Group)
                     .OrderBy(x => x.Order)
@@ -30,14 +29,14 @@ public class NextDescriptionQuery(ILogger<NextDescriptionQuery> logger, Database
 
             if (parameters.Id <= 0) return Result<RegisterDescription>.Failure(errorMessage: "Please supply a valid id");
             
-            var description = await context.RegisterDescriptions
+            var description = await uow.Connection.RegisterDescriptions
                 .AsNoTracking()
                 .SingleOrDefaultAsync(x => x.Id == parameters.Id && x.Group == parameters.Group);
 
             if (description == null) return Result<RegisterDescription>.Warning("Description not found");
 
             // Get the next description in the same group
-            var nextDescription = await context.RegisterDescriptions
+            var nextDescription = await uow.Connection.RegisterDescriptions
                 .AsNoTracking()
                 .Where(x => x.Group == parameters.Group && x.Order > description.Order)
                 .OrderBy(x => x.Order)

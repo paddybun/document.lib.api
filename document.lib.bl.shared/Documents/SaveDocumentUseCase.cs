@@ -1,7 +1,6 @@
 ﻿using document.lib.bl.contracts.Documents;
 using document.lib.bl.contracts.Folders;
 using document.lib.core;
-using document.lib.data.context;
 using document.lib.data.entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -10,7 +9,7 @@ namespace document.lib.bl.shared.Documents;
 
 public class SaveDocumentUseCase(
     ILogger<SaveDocumentUseCase> logger,
-    IGetRegisterUseCase getRegisterUseCase): ISaveDocumentUseCase<UnitOfWork>
+    IGetRegisterUseCase<UnitOfWork> getRegisterUseCase): ISaveDocumentUseCase<UnitOfWork>
 {
     public async Task<Result<Document>> ExecuteAsync(UnitOfWork uow, SaveDocumentUseCaseParameters parameters)
     {
@@ -34,7 +33,7 @@ public class SaveDocumentUseCase(
             if (moveToNewFolder)
             {
                 serverDoc.Register.DocumentCount--;
-                var register = await getRegisterUseCase.ExecuteAsync(folder.Id);
+                var register = await getRegisterUseCase.ExecuteAsync(uow, new(folder.Id));
                 if (register is not { IsSuccess: true, Value: not null }) return Result<Document>.Failure();
                 
                 register.Value.DocumentCount++;

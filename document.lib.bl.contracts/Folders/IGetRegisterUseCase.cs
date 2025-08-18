@@ -3,7 +3,10 @@ using document.lib.data.entities;
 
 namespace document.lib.bl.contracts.Folders;
 
-public interface IGetRegisterUseCase
+public interface IGetRegisterUseCase<in T>
+    where T : IUnitOfWork
 {
-    Task<Result<Register>> ExecuteAsync(int folderId);
+    Task<Result<Register>> ExecuteAsync(T uow, GetRegisterUseCaseParameters parameters);
 }
+
+public record GetRegisterUseCaseParameters(int FolderId);

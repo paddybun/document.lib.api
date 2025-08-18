@@ -26,8 +26,8 @@ public static class CqrsDependencyModule
         serviceCollection.AddTransient<IFolderQuery<UnitOfWork>, FolderQuery>();
         serviceCollection.AddTransient<IFoldersQuery<UnitOfWork>, FoldersQuery>();
         serviceCollection.AddTransient<IRegisterDescriptionsQuery, RegisterDescriptionsQuery>();
-        serviceCollection.AddTransient<IGetRegisterUseCase, GetRegisterUseCase>();
-        serviceCollection.AddTransient<INextDescriptionQuery, NextDescriptionQuery>();
+        serviceCollection.AddTransient<IGetRegisterUseCase<UnitOfWork>, GetRegisterUseCase>();
+        serviceCollection.AddTransient<INextDescriptionQuery<UnitOfWork>, NextDescriptionQuery>();
         serviceCollection.AddTransient<IGetFolderOverviewUseCase<UnitOfWork>, GetFolderOverviewUseCase>();
         
         
