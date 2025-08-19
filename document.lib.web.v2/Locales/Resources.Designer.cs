@@ -74,5 +74,17 @@ namespace document.lib.web.v2.Locales {
                 return ResourceManager.GetString("Folder.DisplayName", resourceCulture);
             }
         }
+        
+        public static string Folder_MaxDocumentsRegister {
+            get {
+                return ResourceManager.GetString("Folder.MaxDocumentsRegister", resourceCulture);
+            }
+        }
+        
+        public static string Folder_MaxDocumentsFolder {
+            get {
+                return ResourceManager.GetString("Folder.MaxDocumentsFolder", resourceCulture);
+            }
+        }
     }
 }

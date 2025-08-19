@@ -33,4 +33,10 @@
     <data name="Folder.DisplayName" xml:space="preserve">
         <value>Folder.DisplayName</value>
     </data>
+    <data name="Folder.MaxDocumentsRegister" xml:space="preserve">
+        <value>Folder.MaxDocumentsRegister</value>
+    </data>
+    <data name="Folder.MaxDocumentsFolder" xml:space="preserve">
+        <value>Folder.MaxDocumentsFolder</value>
+    </data>
 </root>

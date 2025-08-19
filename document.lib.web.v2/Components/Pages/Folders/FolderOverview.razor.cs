@@ -24,4 +24,9 @@ public partial class FolderOverview
     {
         NavigationManager.NavigateTo($"{ManagedPages.Folder}/{folder.Id}");
     }
+
+    private void CreateNewFolder()
+    {
+        NavigationManager.NavigateTo($"{ManagedPages.Folder}/0?mode=create");
+    }
 }

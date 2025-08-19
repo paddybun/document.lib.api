@@ -10,4 +10,7 @@ public interface ISaveFolderUseCase<in T>
     Task<Result<Folder>> ExecuteAsync(T unitOfWork, SaveFolderUseCaseParameters parameters);
 }
 
-public record SaveFolderUseCaseParameters(FolderSaveModel Folder);
+public record SaveFolderUseCaseParameters
+{
+    public required FolderSaveModel Folder { get; init; }
+}

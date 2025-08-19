@@ -1,10 +1,14 @@
 ﻿@page "/Description"
 @using document.lib.bl.contracts.Folders
+@using document.lib.bl.shared
+@using document.lib.data.context
 @using document.lib.data.entities
+@using Microsoft.EntityFrameworkCore
 
 @rendermode InteractiveServer
 
-@inject IRegisterDescriptionsQuery RegisterDescriptionsQuery
+@inject IDbContextFactory<DatabaseContext> DbContextFactory
+@inject IRegisterDescriptionsQuery<UnitOfWork> RegisterDescriptionsQuery
 @inject NavigationManager NavigationManager
 
 <RadzenRow>
@@ -52,9 +56,10 @@
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        using var uow = await UnitOfWork.CreateAsync(DbContextFactory); 
         if (firstRender)
         {
-            var descriptionsResult = await RegisterDescriptionsQuery.ExecuteAsync();
+            var descriptionsResult = await RegisterDescriptionsQuery.ExecuteAsync(uow, new() { HideSystemDescriptions = false });
             _registerDescriptions = descriptionsResult.Value ?? [];
             
             _registerDescriptionsGroups = _registerDescriptions

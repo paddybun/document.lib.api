@@ -1,6 +1,6 @@
 ﻿using document.lib.bl.contracts.Folders;
 using document.lib.core;
-using document.lib.data.context;
+using document.lib.core.System;
 using document.lib.data.entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -8,18 +8,27 @@ using Microsoft.Extensions.Logging;
 namespace document.lib.bl.shared.Folders;
 
 public class RegisterDescriptionsQuery(
-    ILogger<RegisterDescriptionsQuery> logger,
-    DatabaseContext context): IRegisterDescriptionsQuery
+    ILogger<RegisterDescriptionsQuery> logger): IRegisterDescriptionsQuery<UnitOfWork>
 {
-    public async Task<Result<List<RegisterDescription>>> ExecuteAsync()
+    public async Task<Result<List<RegisterDescription>>> ExecuteAsync(UnitOfWork uow, RegisterDescriptionsQueryParameters parameters)
     {
         try
         {
             logger.LogInformation("RegisterDescriptionsQuery started");
+
+            var query = uow.Connection.RegisterDescriptions
+                .AsNoTracking();
             
-            var descriptions = await context.RegisterDescriptions
-                .AsNoTracking()
+            if (parameters.HideSystemDescriptions)
+            {
+                query = query.Where(rd => 
+                    rd.Group != SystemConstants.UnsortedRegisterName &&
+                    rd.Group != SystemConstants.DigitalRegisterName);
+            }
+            
+            var descriptions = await query
                 .ToListAsync();
+            
             
             return Result<List<RegisterDescription>>.Success(descriptions);
         }

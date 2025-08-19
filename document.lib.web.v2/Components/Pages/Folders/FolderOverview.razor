@@ -1,8 +1,4 @@
 ﻿@page "/Folder"
-@using document.lib.bl.contracts.Folders
-@using document.lib.bl.shared
-@using document.lib.data.context
-@using document.lib.data.entities
 @using Microsoft.EntityFrameworkCore
 
 @rendermode InteractiveServer
@@ -21,6 +17,13 @@
     </RadzenBreadCrumb>
 </div>
 
+<RadzenRow>
+    <RadzenColumn Size="12">
+        <RadzenStack Orientation="Orientation.Horizontal">
+            <RadzenButton Text=@L["Button.CreateNew"] Click="@CreateNewFolder"/>
+        </RadzenStack>
+    </RadzenColumn>
+</RadzenRow>
 @if (_folders != null!)
 {
     <RadzenDataGrid @bind-Value="@_selectedFolders" Data="_folders" TItem="Folder">

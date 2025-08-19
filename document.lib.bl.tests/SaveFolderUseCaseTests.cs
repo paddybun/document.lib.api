@@ -28,7 +28,7 @@ public class SaveFolderUseCaseTests: UnitTestBase
         
         using var uow = new UnitOfWork(Context);
         var sut = new SaveFolderUseCase(NullLogger<SaveFolderUseCase>.Instance, new FolderQuery(NullLogger<FolderQuery>.Instance));
-        var actual = await sut.ExecuteAsync(uow, new (expected));
+        var actual = await sut.ExecuteAsync(uow, new() { Folder = expected });
         
         Assert.True(actual.IsSuccess);
         Assert.NotNull(actual.Value);
@@ -51,7 +51,7 @@ public class SaveFolderUseCaseTests: UnitTestBase
         
         using var uow = new UnitOfWork(Context);
         var sut = new SaveFolderUseCase(NullLogger<SaveFolderUseCase>.Instance, new FolderQuery(NullLogger<FolderQuery>.Instance));
-        var actual = await sut.ExecuteAsync(uow, new (expected));
+        var actual = await sut.ExecuteAsync(uow, new() { Folder = expected });
         
         Assert.True(actual.IsSuccess);
         Assert.NotNull(actual.Value);

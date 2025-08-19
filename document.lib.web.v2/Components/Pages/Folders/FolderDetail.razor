@@ -1,30 +1,26 @@
 @page "/Folder/{Id:int}"
-@using System.Text.Json
-@using document.lib.bl.contracts.DocumentHandling
-@using document.lib.bl.contracts.Folders
-@using document.lib.bl.shared
-@using document.lib.core.System
-@using document.lib.data.context
-@using document.lib.data.entities
-@using document.lib.data.models.Folders
 @using Microsoft.EntityFrameworkCore
 
 @rendermode InteractiveServer
 
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
-@inject IFolderQuery<UnitOfWork> FolderQuery
+@inject NavigationManager NavigationManager
 @inject NotificationService NotificationService
 @inject IGetFolderOverviewUseCase<UnitOfWork> GetFolderOverviewUseCase
 @inject IStringLocalizer<Resources> L
 
-@if (_folder != null!)
+@inject IFolderQuery<UnitOfWork> FolderQuery
+@inject IRegisterDescriptionsQuery<UnitOfWork> RegisterDescriptionsQuery
+@inject ISaveFolderUseCase<UnitOfWork> SaveFolderUseCase
+
+@if (_editModeModel != null!)
 {
     <div class="rz-m-12">
         <RadzenBreadCrumb>
             <ChildContent>
                 <RadzenBreadCrumbItem Path="/" Text="Home" />
                 <RadzenBreadCrumbItem Path="/folder" Text="Folder" />
-                <RadzenBreadCrumbItem Text="@_folder.Id.ToString()" />
+                <RadzenBreadCrumbItem Text="@_editModeModel.Id.ToString()" />
             </ChildContent>
         </RadzenBreadCrumb>
     </div>
@@ -33,33 +29,33 @@
             <RadzenFieldset Text="Folder Details">
                 <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
                     <RadzenFormField Text="Id">
-                        <RadzenNumeric Value="@_folder.Id" ReadOnly="true" Disabled="true"/>
+                        <RadzenNumeric Value="@_editModeModel.Id" ReadOnly="true" Disabled="true"/>
                     </RadzenFormField>
                     <RadzenFormField Text="Name">
-                        <RadzenTextBox Value="@_folder.Name" ReadOnly="true" Disabled="true"/>
+                        <RadzenTextBox Value="@_editModeModel.Name" ReadOnly="true" Disabled="true"/>
                     </RadzenFormField>
                     <RadzenFormField Text="Display Name">
-                        <RadzenTextBox @bind-Value="_folder.DisplayName"/>
+                        <RadzenTextBox @bind-Value="_editModeModel.DisplayName"/>
                     </RadzenFormField>
                     <RadzenRow>
                         <RadzenColumn Size="3">
                             <RadzenFormField Text="Total Documents">
-                                <RadzenNumeric Value="@_folder.TotalDocuments"/>
+                                <RadzenNumeric Value="@_editModeModel.TotalDocuments"/>
                             </RadzenFormField>
                         </RadzenColumn>
                         <RadzenColumn Size="3">
                             <RadzenFormField Text="Max Documents">
-                                <RadzenNumeric Value="@_folder.MaxDocumentsFolder"/>
+                                <RadzenNumeric Value="@_editModeModel.MaxDocumentsFolder"/>
                             </RadzenFormField>
                         </RadzenColumn>
                         <RadzenColumn Size="3">
                             <RadzenFormField Text="Max Documents in Register">
-                                <RadzenNumeric Value="@_folder.MaxDocumentsRegister"/>
+                                <RadzenNumeric Value="@_editModeModel.MaxDocumentsRegister"/>
                             </RadzenFormField>
                         </RadzenColumn>
                     </RadzenRow>
                     <RadzenFormField Text=@L[$"{nameof(Folder)}.{nameof(Folder.DescriptionGroup)}"]>
-                        <RadzenTextBox @bind-Value="_folder.DescriptionGroup" ReadOnly="true" Disabled="true"/>
+                        <RadzenTextBox @bind-Value="_editModeModel.DescriptionGroup" ReadOnly="true" Disabled="true"/>
                     </RadzenFormField>
                 </RadzenStack>
             </RadzenFieldset>
@@ -70,13 +66,37 @@
             <RadzenButton Text="@L["Button.Show"]" Click="@LoadFolderOverview"/>
             @if (_folderView is { Items.Count: >0 } )
             {
-                <RadzenDataGrid Data="@_folderView.Items" @ref=grid AllowGrouping="true" Render="@OnRender" TItem="FolderViewItem">
+                <RadzenDataGrid Data="@_folderView.Items" @ref=_grid AllowGrouping="true" Render="@OnRender" TItem="FolderViewItem">
                     <Columns>
                         <RadzenDataGridColumn Property="@nameof(FolderViewItem.Document)" Title="@L["Document"]"/>
                         <RadzenDataGridColumn Property="@nameof(FolderViewItem.Register)" Title="@L["Register"]"/>    
                     </Columns>
                 </RadzenDataGrid>
             }
+        </RadzenColumn>
+    </RadzenRow>
+}
+@if (_createModeModel != null!)
+{
+    <RadzenRow>
+        <RadzenColumn Size="6">
+            <RadzenFieldset Text="Create New Folder">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                    <RadzenFormField Text=@L[$"{nameof(Folder)}.{nameof(Folder.DisplayName)}"] AllowFloatingLabel="false">
+                        <RadzenTextBox @bind-Value="_createModeModel.DisplayName"/>
+                    </RadzenFormField>
+                    <RadzenFormField Text=@L[$"{nameof(Folder)}.{nameof(Folder.DescriptionGroup)}"] AllowFloatingLabel="false">
+                        <RadzenDropDown TValue="string" @bind-Value="_selectedDescription" Data="@_registerDescriptions"/>
+                    </RadzenFormField>
+                    <RadzenFormField Text=@L[$"{nameof(Folder)}.{nameof(Folder.MaxDocumentsRegister)}"] AllowFloatingLabel="false">
+                        <RadzenNumeric @bind-Value="_createModeModel.MaxDocumentsRegister"/>
+                    </RadzenFormField>
+                    <RadzenFormField Text=@L[$"{nameof(Folder)}.{nameof(Folder.MaxDocumentsFolder)}"] AllowFloatingLabel="false">
+                        <RadzenNumeric @bind-Value="_createModeModel.MaxDocumentsFolder"/>
+                    </RadzenFormField>
+                </RadzenStack>
+                <RadzenButton Text=@L["Button.Save"] Click="@CreateNewFolder"/>
+            </RadzenFieldset>
         </RadzenColumn>
     </RadzenRow>
 }
