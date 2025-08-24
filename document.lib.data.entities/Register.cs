@@ -8,7 +8,7 @@ public class Register: BaseFields
     
     [Required]
     [MaxLength(250)]
-    public string Name { get; set; } = null!;
+    public required string Name { get; set; } = null!;
 
     [MaxLength(500)]
     public string? DisplayName { get; set; }

@@ -5,6 +5,7 @@ using document.lib.core;
 using document.lib.data.context;
 using document.lib.web.v2.Components;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
@@ -17,6 +18,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddRadzenComponents();
+builder.Services.AddLocalization();
 
 var configSection = builder.Configuration.GetSection("Config");
 var appConfig = configSection.Get<SharedConfig>();
@@ -35,6 +37,15 @@ builder.Services.AddBusinessShared();
 
 var app = builder.Build();
 
+string[] supportedCultures = ["en-US", "de-DE"];
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture(supportedCultures[0])
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures);
+
+app.UseRequestLocalization(localizationOptions);
+
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -52,19 +63,27 @@ app.UseHttpsRedirection();
 app.MapStaticAssets();
 app.UseAntiforgery();
 
-app.MapGet("/api/upload/health", async Task<Ok> () => await Task.FromResult(TypedResults.Ok()));
-
-app.MapPost("/api/upload/single", async (IUploadBlobUseCase uploadBlobUse, [FromForm]IFormFile file) =>
+app.MapPost("/api/upload/single", async (IUploadBlobUseCase uploadBlobUse, [FromForm] IFormFile file) =>
 {
     using (var memStream = new MemoryStream())
     {
         await file.CopyToAsync(memStream);
         memStream.Position = 0;
-        await uploadBlobUse.ExecuteAsync(file.FileName, memStream);        
+        await uploadBlobUse.ExecuteAsync(file.FileName, memStream);
     }
 
     return TypedResults.Ok();
-}).DisableAntiforgery();
+});
+
+app.MapGet("api/culture", (string culture, string redirectUri, HttpContext context) =>
+{
+    var requestCulture = new RequestCulture(culture, culture);
+    var cookieName = CookieRequestCultureProvider.DefaultCookieName;
+    var cookieValue = CookieRequestCultureProvider.MakeCookieValue(requestCulture);
+    context.Response.Cookies.Append(cookieName, cookieValue);
+    return TypedResults.LocalRedirect(redirectUri);
+});
+
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

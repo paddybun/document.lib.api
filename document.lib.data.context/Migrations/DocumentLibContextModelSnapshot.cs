@@ -17,7 +17,7 @@ namespace document.lib.ef.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.6")
+                .HasAnnotation("ProductVersion", "9.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -144,14 +144,16 @@ namespace document.lib.ef.Migrations
                     b.Property<DateTimeOffset>("DateModified")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<string>("DescriptionGroup")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
                     b.Property<string>("DisplayName")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsFull")
+                    b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<int>("MaxDocumentsFolder")
@@ -169,6 +171,9 @@ namespace document.lib.ef.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("Folders");
                 });
@@ -247,6 +252,10 @@ namespace document.lib.ef.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Group", "Order")
+                        .IsUnique()
+                        .IsDescending();
 
                     b.ToTable("RegisterDescriptions");
                 });

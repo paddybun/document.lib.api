@@ -1,7 +1,7 @@
-﻿using document.lib.bl.contracts.Documents;
+﻿using document.lib.bl.contracts.DocumentHandling;
+using document.lib.bl.contracts.Documents;
 using document.lib.bl.contracts.Folders;
 using document.lib.core;
-using document.lib.data.context;
 using document.lib.data.entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -10,42 +10,48 @@ namespace document.lib.bl.shared.Documents;
 
 public class SaveDocumentUseCase(
     ILogger<SaveDocumentUseCase> logger,
-    DatabaseContext context,
-    IGetRegisterUseCase getRegisterUseCase): ISaveDocumentUseCase
+    IGetRegisterUseCase<UnitOfWork> getRegisterUseCase): ISaveDocumentUseCase<UnitOfWork>
 {
-    public async Task<Result<Document>> ExecuteAsync(Document document, int folderId)
+    public async Task<Result<Document>> ExecuteAsync(UnitOfWork uow, SaveDocumentUseCaseParameters parameters)
     {
         try
         {
-            logger.LogInformation("Saving document {id}", document.Id);
+            logger.LogInformation("Saving document {id}", parameters.DocumentId);
             
-            var serverDoc = await context.Documents.AsNoTracking()
+            var serverDoc = await uow.Connection.Documents
                 .Include(x => x.Register)
                 .ThenInclude(x => x.Folder)
-                .SingleAsync(x => x.Id == document.Id);
+                .Include(x => x.Tags)
+                .ThenInclude(x => x.Tag)
+                .SingleAsync(x => x.Id == parameters.DocumentId);
             
-            var folder = await context.Folders
+            var folder = await uow.Connection.Folders
                 .AsNoTracking()
                 .Include(x => x.Registers)
-                .SingleAsync(x => x.Id == folderId);
+                .SingleAsync(x => x.Id == parameters.FolderId);
             
             var moveToNewFolder = folder.Registers.All(x => x.Id != serverDoc.Register.Id);
-
             if (moveToNewFolder)
             {
                 serverDoc.Register.DocumentCount--;
-                var register = await getRegisterUseCase.ExecuteAsync(folder.Id);
+                var register = await getRegisterUseCase.ExecuteAsync(uow, new(folder.Id));
                 if (register is not { IsSuccess: true, Value: not null }) return Result<Document>.Failure();
                 
                 register.Value.DocumentCount++;
                 serverDoc.Register = register.Value;
             }
             
-            return Result<Document>.Failure();
+            serverDoc = parameters.Document.ApplyToEntity(serverDoc);
+            
+            // TODO: compare tags and update accordingly
+            
+            await uow.Connection.SaveChangesAsync();
+            
+            return Result<Document>.Success(serverDoc);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error saving document {id}", document.Id);
+            logger.LogError(ex, "Error saving document {id}", parameters.DocumentId);
             return Result<Document>.Failure();
         }
     }
