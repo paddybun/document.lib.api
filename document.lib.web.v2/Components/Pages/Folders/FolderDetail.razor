@@ -12,6 +12,8 @@
 @inject IFolderQuery<UnitOfWork> FolderQuery
 @inject IRegisterDescriptionsQuery<UnitOfWork> RegisterDescriptionsQuery
 @inject ISaveFolderUseCase<UnitOfWork> SaveFolderUseCase
+@inject IDeleteFolderUseCase<UnitOfWork> DeleteFolderUseCase
+@inject IActivateFolderUseCase<UnitOfWork> ActivateFolderUseCase
 
 @if (_editModeModel != null!)
 {
@@ -37,6 +39,10 @@
                     <RadzenFormField Text="Display Name">
                         <RadzenTextBox @bind-Value="_editModeModel.DisplayName"/>
                     </RadzenFormField>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
+                        <RadzenLabel Text=@L[$"{nameof(Folder)}.{nameof(Folder.IsActive)}"] Component=@nameof(Folder.IsActive)/>
+                        <RadzenSwitch @bind-Value="_isActive" Name=@nameof(Folder.IsActive) Change="@MakeFolderActive" />
+                    </RadzenStack>
                     <RadzenRow>
                         <RadzenColumn Size="3">
                             <RadzenFormField Text="Total Documents">
@@ -59,6 +65,7 @@
                     </RadzenFormField>
                 </RadzenStack>
             </RadzenFieldset>
+            <RadzenButton Text=@L["Button.Delete"] Click="@(() => DeleteFolder(_editModeModel.Id))"/>
         </RadzenColumn>
     </RadzenRow>
     <RadzenRow>

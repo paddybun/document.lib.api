@@ -21,6 +21,7 @@ public partial class FolderDetail : ComponentBase
     
     
     private Folder _editModeModel = null!;
+    private bool _isActive = false;
     private FolderSaveModel _createModeModel = null!;
     private FolderView? _folderView = null;
     private IEnumerable<FolderViewItem> _items = null!;
@@ -68,7 +69,7 @@ public partial class FolderDetail : ComponentBase
                     });
                 }
                 _editModeModel = folderQuery.Value!;
-                
+                _isActive = _editModeModel.IsActive;
             }
             StateHasChanged();
         }
@@ -142,6 +143,41 @@ public partial class FolderDetail : ComponentBase
                 Summary = "Error",
                 Detail = "Could not create folder"
             });
+        }
+    }
+
+    private async Task DeleteFolder(int id)
+    {
+        var uow = await UnitOfWork.CreateAsync(DbContextFactory);
+        await DeleteFolderUseCase.ExecuteAsync(uow, new (){  FolderId = id});
+    }
+
+    private async Task MakeFolderActive(bool arg)
+    {
+        var uow = await UnitOfWork.CreateAsync(DbContextFactory);
+        var activateResult = await ActivateFolderUseCase.ExecuteAsync(uow, new() { FolderId = Id });
+        
+        if (activateResult is { IsSuccess: true, Value: true })
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Folder activated",
+                Detail = "The folder has been successfully activated."
+            });
+            _isActive = true;
+            StateHasChanged();
+        }
+        else
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Error",
+                Detail = "Could not activate folder"
+            });
+            _isActive = false;
+            StateHasChanged();
         }
     }
 }

@@ -5,7 +5,7 @@ using document.lib.data.models.Folders;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
-namespace document.lib.bl.tests;
+namespace document.lib.bl.tests.Folders;
 
 public class SaveFolderUseCaseTests: UnitTestBase
 {

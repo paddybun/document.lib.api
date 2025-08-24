@@ -11,7 +11,7 @@ public abstract class UnitTestBase
 
     protected UnitTestBase()
     {
-        var name = GetType().Name;
+        var name = GetType().Name + Guid.NewGuid();
         UnitTestContext.RegisterTest(name);
         _offset = UnitTestContext.GetFolderOffset(name);
         
@@ -20,8 +20,9 @@ public abstract class UnitTestBase
             .ConfigureWarnings(b => b.Ignore(InMemoryEventId.TransactionIgnoredWarning))
             .Options;
 
-            Context = new DatabaseContext(options);
-            Context.Database.EnsureCreated();
+        Context = new DatabaseContext(options);
+        // Context.Database.EnsureDeleted();
+        Context.Database.EnsureCreated();
     }
     protected int GetFolderId(int id)
     {

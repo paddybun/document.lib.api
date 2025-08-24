@@ -4,7 +4,7 @@ using document.lib.data.entities;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
-namespace document.lib.bl.tests;
+namespace document.lib.bl.tests.Folders;
 
 public class GetRegisterUseCaseTests: UnitTestBase
 {
