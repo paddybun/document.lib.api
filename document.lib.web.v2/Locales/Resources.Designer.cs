@@ -86,5 +86,23 @@ namespace document.lib.web.v2.Locales {
                 return ResourceManager.GetString("Folder.MaxDocumentsFolder", resourceCulture);
             }
         }
+        
+        public static string Messages_LoadError {
+            get {
+                return ResourceManager.GetString("Messages.LoadError", resourceCulture);
+            }
+        }
+        
+        public static string Descriptions_NotFoundMessage {
+            get {
+                return ResourceManager.GetString("Descriptions.NotFoundMessage", resourceCulture);
+            }
+        }
+        
+        public static string Descriptions_Group {
+            get {
+                return ResourceManager.GetString("Descriptions.Group", resourceCulture);
+            }
+        }
     }
 }

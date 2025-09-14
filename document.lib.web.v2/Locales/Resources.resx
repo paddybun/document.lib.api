@@ -39,4 +39,13 @@
     <data name="Folder.MaxDocumentsFolder" xml:space="preserve">
         <value>Folder.MaxDocumentsFolder</value>
     </data>
+    <data name="Messages.LoadError" xml:space="preserve">
+        <value>Messages.LoadError</value>
+    </data>
+    <data name="Descriptions.NotFoundMessage" xml:space="preserve">
+        <value>Descriptions.NotFoundMessage</value>
+    </data>
+    <data name="Descriptions.Group" xml:space="preserve">
+        <value>Descriptions.Group</value>
+    </data>
 </root>
