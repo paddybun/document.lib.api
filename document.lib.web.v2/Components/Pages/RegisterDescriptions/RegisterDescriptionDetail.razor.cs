@@ -74,4 +74,35 @@ public partial class RegisterDescriptionDetail
         _descriptionToUpdate.Add(description);
         await _grid.EditRow(description);
     }
+
+    private void Up(RegisterDescriptionEntryModel entry)
+    {
+        var ix = _model!.Entries.IndexOf(entry);
+        if (ix == 0) return;
+        var newIx = ix - 1;
+        
+        MoveEntry(ix,newIx,entry);
+        StateHasChanged();
+    }
+
+    private void Down(RegisterDescriptionEntryModel entry)
+    {
+        var ix = _model!.Entries.IndexOf(entry);
+        if (ix >= _model.Entries.Count - 1) return;
+        var newIx = ix + 1;
+        
+        MoveEntry(ix,newIx, entry);
+        StateHasChanged();
+    }
+    
+    private void MoveEntry(int oldIndex, int newIndex, RegisterDescriptionEntryModel entry)
+    {
+        _model!.Entries.RemoveAt(oldIndex);
+        _model.Entries.Insert(newIndex, entry);
+
+        foreach (var (value, index) in _model.Entries.Select((value, index) => (value, index)))
+        {
+            value.Order = index;
+        }
+    }
 }

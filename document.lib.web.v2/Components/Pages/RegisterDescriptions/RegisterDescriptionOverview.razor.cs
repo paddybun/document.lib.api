@@ -29,5 +29,6 @@ public partial class RegisterDescriptionOverview
     private void Edit(string context)
     {
         _selectedGroup = context;
+        NavigationManager.NavigateTo($"{ManagedPages.Description}/{_selectedGroup}");
     }
 }

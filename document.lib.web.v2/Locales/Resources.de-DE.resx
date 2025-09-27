@@ -48,4 +48,10 @@
     <data name="Descriptions.Group" xml:space="preserve">
         <value>Gruppe</value>
     </data>
+    <data name="Descriptions.DisplayName" xml:space="preserve">
+        <value>Registername</value>
+    </data>
+    <data name="Descriptions.Order" xml:space="preserve">
+        <value>Anordnung</value>
+    </data>
 </root>

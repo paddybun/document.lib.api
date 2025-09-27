@@ -104,5 +104,17 @@ namespace document.lib.web.v2.Locales {
                 return ResourceManager.GetString("Descriptions.Group", resourceCulture);
             }
         }
+        
+        public static string Descriptions_DisplayName {
+            get {
+                return ResourceManager.GetString("Descriptions.DisplayName", resourceCulture);
+            }
+        }
+        
+        public static string Descriptions_Order {
+            get {
+                return ResourceManager.GetString("Descriptions.Order", resourceCulture);
+            }
+        }
     }
 }
