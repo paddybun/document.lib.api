@@ -1,10 +1,11 @@
 using document.lib.bl.contracts.Folders;
+using document.lib.bl.contracts.RegisterDescriptions;
 using document.lib.core;
 using document.lib.data.models.RegisterDescriptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace document.lib.bl.shared.Folders;
+namespace document.lib.bl.shared.RegisterDescriptions;
 
 public class RegisterDescriptionQuery(ILogger<RegisterDescriptionQuery> logger): IRegisterDescriptionQuery<UnitOfWork>
 {

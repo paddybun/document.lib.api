@@ -1,7 +1,7 @@
 using document.lib.core;
 using document.lib.data.models.RegisterDescriptions;
 
-namespace document.lib.bl.contracts.Folders;
+namespace document.lib.bl.contracts.RegisterDescriptions;
 
 public interface IRegisterDescriptionQuery<in T>
     where T : IUnitOfWork

@@ -6,10 +6,12 @@ namespace document.lib.bl.tests;
 public static class UnitTestContext
 {
     private static readonly Lock Lock = new();
-    private static readonly int IncrementOffsetBy = 10;
+    private static readonly int IncrementOffsetBy = 100;
     private static readonly Dictionary<string, int> FolderIdOffsets = [];
+    private static readonly Dictionary<string, int> RegisterIdOffsets = [];
     
-    private static int _lastOffset = 0;
+    private static int _lastFolderOffset = 0;
+    private static int _lastRegisterOffset = 0;
 
 
     public static int GetFolderOffset(string name)
@@ -27,8 +29,21 @@ public static class UnitTestContext
     {
         lock (Lock)
         {
-            FolderIdOffsets[name] = _lastOffset;    
+            FolderIdOffsets[name] = _lastFolderOffset;    
+            RegisterIdOffsets[name] = _lastRegisterOffset;    
         }
-        _lastOffset += IncrementOffsetBy;
+        _lastFolderOffset += IncrementOffsetBy;
+        _lastRegisterOffset += IncrementOffsetBy;
+    }    
+    
+    public static int GetRegisterOffset(string name)
+    {
+        int offset;
+        lock (Lock)
+        {
+            offset = RegisterIdOffsets[name];
+        }
+
+        return offset;
     }
 }

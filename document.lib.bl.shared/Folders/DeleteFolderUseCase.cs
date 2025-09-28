@@ -31,7 +31,7 @@ public class DeleteFolderUseCase(
 
             if (hasRegisters || hasDocuments)
             {
-                logger.LogWarning("Cannot delete folder {FolderId} - folder is not empty. Has {RegisterCount} registers and {DocumentCount} documents", 
+                logger.LogWarning("Cannot delete folder {FolderId} - folder is not empty. Has {RegisterCount} registers and {DocumentCount} documents",
                     parameters.FolderId, folder.Registers.Count, folder.Registers.SelectMany(r => r.Documents).Count());
                 return Result<bool>.Warning("Cannot delete folder - folder is not empty. Remove all registers and documents first.");
             }
