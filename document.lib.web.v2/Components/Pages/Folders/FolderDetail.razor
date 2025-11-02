@@ -21,68 +21,77 @@
     <div class="rz-m-12">
         <RadzenBreadCrumb>
             <ChildContent>
-                <RadzenBreadCrumbItem Path="/" Text="Home" />
-                <RadzenBreadCrumbItem Path="/folder" Text="Folder" />
-                <RadzenBreadCrumbItem Text="@_editModeModel.Id.ToString()" />
+                <RadzenBreadCrumbItem Path="/" Text="Home"/>
+                <RadzenBreadCrumbItem Path="/folder" Text="Folder"/>
+                <RadzenBreadCrumbItem Text="@_editModeModel.Id.ToString()"/>
             </ChildContent>
         </RadzenBreadCrumb>
     </div>
-    <RadzenRow>
-        <RadzenColumn Size="6">
-            <RadzenFieldset Text="Folder Details">
-                <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
-                    <RadzenFormField Text="Id">
-                        <RadzenNumeric Value="@_editModeModel.Id" ReadOnly="true" Disabled="true"/>
-                    </RadzenFormField>
-                    <RadzenFormField Text="Name">
-                        <RadzenTextBox Value="@_editModeModel.Name" ReadOnly="true" Disabled="true"/>
-                    </RadzenFormField>
-                    <RadzenFormField Text="Display Name">
-                        <RadzenTextBox @bind-Value="_editModeModel.DisplayName"/>
-                    </RadzenFormField>
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
-                        <RadzenLabel Text=@L[$"{nameof(Folder)}.{nameof(Folder.IsActive)}"] Component=@nameof(Folder.IsActive)/>
-                        <RadzenSwitch @bind-Value="_isActive" Name=@nameof(Folder.IsActive) Change="@MakeFolderActive" />
+    <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+        <RadzenRow>
+            <RadzenColumn Size="6">
+                <RadzenFieldset Text="Folder Details">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                        <RadzenFormField Text="Id">
+                            <RadzenNumeric Value="@_editModeModel.Id" ReadOnly="true" Disabled="true"/>
+                        </RadzenFormField>
+                        <RadzenFormField Text="Name">
+                            <RadzenTextBox Value="@_editModeModel.Name" ReadOnly="true" Disabled="true"/>
+                        </RadzenFormField>
+                        <RadzenFormField Text="Display Name">
+                            <RadzenTextBox @bind-Value="_editModeModel.DisplayName"/>
+                        </RadzenFormField>
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
+                            <RadzenLabel Text=@L[$"{nameof(Folder)}.{nameof(Folder.IsActive)}"] Component=@nameof(Folder.IsActive)/>
+                            <RadzenSwitch @bind-Value="_isActive" Name=@nameof(Folder.IsActive) Change="@MakeFolderActive"/>
+                        </RadzenStack>
+                        <RadzenRow>
+                            <RadzenColumn Size="3">
+                                <RadzenFormField Text="Total Documents">
+                                    <RadzenNumeric Value="@_editModeModel.TotalDocuments"/>
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="3">
+                                <RadzenFormField Text="Max Documents">
+                                    <RadzenNumeric Value="@_editModeModel.MaxDocumentsFolder"/>
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="3">
+                                <RadzenFormField Text="Max Documents in Register">
+                                    <RadzenNumeric Value="@_editModeModel.MaxDocumentsRegister"/>
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+                        <RadzenFormField Text=@L[$"{nameof(Folder)}.{nameof(Folder.DescriptionGroup)}"]>
+                            <RadzenTextBox @bind-Value="_editModeModel.DescriptionGroup" ReadOnly="true" Disabled="true"/>
+                        </RadzenFormField>
                     </RadzenStack>
-                    <RadzenRow>
-                        <RadzenColumn Size="3">
-                            <RadzenFormField Text="Total Documents">
-                                <RadzenNumeric Value="@_editModeModel.TotalDocuments"/>
-                            </RadzenFormField>
-                        </RadzenColumn>
-                        <RadzenColumn Size="3">
-                            <RadzenFormField Text="Max Documents">
-                                <RadzenNumeric Value="@_editModeModel.MaxDocumentsFolder"/>
-                            </RadzenFormField>
-                        </RadzenColumn>
-                        <RadzenColumn Size="3">
-                            <RadzenFormField Text="Max Documents in Register">
-                                <RadzenNumeric Value="@_editModeModel.MaxDocumentsRegister"/>
-                            </RadzenFormField>
-                        </RadzenColumn>
-                    </RadzenRow>
-                    <RadzenFormField Text=@L[$"{nameof(Folder)}.{nameof(Folder.DescriptionGroup)}"]>
-                        <RadzenTextBox @bind-Value="_editModeModel.DescriptionGroup" ReadOnly="true" Disabled="true"/>
-                    </RadzenFormField>
+                </RadzenFieldset>
+            </RadzenColumn>
+        </RadzenRow>
+        <RadzenRow>
+            <RadzenColumn Size="6">
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem">
+                    <RadzenButton Text="@L["Button.Save"]" ButtonStyle="ButtonStyle.Base" Click="SaveExistingFolder"/>
+                    <RadzenButton Text="@L["Button.ShowDocuments"]" Click="@LoadFolderOverview" ButtonStyle="ButtonStyle.Base"/>
+                    <RadzenButton Text=@L["Button.Delete"] Click="@(() => DeleteFolder(_editModeModel.Id))" ButtonStyle="ButtonStyle.Danger"/>
                 </RadzenStack>
-            </RadzenFieldset>
-            <RadzenButton Text=@L["Button.Delete"] Click="@(() => DeleteFolder(_editModeModel.Id))"/>
-        </RadzenColumn>
-    </RadzenRow>
-    <RadzenRow>
-        <RadzenColumn Size="6">
-            <RadzenButton Text="@L["Button.Show"]" Click="@LoadFolderOverview"/>
-            @if (_folderView is { Items.Count: >0 } )
-            {
-                <RadzenDataGrid Data="@_folderView.Items" @ref=_grid AllowGrouping="true" Render="@OnRender" TItem="FolderViewItem">
-                    <Columns>
-                        <RadzenDataGridColumn Property="@nameof(FolderViewItem.Document)" Title="@L["Document"]"/>
-                        <RadzenDataGridColumn Property="@nameof(FolderViewItem.Register)" Title="@L["Register"]"/>    
-                    </Columns>
-                </RadzenDataGrid>
-            }
-        </RadzenColumn>
-    </RadzenRow>
+            </RadzenColumn>
+        </RadzenRow>
+        <RadzenRow>
+            <RadzenColumn Size="6">
+                @if (_folderView is { Items.Count: > 0 })
+                {
+                    <RadzenDataGrid Data="@_folderView.Items" @ref=_grid AllowGrouping="true" Render="@OnRender" TItem="FolderViewItem">
+                        <Columns>
+                            <RadzenDataGridColumn Property="@nameof(FolderViewItem.Document)" Title="@L["Document"]"/>
+                            <RadzenDataGridColumn Property="@nameof(FolderViewItem.Register)" Title="@L["Register"]"/>
+                        </Columns>
+                    </RadzenDataGrid>
+                }
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenStack>
 }
 @if (_createModeModel != null!)
 {

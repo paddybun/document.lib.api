@@ -8,25 +8,9 @@ public partial class DatabaseContext : DbContext
     public DatabaseContext()
     {
     }
-
-    public DatabaseContext(string connectionString)
-    {
-        _connectionString = connectionString;
-    }
-
     public DatabaseContext(DbContextOptions<DatabaseContext> options)
     : base(options)
     {
-    }
-
-    private readonly string _connectionString;
-    
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        if (!optionsBuilder.IsConfigured)
-        {
-            optionsBuilder.UseSqlServer(_connectionString);
-        }
     }
     
     public override int SaveChanges()

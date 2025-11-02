@@ -54,4 +54,31 @@
     <data name="Descriptions.Order" xml:space="preserve">
         <value>Descriptions.Order</value>
     </data>
+    <data name="Folder.IsActive" xml:space="preserve">
+        <value>Folder.IsActive</value>
+    </data>
+    <data name="Button.ShowDocuments" xml:space="preserve">
+        <value>Button.ShowDocuments</value>
+    </data>
+    <data name="Button.Delete" xml:space="preserve">
+        <value>Button.Delete</value>
+    </data>
+    <data name="Button.Save" xml:space="preserve">
+        <value>Button.Save</value>
+    </data>
+    <data name="Message.Error" xml:space="preserve">
+        <value>Message.Error</value>
+    </data>
+    <data name="Message.CouldNotSaveFolder" xml:space="preserve">
+        <value>Message.CouldNotSaveFolder</value>
+    </data>
+    <data name="Message.Success" xml:space="preserve">
+        <value>Message.Success</value>
+    </data>
+    <data name="Message.FolderSaved" xml:space="preserve">
+        <value>Message.FolderSaved</value>
+    </data>
+    <data name="Folder.DescriptionGroup" xml:space="preserve">
+        <value>Folder.DescriptionGroup</value>
+    </data>
 </root>

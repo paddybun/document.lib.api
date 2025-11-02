@@ -116,5 +116,59 @@ namespace document.lib.web.v2.Locales {
                 return ResourceManager.GetString("Descriptions.Order", resourceCulture);
             }
         }
+        
+        public static string Folder_IsActive {
+            get {
+                return ResourceManager.GetString("Folder.IsActive", resourceCulture);
+            }
+        }
+        
+        public static string Button_ShowDocuments {
+            get {
+                return ResourceManager.GetString("Button.ShowDocuments", resourceCulture);
+            }
+        }
+        
+        public static string Button_Delete {
+            get {
+                return ResourceManager.GetString("Button.Delete", resourceCulture);
+            }
+        }
+        
+        public static string Button_Save {
+            get {
+                return ResourceManager.GetString("Button.Save", resourceCulture);
+            }
+        }
+        
+        public static string Message_Error {
+            get {
+                return ResourceManager.GetString("Message.Error", resourceCulture);
+            }
+        }
+        
+        public static string Message_CouldNotSaveFolder {
+            get {
+                return ResourceManager.GetString("Message.CouldNotSaveFolder", resourceCulture);
+            }
+        }
+        
+        public static string Message_Success {
+            get {
+                return ResourceManager.GetString("Message.Success", resourceCulture);
+            }
+        }
+        
+        public static string Message_FolderSaved {
+            get {
+                return ResourceManager.GetString("Message.FolderSaved", resourceCulture);
+            }
+        }
+        
+        public static string Folder_DescriptionGroup {
+            get {
+                return ResourceManager.GetString("Folder.DescriptionGroup", resourceCulture);
+            }
+        }
     }
 }

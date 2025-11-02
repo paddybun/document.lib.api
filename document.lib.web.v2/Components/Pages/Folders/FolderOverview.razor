@@ -29,6 +29,18 @@
     <RadzenDataGrid @bind-Value="@_selectedFolders" Data="_folders" TItem="Folder">
         <Columns>
             <RadzenDataGridColumn Property="@nameof(Folder.Id)" Title=@L[$"{nameof(Folder)}.{nameof(Folder.Id)}"] />
+            <RadzenDataGridColumn Title=@L[$"{nameof(Folder)}.{nameof(Folder.IsActive)}"]>
+                <Template>
+                    @if (context.IsActive)
+                    {
+                        <RadzenIcon Icon="check"/>
+                    }
+                    else
+                    {
+                        <RadzenIcon Icon="close"/>
+                    }
+                </Template>
+            </RadzenDataGridColumn>
             <RadzenDataGridColumn Property="@nameof(Folder.DisplayName)" Title=@L[$"{nameof(Folder)}.{nameof(Folder.DisplayName)}"]/>
             <RadzenDataGridColumn Property="@nameof(Folder.Name)" Title=@L[$"{nameof(Folder)}.{nameof(Folder.Name)}"]/>
             <RadzenDataGridColumn>

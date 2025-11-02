@@ -42,6 +42,7 @@ public static class CqrsDependencyModule
         serviceCollection.AddTransient<IRegisterDescriptionAddCommand<UnitOfWork>, RegisterDescriptionAddCommand>();
         serviceCollection.AddTransient<IRegisterDescriptionSaveUseCase<UnitOfWork>, RegisterDescriptionSaveUseCase>();
         serviceCollection.AddTransient<IRegisterDescriptionRenameGroupCommand<UnitOfWork>, RegisterDescriptionRenameGroupCommand>();
+        serviceCollection.AddTransient<IRegisterDescriptionUpdateCommand<UnitOfWork>, RegisterDescriptionUpdateCommand>();
         
         
         return serviceCollection;

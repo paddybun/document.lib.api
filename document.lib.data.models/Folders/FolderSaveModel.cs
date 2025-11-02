@@ -20,4 +20,16 @@ public class FolderSaveModel(bool createNew)
         this.Adapt(folder);
         return folder;
     }
+
+    public static FolderSaveModel AdaptExisting(Folder folder)
+    {
+        return new FolderSaveModel(false)
+        {
+            Id = folder.Id,
+            DescriptionGroup = folder.DescriptionGroup,
+            MaxDocumentsFolder = folder.MaxDocumentsFolder,
+            MaxDocumentsRegister = folder.MaxDocumentsRegister,
+            DisplayName = folder.DisplayName
+        };
+    }
 }
