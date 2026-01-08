@@ -1,10 +1,12 @@
 ﻿using document.lib.bl.contracts.Categories;
 using document.lib.bl.contracts.DocumentHandling;
 using document.lib.bl.contracts.Folders;
+using document.lib.bl.contracts.RegisterDescriptions;
 using document.lib.bl.contracts.Upload;
 using document.lib.bl.shared.Categories;
 using document.lib.bl.shared.DocumentHandling;
 using document.lib.bl.shared.Folders;
+using document.lib.bl.shared.RegisterDescriptions;
 using document.lib.bl.shared.Upload;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,13 +29,20 @@ public static class CqrsDependencyModule
         // Folders
         serviceCollection.AddTransient<IFolderQuery<UnitOfWork>, FolderQuery>();
         serviceCollection.AddTransient<IFoldersQuery<UnitOfWork>, FoldersQuery>();
-        serviceCollection.AddTransient<IRegisterDescriptionsQuery<UnitOfWork>, RegisterDescriptionsQuery>();
         serviceCollection.AddTransient<IGetRegisterUseCase<UnitOfWork>, GetRegisterUseCase>();
         serviceCollection.AddTransient<INextDescriptionQuery<UnitOfWork>, NextDescriptionQuery>();
         serviceCollection.AddTransient<IGetFolderOverviewUseCase<UnitOfWork>, GetFolderOverviewUseCase>();
         serviceCollection.AddTransient<ISaveFolderUseCase<UnitOfWork>, SaveFolderUseCase>();
         serviceCollection.AddTransient<IDeleteFolderUseCase<UnitOfWork>, DeleteFolderUseCase>();
         serviceCollection.AddTransient<IActivateFolderUseCase<UnitOfWork>, ActivateFolderUseCase>();
+        
+        // Descriptions
+        serviceCollection.AddTransient<IRegisterDescriptionsQuery<UnitOfWork>, RegisterDescriptionsQuery>();
+        serviceCollection.AddTransient<IRegisterDescriptionQuery<UnitOfWork>, RegisterDescriptionQuery>();
+        serviceCollection.AddTransient<IRegisterDescriptionAddCommand<UnitOfWork>, RegisterDescriptionAddCommand>();
+        serviceCollection.AddTransient<IRegisterDescriptionSaveUseCase<UnitOfWork>, RegisterDescriptionSaveUseCase>();
+        serviceCollection.AddTransient<IRegisterDescriptionRenameGroupCommand<UnitOfWork>, RegisterDescriptionRenameGroupCommand>();
+        serviceCollection.AddTransient<IRegisterDescriptionUpdateCommand<UnitOfWork>, RegisterDescriptionUpdateCommand>();
         
         
         return serviceCollection;

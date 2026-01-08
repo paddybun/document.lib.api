@@ -31,9 +31,9 @@ public class ActivateFolderUseCase(
                 await uow.RollbackTransactionAsync();
                 return Result<bool>.Warning("Folder not found");
             }
-            
+
             folderToActivate.IsActive = true;
-            
+
             // Set all eligible folders to inactive
             foreach (var folder in allFolders.Where(x => x.Id != parameters.FolderId))
             {
@@ -44,7 +44,7 @@ public class ActivateFolderUseCase(
             uow.Connection.UpdateRange(allFolders);
             await uow.CommitAsync();
 
-            logger.LogInformation("Successfully activated folder with ID {FolderId} and deactivated all other eligible folders", 
+            logger.LogInformation("Successfully activated folder with ID {FolderId} and deactivated all other eligible folders",
                 parameters.FolderId);
             return Result<bool>.Success(true);
         }

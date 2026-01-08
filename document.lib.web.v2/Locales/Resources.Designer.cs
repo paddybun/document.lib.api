@@ -86,5 +86,89 @@ namespace document.lib.web.v2.Locales {
                 return ResourceManager.GetString("Folder.MaxDocumentsFolder", resourceCulture);
             }
         }
+        
+        public static string Messages_LoadError {
+            get {
+                return ResourceManager.GetString("Messages.LoadError", resourceCulture);
+            }
+        }
+        
+        public static string Descriptions_NotFoundMessage {
+            get {
+                return ResourceManager.GetString("Descriptions.NotFoundMessage", resourceCulture);
+            }
+        }
+        
+        public static string Descriptions_Group {
+            get {
+                return ResourceManager.GetString("Descriptions.Group", resourceCulture);
+            }
+        }
+        
+        public static string Descriptions_DisplayName {
+            get {
+                return ResourceManager.GetString("Descriptions.DisplayName", resourceCulture);
+            }
+        }
+        
+        public static string Descriptions_Order {
+            get {
+                return ResourceManager.GetString("Descriptions.Order", resourceCulture);
+            }
+        }
+        
+        public static string Folder_IsActive {
+            get {
+                return ResourceManager.GetString("Folder.IsActive", resourceCulture);
+            }
+        }
+        
+        public static string Button_ShowDocuments {
+            get {
+                return ResourceManager.GetString("Button.ShowDocuments", resourceCulture);
+            }
+        }
+        
+        public static string Button_Delete {
+            get {
+                return ResourceManager.GetString("Button.Delete", resourceCulture);
+            }
+        }
+        
+        public static string Button_Save {
+            get {
+                return ResourceManager.GetString("Button.Save", resourceCulture);
+            }
+        }
+        
+        public static string Message_Error {
+            get {
+                return ResourceManager.GetString("Message.Error", resourceCulture);
+            }
+        }
+        
+        public static string Message_CouldNotSaveFolder {
+            get {
+                return ResourceManager.GetString("Message.CouldNotSaveFolder", resourceCulture);
+            }
+        }
+        
+        public static string Message_Success {
+            get {
+                return ResourceManager.GetString("Message.Success", resourceCulture);
+            }
+        }
+        
+        public static string Message_FolderSaved {
+            get {
+                return ResourceManager.GetString("Message.FolderSaved", resourceCulture);
+            }
+        }
+        
+        public static string Folder_DescriptionGroup {
+            get {
+                return ResourceManager.GetString("Folder.DescriptionGroup", resourceCulture);
+            }
+        }
     }
 }

@@ -180,4 +180,32 @@ public partial class FolderDetail : ComponentBase
             StateHasChanged();
         }
     }
+
+    private async Task SaveExistingFolder(MouseEventArgs arg)
+    {
+        var saveModel = FolderSaveModel.AdaptExisting(_editModeModel);
+        var uow = await UnitOfWork.CreateAsync(DbContextFactory);
+        var saveResult = await SaveFolderUseCase.ExecuteAsync(uow, new(){ Folder = saveModel });
+        if (saveResult is { IsSuccess: true, Value: not null })
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = L["Message.Success"],
+                Detail = L["Message.FolderSaved"]
+            });
+
+            _editModeModel = saveResult.Value;
+            StateHasChanged();
+        }
+        else
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L["Message.Error"],
+                Detail = L["Message.CouldNotSaveFolder"]
+            });    
+        }
+    }
 }

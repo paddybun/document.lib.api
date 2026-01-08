@@ -1,0 +1,48 @@
+@page "/Description/{group}"
+@using document.lib.bl.contracts.RegisterDescriptions
+@using document.lib.data.models.RegisterDescriptions
+@using Microsoft.EntityFrameworkCore
+
+@rendermode InteractiveServer
+
+@inject IDbContextFactory<DatabaseContext> DbContextFactory
+@inject NotificationService NotificationService
+@inject IStringLocalizer<Resources> L
+@inject IJSRuntime JSRuntime
+
+@inject IRegisterDescriptionQuery<UnitOfWork> RegisterDescriptionQuery
+
+@if (_model != null)
+{
+    <RadzenRow>
+        <RadzenColumn Size="6">
+            <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                <RadzenFieldset>
+                    <RadzenStack Orientation="Orientation.Vertical">
+                        <RadzenFormField AllowFloatingLabel="false" Text=@L["Descriptions.Group"]>
+                            <RadzenTextBox @bind-Value="_model.Group"/>
+                        </RadzenFormField>
+                    </RadzenStack>
+                </RadzenFieldset>
+                <RadzenFieldset>
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                        @foreach (var entry in _model.Entries.OrderBy(x => x.Order))
+                        {
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center">
+                                <RadzenFormField Text="@L["Descriptions.DisplayName"]" AllowFloatingLabel="false">
+                                    <RadzenTextBox @bind-Value="entry.DisplayName"/>    
+                                </RadzenFormField>
+                                <RadzenFormField Text="@L["Descriptions.Order"]" AllowFloatingLabel="false">
+                                    <RadzenNumeric @bind-Value="entry.Order" ReadOnly="true" Disabled="true"/>
+                                </RadzenFormField>
+                                
+                                <RadzenButton Icon="arrow_upward" Click="@(_ => { Up(entry); })"/>
+                                <RadzenButton Icon="arrow_downward" Click="@(_ => { Down(entry); })"/>
+                            </RadzenStack>
+                        }
+                    </RadzenStack>
+                </RadzenFieldset>
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+}

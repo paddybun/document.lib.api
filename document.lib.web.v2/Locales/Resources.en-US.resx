@@ -39,4 +39,46 @@
     <data name="Folder.MaxDocumentsFolder" xml:space="preserve">
         <value>Amount of documents per folder</value>
     </data>
+    <data name="Messages.LoadError" xml:space="preserve">
+        <value>Load error</value>
+    </data>
+    <data name="Descriptions.NotFoundMessage" xml:space="preserve">
+        <value>Descriptions not found</value>
+    </data>
+    <data name="Descriptions.Group" xml:space="preserve">
+        <value>Group</value>
+    </data>
+    <data name="Descriptions.DisplayName" xml:space="preserve">
+        <value>Register name</value>
+    </data>
+    <data name="Descriptions.Order" xml:space="preserve">
+        <value>Order</value>
+    </data>
+    <data name="Folder.IsActive" xml:space="preserve">
+        <value>Active</value>
+    </data>
+    <data name="Button.ShowDocuments" xml:space="preserve">
+        <value>Show documents</value>
+    </data>
+    <data name="Button.Delete" xml:space="preserve">
+        <value>Delete</value>
+    </data>
+    <data name="Button.Save" xml:space="preserve">
+        <value>Save</value>
+    </data>
+    <data name="Message.Error" xml:space="preserve">
+        <value>Error</value>
+    </data>
+    <data name="Message.CouldNotSaveFolder" xml:space="preserve">
+        <value>Error while saving folder</value>
+    </data>
+    <data name="Message.Success" xml:space="preserve">
+        <value>Success</value>
+    </data>
+    <data name="Message.FolderSaved" xml:space="preserve">
+        <value>Folder saved</value>
+    </data>
+    <data name="Folder.DescriptionGroup" xml:space="preserve">
+        <value>Folder configuration</value>
+    </data>
 </root>
