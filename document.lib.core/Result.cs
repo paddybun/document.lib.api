@@ -3,8 +3,11 @@
 public class Result<T>
 {
     public bool IsSuccess { get; set; }
-    public T? Value { get; private set; }
+    public bool HasError { get; set; }
     public bool HasWarning { get; set; }
+    public bool HasData => !(HasError || HasWarning) && Value is not null;
+    
+    public T? Value { get; private set; }
     public string Message { get; private set; } = "";
     public Exception? Exception { get; set; }
 
@@ -13,6 +16,7 @@ public class Result<T>
         return new Result<T>
         {
             IsSuccess = true,
+            HasError = false,
             Value = value
         };
     }
@@ -22,6 +26,7 @@ public class Result<T>
         return new Result<T>
         {
             IsSuccess = false,
+            HasError = true,
             Value = default
         };
     }
@@ -31,6 +36,7 @@ public class Result<T>
         return new Result<T>
         {
             IsSuccess = false,
+            HasError = false,
             HasWarning = true,
             Message = warningMessage,
             Value = default

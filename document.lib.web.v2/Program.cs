@@ -63,7 +63,7 @@ app.UseHttpsRedirection();
 app.MapStaticAssets();
 app.UseAntiforgery();
 
-app.MapPost("/api/upload/single", async (IUploadBlobUseCase uploadBlobUse, [FromForm] IFormFile file) =>
+app.MapPost("api/upload/single", async (IUploadBlobUseCase uploadBlobUse, [FromForm] IFormFile file) =>
 {
     using (var memStream = new MemoryStream())
     {
@@ -73,7 +73,7 @@ app.MapPost("/api/upload/single", async (IUploadBlobUseCase uploadBlobUse, [From
     }
 
     return TypedResults.Ok();
-});
+}).DisableAntiforgery();
 
 app.MapGet("api/culture", (string culture, string redirectUri, HttpContext context) =>
 {

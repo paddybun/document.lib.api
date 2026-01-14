@@ -1,5 +1,4 @@
 ﻿@page "/Document/create"
-@using document.lib.data.context
 @using Microsoft.EntityFrameworkCore
 
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
@@ -10,37 +9,39 @@
 <RadzenRow>
     <RadzenColumn Size="12">
         <RadzenCard>
-            <RadzenText TextStyle="TextStyle.Subtitle2" Text="Upload New Document"/>
-            <RadzenUpload Url="/api/upload/single" Progress="@OnProgress" Error="@OnError" />
+            <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem">
+                    <RadzenText TextStyle="TextStyle.Subtitle2" Text="Upload New Document"/>
+                    <RadzenUpload @ref="_upload" Url="api/upload/single" Progress="@OnProgress" Error="@OnError" Auto="false"/>        
+                </RadzenStack>
+                <RadzenButton Text="Upload" Click=@OnUpload class="rz-mt-4" />
+            </RadzenStack>
         </RadzenCard>
-        
     </RadzenColumn>
 </RadzenRow>
 
 @code{
     private byte[] _data;
     private RadzenUpload _upload;
+    private string? _docName = null;
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
     }
 
-    private async Task OnChange(UploadChangeEventArgs arg)
-    {
-    }
-
-    private async Task OnComplete(UploadCompleteEventArgs arg)
-    {
-    }
-
     private async Task OnProgress(UploadProgressArgs arg)
     {
-        
     }
 
     private void OnError(UploadErrorEventArgs obj)
     {
         Console.WriteLine(obj.Message);
     }
+
+    private async Task OnUpload(MouseEventArgs arg)
+    {
+        await _upload.Upload();
+    }
+
 }
