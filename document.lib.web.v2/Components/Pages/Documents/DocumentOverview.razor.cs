@@ -1,13 +1,11 @@
 using document.lib.bl.contracts.Documents.ViewModels;
 using document.lib.bl.shared;
 using document.lib.core.Models;
-using document.lib.data.entities;
 using document.lib.web.v2.Extensions;
-using Microsoft.EntityFrameworkCore;
 using Radzen;
 using Radzen.Blazor;
 
-namespace document.lib.web.v2.Components.Pages;
+namespace document.lib.web.v2.Components.Pages.Documents;
 
 public partial class DocumentOverview
 {
@@ -35,5 +33,10 @@ public partial class DocumentOverview
             return;
         
         _documents = result.Value!.FilteredList.ToList();
+    }
+    
+    private void Callback(DataGridRowMouseEventArgs<DocumentOverviewModel> obj)
+    {
+        NavigationManager.NavigateTo($"{ManagedPages.Documents}/{obj.Data.Id}");
     }
 }

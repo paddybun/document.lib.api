@@ -5,6 +5,7 @@
 
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
 @inject IDocumentListUseCase<UnitOfWork> DocumentListUseCase
+@inject NavigationManager NavigationManager
 
 @rendermode InteractiveServer
 
@@ -19,7 +20,8 @@
             TItem="DocumentOverviewModel"
             Count="@_count"
             Data="@_documents"
-            LoadData="@LoadData">
+            LoadData="@LoadData"
+            RowDoubleClick="Callback">
             <Columns>
                 @foreach (var prop in typeof(DocumentOverviewModel).GetProperties())
                 {

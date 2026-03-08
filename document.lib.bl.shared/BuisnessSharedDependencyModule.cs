@@ -35,6 +35,7 @@ public static class CqrsDependencyModule
         // Documents
         serviceCollection.AddTransient<IDocumentListUseCase<UnitOfWork>, DocumentListUseCase>();
         serviceCollection.AddTransient<IDocumentOverviewQuery<UnitOfWork>, DocumentOverviewQuery>();
+        serviceCollection.AddTransient<IDocumentQuery<UnitOfWork>, DocumentQuery>();
         
         // Folders
         serviceCollection.AddTransient<IFolderQuery<UnitOfWork>, FolderQuery>();

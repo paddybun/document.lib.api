@@ -44,4 +44,6 @@ public class Document: BaseFields
     public Category Category { get; set; } = null!;
     
     public bool Digital { get; set; }
+
+    public int FilesizeInBytes { get; set; }
 }
