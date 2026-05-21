@@ -1,5 +1,6 @@
 using document.lib.bl.shared;
-using document.lib.bl.shared.Folders;
+using document.lib.bl.shared.Folders.UseCases;
+using document.lib.bl.shared.Folders.Queries;
 using document.lib.data.entities;
 using document.lib.data.models.Folders;
 using Microsoft.Extensions.Logging.Abstractions;

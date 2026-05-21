@@ -1,19 +1,31 @@
-﻿using document.lib.bl.contracts.Categories;
-using document.lib.bl.contracts.DocumentHandling;
+﻿using document.lib.bl.contracts.Categories.Queries;
+using document.lib.bl.contracts.Categories.UseCases;
+using document.lib.bl.contracts.DocumentHandling.Queries;
+using document.lib.bl.contracts.DocumentHandling.UseCases;
 using document.lib.bl.contracts.Documents.Queries;
 using document.lib.bl.contracts.Documents.UseCases;
-using document.lib.bl.contracts.Folders;
-using document.lib.bl.contracts.RegisterDescriptions;
+using document.lib.bl.contracts.Folders.Queries;
+using document.lib.bl.contracts.Folders.UseCases;
+using document.lib.bl.contracts.RegisterDescriptions.Commands;
+using document.lib.bl.contracts.RegisterDescriptions.Queries;
+using document.lib.bl.contracts.RegisterDescriptions.UseCases;
 using document.lib.bl.contracts.Tags.Queries;
-using document.lib.bl.contracts.Upload;
-using document.lib.bl.shared.Categories;
-using document.lib.bl.shared.DocumentHandling;
+using document.lib.bl.contracts.Upload.Commands;
+using document.lib.bl.contracts.Upload.UseCases;
+using document.lib.bl.shared.Categories.Queries;
+using document.lib.bl.shared.Categories.UseCases;
+using document.lib.bl.shared.DocumentHandling.Queries;
+using document.lib.bl.shared.DocumentHandling.UseCases;
 using document.lib.bl.shared.Documents.Queries;
 using document.lib.bl.shared.Documents.UseCases;
-using document.lib.bl.shared.Folders;
-using document.lib.bl.shared.RegisterDescriptions;
+using document.lib.bl.shared.Folders.Queries;
+using document.lib.bl.shared.Folders.UseCases;
+using document.lib.bl.shared.RegisterDescriptions.Commands;
+using document.lib.bl.shared.RegisterDescriptions.Queries;
+using document.lib.bl.shared.RegisterDescriptions.UseCases;
 using document.lib.bl.shared.Tags.Queries;
-using document.lib.bl.shared.Upload;
+using document.lib.bl.shared.Upload.Commands;
+using document.lib.bl.shared.Upload.UseCases;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace document.lib.bl.shared;
@@ -25,6 +37,8 @@ public static class CqrsDependencyModule
         // Categories
         serviceCollection.AddTransient<ICategoryQuery<UnitOfWork>, CategoryQuery>();
         serviceCollection.AddTransient<ICategoriesQuery<UnitOfWork>, CategoriesQuery>();
+        serviceCollection.AddTransient<IGetCategoryUseCase<UnitOfWork>, GetCategoryUseCase>();
+        serviceCollection.AddTransient<IGetCategoriesUseCase<UnitOfWork>, GetCategoriesUseCase>();
 
         // Upload
         serviceCollection.AddTransient<IUploadBlobCommand, UploadBlobCommand>();

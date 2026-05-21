@@ -1,5 +1,6 @@
-using document.lib.bl.contracts.DocumentHandling;
-using document.lib.bl.contracts.Folders;
+using document.lib.bl.contracts.DocumentHandling.UseCases;
+using document.lib.bl.contracts.Folders.Queries;
+using document.lib.bl.contracts.Folders.UseCases;
 using document.lib.bl.shared;
 using document.lib.data.entities;
 using document.lib.data.models.Folders;

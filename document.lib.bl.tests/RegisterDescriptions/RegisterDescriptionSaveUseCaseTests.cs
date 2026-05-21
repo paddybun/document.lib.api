@@ -1,5 +1,7 @@
 using document.lib.bl.shared;
-using document.lib.bl.shared.RegisterDescriptions;
+using document.lib.bl.shared.RegisterDescriptions.Queries;
+using document.lib.bl.shared.RegisterDescriptions.Commands;
+using document.lib.bl.shared.RegisterDescriptions.UseCases;
 using document.lib.data.entities;
 using document.lib.data.models.RegisterDescriptions;
 using Microsoft.Extensions.Logging.Abstractions;

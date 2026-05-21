@@ -1,5 +1,5 @@
 using Azure.Identity;
-using document.lib.bl.contracts.Upload;
+using document.lib.bl.contracts.Upload.UseCases;
 using document.lib.bl.shared;
 using document.lib.core;
 using document.lib.data.context;

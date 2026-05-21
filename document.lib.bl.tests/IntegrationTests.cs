@@ -1,6 +1,7 @@
 ﻿using document.lib.bl.shared;
-using document.lib.bl.shared.DocumentHandling;
-using document.lib.bl.shared.Folders;
+using document.lib.bl.shared.DocumentHandling.UseCases;
+using document.lib.bl.shared.DocumentHandling.Queries;
+using document.lib.bl.shared.Folders.Queries;
 using document.lib.data.context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

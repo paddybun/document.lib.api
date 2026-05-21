@@ -1,5 +1,6 @@
 using document.lib.bl.shared;
-using document.lib.bl.shared.DocumentHandling;
+using document.lib.bl.shared.DocumentHandling.UseCases;
+using document.lib.bl.shared.DocumentHandling.Queries;
 using document.lib.data.entities;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
