@@ -1,0 +1,58 @@
+@page "/Tags"
+@using document.lib.bl.contracts.Tags.UseCases
+@using document.lib.bl.contracts.Tags.ViewModels
+@using Microsoft.EntityFrameworkCore
+
+@rendermode InteractiveServer
+
+@inject IDbContextFactory<DatabaseContext> DbContextFactory
+@inject IGetTagOverviewUseCase<UnitOfWork> GetTagOverviewUseCase
+@inject IMergeTagUseCase<UnitOfWork> MergeTagUseCase
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+
+<RadzenStack Orientation="Orientation.Vertical" Gap="1rem" class="rz-m-12">
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="/" Text="Home"/>
+            <RadzenBreadCrumbItem Text="Tags"/>
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+    @if (_tags == null)
+    {
+        <p>Loading ...</p>
+    }
+    else
+    {
+        <RadzenFieldset Text="Merge tags">
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+                <RadzenFormField Text="Tag to merge">
+                    <RadzenDropDown @bind-Value="_sourceId" Data="_tags" TValue="int?" AllowClear="true" AllowFiltering="true"
+                                    TextProperty="@nameof(TagOverviewModel.DisplayName)" ValueProperty="@nameof(TagOverviewModel.Id)"/>
+                </RadzenFormField>
+                <RadzenIcon Icon="arrow_forward"/>
+                <RadzenFormField Text="Destination tag">
+                    <RadzenDropDown @bind-Value="_destinationId" Data="_tags.Where(x => x.Id != _sourceId)" TValue="int?" AllowClear="true" AllowFiltering="true"
+                                    TextProperty="@nameof(TagOverviewModel.DisplayName)" ValueProperty="@nameof(TagOverviewModel.Id)"/>
+                </RadzenFormField>
+                <RadzenButton Text="Merge" ButtonStyle="ButtonStyle.Warning" IsBusy="_merging"
+                              Disabled="@(_sourceId == null || _destinationId == null || _sourceId == _destinationId || _merging)" Click="Merge"/>
+            </RadzenStack>
+        </RadzenFieldset>
+
+        <RadzenDataGrid Data="_tags" TItem="TagOverviewModel" AllowSorting="true" AllowPaging="true" PageSize="20"
+                        AllowFiltering="true" FilterMode="FilterMode.Simple">
+            <Columns>
+                <RadzenDataGridColumn TItem="TagOverviewModel" Property="DisplayName" Title="Tag"/>
+                <RadzenDataGridColumn TItem="TagOverviewModel" Property="DocumentCount" Title="Documents" TextAlign="TextAlign.Right" Filterable="false"/>
+                <RadzenDataGridColumn TItem="TagOverviewModel" Title="" Sortable="false" Filterable="false" TextAlign="TextAlign.Right">
+                    <Template Context="tag">
+                        <RadzenButton Text="Merge into ..." Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light"
+                                      Click="@(() => SelectSource(tag.Id))"/>
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    }
+</RadzenStack>

@@ -57,7 +57,7 @@
                             <RadzenRequiredValidator Component="DisplayName" Text="Display name is required" Popup="true"/>
                         </RadzenFormField>
                         <RadzenFormField Text="Date of document">
-                            <RadzenDatePicker Name="DateOfDocument" @bind-Value="_model.DateOfDocument" DateFormat="d"/>
+                            <RadzenDatePicker Name="DateOfDocument" @bind-Value="_model.DateOfDocument" DateFormat="dd.MM.yyyy"/>
                             <RadzenRequiredValidator Component="DateOfDocument" Text="Date of document is required" Popup="true"/>
                         </RadzenFormField>
                         <RadzenFormField Text="Company (optional)">
@@ -116,10 +116,10 @@
                             <RadzenTextBox Value="@_model.Filename" ReadOnly="true" Disabled="true"/>
                         </RadzenFormField>
                         <RadzenFormField Text="Upload date">
-                            <RadzenTextBox Value="@_model.UploadDate.ToString("g")" ReadOnly="true" Disabled="true"/>
+                            <RadzenTextBox Value="@_model.UploadDate.ToString("dd.MM.yyyy HH:mm")" ReadOnly="true" Disabled="true"/>
                         </RadzenFormField>
                         <RadzenFormField Text="Last modified">
-                            <RadzenTextBox Value="@_model.DateModified.ToString("g")" ReadOnly="true" Disabled="true"/>
+                            <RadzenTextBox Value="@_model.DateModified.ToString("dd.MM.yyyy HH:mm")" ReadOnly="true" Disabled="true"/>
                         </RadzenFormField>
                         <RadzenFormField Text="File size (bytes)">
                             <RadzenTextBox Value="@_model.FilesizeInBytes.ToString("N0")" ReadOnly="true" Disabled="true"/>

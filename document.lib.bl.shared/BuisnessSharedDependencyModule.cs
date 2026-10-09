@@ -11,6 +11,7 @@ using document.lib.bl.contracts.Folders.UseCases;
 using document.lib.bl.contracts.RegisterDescriptions.Commands;
 using document.lib.bl.contracts.RegisterDescriptions.Queries;
 using document.lib.bl.contracts.RegisterDescriptions.UseCases;
+using document.lib.bl.contracts.Tags.Commands;
 using document.lib.bl.contracts.Tags.Queries;
 using document.lib.bl.contracts.Tags.UseCases;
 using document.lib.bl.contracts.Upload.Commands;
@@ -28,6 +29,7 @@ using document.lib.bl.shared.Folders.UseCases;
 using document.lib.bl.shared.RegisterDescriptions.Commands;
 using document.lib.bl.shared.RegisterDescriptions.Queries;
 using document.lib.bl.shared.RegisterDescriptions.UseCases;
+using document.lib.bl.shared.Tags.Commands;
 using document.lib.bl.shared.Tags.Queries;
 using document.lib.bl.shared.Tags.UseCases;
 using document.lib.bl.shared.Upload.Commands;
@@ -98,6 +100,10 @@ public static class CqrsDependencyModule
         // Tags
         serviceCollection.AddTransient<ITagsQuery<UnitOfWork>, TagsQuery>();
         serviceCollection.AddTransient<IGetTagsUseCase<UnitOfWork>, GetTagsUseCase>();
+        serviceCollection.AddTransient<ITagOverviewQuery<UnitOfWork>, TagOverviewQuery>();
+        serviceCollection.AddTransient<IMergeTagCommand<UnitOfWork>, MergeTagCommand>();
+        serviceCollection.AddTransient<IGetTagOverviewUseCase<UnitOfWork>, GetTagOverviewUseCase>();
+        serviceCollection.AddTransient<IMergeTagUseCase<UnitOfWork>, MergeTagUseCase>();
         
         return serviceCollection;
     }
