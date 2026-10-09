@@ -21,6 +21,7 @@ public class MoveDocumentCommand : IMoveDocumentCommand<UnitOfWork>
         doc.Register = register;
         doc.BlobLocation = parameters.BlobLocation;
         doc.Unsorted = false;
+        doc.Digital = parameters.Digital;
 
         return Result<int>.Success(doc.Id);
     }

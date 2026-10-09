@@ -27,6 +27,8 @@ public class UpdateDocumentCommand : IUpdateDocumentCommand<UnitOfWork>
             return Result<int>.Warning("A real category is required");
 
         doc.DisplayName = parameters.DisplayName.Trim();
+        doc.Company = string.IsNullOrWhiteSpace(parameters.Company) ? null : parameters.Company.Trim();
+        doc.Description = string.IsNullOrWhiteSpace(parameters.Description) ? null : parameters.Description.Trim();
         doc.DateOfDocument = parameters.DateOfDocument;
         doc.Category = category;
 

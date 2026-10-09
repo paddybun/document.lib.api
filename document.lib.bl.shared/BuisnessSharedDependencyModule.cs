@@ -60,6 +60,8 @@ public static class CqrsDependencyModule
         serviceCollection.AddTransient<ISaveDocumentUseCase<UnitOfWork>, SaveDocumentUseCase>();
         serviceCollection.AddTransient<IGetDocumentFileUseCase<UnitOfWork>, GetDocumentFileUseCase>();
         serviceCollection.AddTransient<IMoveDocumentCommand<UnitOfWork>, MoveDocumentCommand>();
+        serviceCollection.AddTransient<ICompaniesQuery<UnitOfWork>, CompaniesQuery>();
+        serviceCollection.AddTransient<IGetCompaniesUseCase<UnitOfWork>, GetCompaniesUseCase>();
         serviceCollection.AddTransient<IUpdateDocumentCommand<UnitOfWork>, UpdateDocumentCommand>();
         
         // Folders

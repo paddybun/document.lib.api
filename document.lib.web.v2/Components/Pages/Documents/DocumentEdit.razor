@@ -14,6 +14,7 @@
 @inject ISaveDocumentUseCase<UnitOfWork> SaveDocumentUseCase
 @inject IGetCategoriesUseCase<UnitOfWork> GetCategoriesUseCase
 @inject IGetTagsUseCase<UnitOfWork> GetTagsUseCase
+@inject IGetCompaniesUseCase<UnitOfWork> GetCompaniesUseCase
 
 @if (_model != null)
 {
@@ -29,7 +30,9 @@
             <RadzenText TextStyle="TextStyle.Overline" class="rz-mb-2">Physical location</RadzenText>
             @if (_model.Unsorted)
             {
-                <RadzenText TextStyle="TextStyle.Body1">Not filed yet. Saving moves it to the active folder.</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body1">
+                    @(_model.Digital ? "Not filed yet. Saving moves it to the digital storage." : "Not filed yet. Saving moves it to the active folder.")
+                </RadzenText>
             }
             <RadzenRow Gap="2rem">
                 <RadzenColumn Size="6">
@@ -55,6 +58,14 @@
                             <RadzenDatePicker Name="DateOfDocument" @bind-Value="_model.DateOfDocument" DateFormat="d"/>
                             <RadzenRequiredValidator Component="DateOfDocument" Text="Date of document is required" Popup="true"/>
                         </RadzenFormField>
+                        <RadzenFormField Text="Company (optional)">
+                            <RadzenAutoComplete @bind-Value="_model.Company" Data="_companies" MaxLength="250"
+                                                FilterOperator="StringFilterOperator.Contains"
+                                                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"/>
+                        </RadzenFormField>
+                        <RadzenFormField Text="Description (optional)">
+                            <RadzenTextArea @bind-Value="_model.Description" Rows="5" MaxLength="2000"/>
+                        </RadzenFormField>
                         <RadzenFormField Text="Category">
                             <RadzenDropDown Name="Category" @bind-Value="_model.CategoryId" Data="_categories"
                                             TextProperty="@nameof(Category.DisplayName)"
@@ -73,6 +84,14 @@
                             </RadzenFormField>
                             <RadzenButton Text="Add tag" ButtonStyle="ButtonStyle.Secondary" ButtonType="ButtonType.Button" Click="AddTag"/>
                         </RadzenStack>
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                            <RadzenCheckBox Name="DigitalOnly" @bind-Value="_model.Digital" Disabled="@(!_model.Unsorted)"/>
+                            <RadzenLabel Text="Digital only (no physical document)" Component="DigitalOnly"/>
+                        </RadzenStack>
+                        @if (!_model.Unsorted)
+                        {
+                            <RadzenText TextStyle="TextStyle.Caption">The digital flag can only be chosen while the document is unsorted.</RadzenText>
+                        }
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem">
                             <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Primary" ButtonType="ButtonType.Submit" IsBusy="_saving"/>
                             <RadzenButton Text="@(_showPreview ? "Hide preview" : "Preview")" Icon="picture_as_pdf" ButtonStyle="ButtonStyle.Secondary" ButtonType="ButtonType.Button" Click="@(() => _showPreview = !_showPreview)"/>
@@ -93,12 +112,6 @@
                         <RadzenFormField Text="File name">
                             <RadzenTextBox Value="@_model.Filename" ReadOnly="true" Disabled="true"/>
                         </RadzenFormField>
-                        <RadzenFormField Text="Company">
-                            <RadzenTextBox Value="@_model.Company" ReadOnly="true" Disabled="true"/>
-                        </RadzenFormField>
-                        <RadzenFormField Text="Description">
-                            <RadzenTextArea Value="@_model.Description" ReadOnly="true" Disabled="true"/>
-                        </RadzenFormField>
                         <RadzenFormField Text="Upload date">
                             <RadzenTextBox Value="@_model.UploadDate.ToString("g")" ReadOnly="true" Disabled="true"/>
                         </RadzenFormField>
@@ -108,8 +121,6 @@
                         <RadzenFormField Text="File size (bytes)">
                             <RadzenTextBox Value="@_model.FilesizeInBytes.ToString("N0")" ReadOnly="true" Disabled="true"/>
                         </RadzenFormField>
-                        <RadzenCheckBox Value="@_model.Digital" ReadOnly="true" Disabled="true" Name="Digital"/>
-                        <RadzenLabel Text="Digital" Component="Digital"/>
                     </RadzenStack>
                 </RadzenFieldset>
             </RadzenColumn>

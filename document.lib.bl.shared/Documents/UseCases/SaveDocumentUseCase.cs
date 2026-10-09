@@ -5,6 +5,7 @@ using document.lib.bl.contracts.Documents.UseCases;
 using document.lib.bl.contracts.Folders.Queries;
 using document.lib.bl.contracts.Upload.Commands;
 using document.lib.core;
+using document.lib.core.System;
 using document.lib.data.entities;
 using Microsoft.Extensions.Logging;
 
@@ -14,6 +15,7 @@ public class SaveDocumentUseCase(
     ILogger<SaveDocumentUseCase> logger,
     IDocumentQuery<UnitOfWork> documentQuery,
     IActiveFolderQuery<UnitOfWork> activeFolderQuery,
+    IFolderQuery<UnitOfWork> folderQuery,
     IGetRegisterUseCase<UnitOfWork> getRegisterUseCase,
     IUpdateDocumentCommand<UnitOfWork> updateDocumentCommand,
     IMoveDocumentCommand<UnitOfWork> moveDocumentCommand,
@@ -41,7 +43,9 @@ public class SaveDocumentUseCase(
 
             if (doc.Unsorted)
             {
-                var folderResult = await activeFolderQuery.ExecuteAsync(uow);
+                var folderResult = model.Digital
+                    ? await folderQuery.ExecuteAsync(uow, new FolderQueryParameters { FolderName = SystemConstants.DigitalFolderName })
+                    : await activeFolderQuery.ExecuteAsync(uow);
                 if (!folderResult.HasData) return Result<Document>.Warning(folderResult.Message);
                 var folder = folderResult.Value!;
 
@@ -54,7 +58,9 @@ public class SaveDocumentUseCase(
 
                 targetRegister = registerResult.Value!;
                 oldBlob = doc.BlobLocation;
-                newBlob = $"{folder.Name}/{targetRegister.Name}/{doc.PhysicalName}";
+                newBlob = model.Digital
+                    ? $"{SystemConstants.DigitalFolderName}/{doc.PhysicalName}"
+                    : $"{folder.Name}/{targetRegister.Name}/{doc.PhysicalName}";
 
                 if (!await copyBlobCommand.ExecuteAsync(oldBlob, newBlob))
                 {
@@ -67,7 +73,7 @@ public class SaveDocumentUseCase(
             await uow.BeginTransactionAsync();
 
             var update = await updateDocumentCommand.ExecuteAsync(uow,
-                new UpdateDocumentCommandParameters(doc.Id, model.DisplayName, model.DateOfDocument, model.CategoryId, model.Tags));
+                new UpdateDocumentCommandParameters(doc.Id, model.DisplayName, model.DateOfDocument, model.CategoryId, model.Company, model.Description, model.Tags));
             if (!update.IsSuccess)
             {
                 await Abort(uow, copiedBlob);
@@ -77,7 +83,7 @@ public class SaveDocumentUseCase(
             if (targetRegister != null)
             {
                 var move = await moveDocumentCommand.ExecuteAsync(uow,
-                    new MoveDocumentCommandParameters(doc.Id, targetRegister.Id, newBlob!));
+                    new MoveDocumentCommandParameters(doc.Id, targetRegister.Id, newBlob!, model.Digital));
                 if (!move.IsSuccess)
                 {
                     await Abort(uow, copiedBlob);

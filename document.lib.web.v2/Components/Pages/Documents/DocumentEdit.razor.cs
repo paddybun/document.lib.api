@@ -16,6 +16,7 @@ public partial class DocumentEdit : ComponentBase
     private DocumentEditModel? _model;
     private List<Category> _categories = [];
     private List<Tag> _tags = [];
+    private List<string> _companies = [];
     private bool _saving;
     private bool _showPreview;
     private string _newTag = string.Empty;
@@ -34,6 +35,7 @@ public partial class DocumentEdit : ComponentBase
         var docResult = await GetDocumentUseCase.ExecuteAsync(uow, new GetDocumentUseCaseParameters(Id));
         var categories = await GetCategoriesUseCase.ExecuteAsync(uow, new GetCategoriesUseCaseParameters(null, null));
         var tags = await GetTagsUseCase.ExecuteAsync(uow);
+        var companies = await GetCompaniesUseCase.ExecuteAsync(uow);
 
         if (!docResult.HasData || !categories.IsSuccess || !tags.IsSuccess)
         {
@@ -43,6 +45,7 @@ public partial class DocumentEdit : ComponentBase
 
         _categories = categories.Value!.Where(x => x.Name != Constants.UncategorizedName).ToList();
         _tags = tags.Value!.ToList();
+        _companies = companies.Value ?? [];
         _model = docResult.Value;
         StateHasChanged();
     }
@@ -64,6 +67,9 @@ public partial class DocumentEdit : ComponentBase
                 DisplayName = _model.DisplayName ?? string.Empty,
                 DateOfDocument = dateOfDocument,
                 CategoryId = categoryId,
+                Company = _model.Company,
+                Description = _model.Description,
+                Digital = _model.Digital,
                 Tags = tagNames
             }));
         _saving = false;
