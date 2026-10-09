@@ -1,3 +1,4 @@
+using document.lib.bl.contracts.Categories.Commands;
 using document.lib.bl.contracts.Categories.Queries;
 using document.lib.bl.contracts.Categories.UseCases;
 using document.lib.bl.contracts.DocumentHandling.Queries;
@@ -14,6 +15,7 @@ using document.lib.bl.contracts.Tags.Queries;
 using document.lib.bl.contracts.Tags.UseCases;
 using document.lib.bl.contracts.Upload.Commands;
 using document.lib.bl.contracts.Upload.UseCases;
+using document.lib.bl.shared.Categories.Commands;
 using document.lib.bl.shared.Categories.Queries;
 using document.lib.bl.shared.Categories.UseCases;
 using document.lib.bl.shared.DocumentHandling.Queries;
@@ -43,6 +45,14 @@ public static class CqrsDependencyModule
         serviceCollection.AddTransient<ICategoriesQuery<UnitOfWork>, CategoriesQuery>();
         serviceCollection.AddTransient<IGetCategoryUseCase<UnitOfWork>, GetCategoryUseCase>();
         serviceCollection.AddTransient<IGetCategoriesUseCase<UnitOfWork>, GetCategoriesUseCase>();
+        serviceCollection.AddTransient<ICategoryOverviewQuery<UnitOfWork>, CategoryOverviewQuery>();
+        serviceCollection.AddTransient<IUpdateCategoryCommand<UnitOfWork>, UpdateCategoryCommand>();
+        serviceCollection.AddTransient<IGetCategoryOverviewUseCase<UnitOfWork>, GetCategoryOverviewUseCase>();
+        serviceCollection.AddTransient<IUpdateCategoryUseCase<UnitOfWork>, UpdateCategoryUseCase>();
+        serviceCollection.AddTransient<IMergeCategoryCommand<UnitOfWork>, MergeCategoryCommand>();
+        serviceCollection.AddTransient<IDeleteCategoryCommand<UnitOfWork>, DeleteCategoryCommand>();
+        serviceCollection.AddTransient<IMergeCategoryUseCase<UnitOfWork>, MergeCategoryUseCase>();
+        serviceCollection.AddTransient<IDeleteCategoryUseCase<UnitOfWork>, DeleteCategoryUseCase>();
 
         // Upload
         serviceCollection.AddTransient<IUploadBlobCommand, UploadBlobCommand>();

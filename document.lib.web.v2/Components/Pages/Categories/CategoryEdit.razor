@@ -1,0 +1,88 @@
+@page "/Categories/{Id:int}"
+@using document.lib.bl.contracts.Categories.UseCases
+@using document.lib.bl.contracts.Categories.ViewModels
+@using Microsoft.EntityFrameworkCore
+
+@rendermode InteractiveServer
+
+@inject IDbContextFactory<DatabaseContext> DbContextFactory
+@inject IGetCategoryOverviewUseCase<UnitOfWork> GetCategoryOverviewUseCase
+@inject IUpdateCategoryUseCase<UnitOfWork> UpdateCategoryUseCase
+@inject IMergeCategoryUseCase<UnitOfWork> MergeCategoryUseCase
+@inject IDeleteCategoryUseCase<UnitOfWork> DeleteCategoryUseCase
+@inject DialogService DialogService
+@inject NavigationManager NavigationManager
+@inject NotificationService NotificationService
+
+<RadzenStack Orientation="Orientation.Vertical" Gap="1rem" class="rz-m-12">
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="/" Text="Home"/>
+            <RadzenBreadCrumbItem Path="/Categories" Text="Categories"/>
+            <RadzenBreadCrumbItem Text="@(_category?.Name ?? Id.ToString())"/>
+        </ChildContent>
+    </RadzenBreadCrumb>
+    @if (_loaded && _category == null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">Category not found.</RadzenAlert>
+        <RadzenButton Text="Back" ButtonStyle="ButtonStyle.Light" Click="Back"/>
+    }
+    else if (_category != null)
+    {
+        <RadzenRow>
+            <RadzenColumn Size="6">
+                <RadzenFieldset Text="Category">
+                    <RadzenTemplateForm TItem="CategoryOverviewModel" Data="_category" Submit="@(_ => Save())">
+                        <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                            <RadzenFormField Text="Display name">
+                                <RadzenTextBox Name="DisplayName" @bind-Value="_category.DisplayName" MaxLength="500"/>
+                                <RadzenRequiredValidator Component="DisplayName" Text="Display name is required" Popup="true"/>
+                            </RadzenFormField>
+                            <RadzenFormField Text="Name">
+                                <RadzenTextBox Value="@_category.Name" ReadOnly="true"/>
+                            </RadzenFormField>
+                            <RadzenFormField Text="Documents">
+                                <RadzenTextBox Value="@_category.DocumentCount.ToString()" ReadOnly="true"/>
+                            </RadzenFormField>
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem">
+                                <RadzenButton ButtonType="ButtonType.Submit" Text="Save" IsBusy="_saving" Disabled="_saving"/>
+                                <RadzenButton Text="Back" ButtonStyle="ButtonStyle.Light" Click="Back"/>
+                            </RadzenStack>
+                        </RadzenStack>
+                    </RadzenTemplateForm>
+                </RadzenFieldset>
+            </RadzenColumn>
+            <RadzenColumn Size="6">
+                <RadzenFieldset Text="Merge into another category">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                        <RadzenText TextStyle="TextStyle.Body2">
+                            All documents of this category are moved to the selected category.
+                        </RadzenText>
+                        <RadzenFormField Text="Destination category">
+                            <RadzenDropDown @bind-Value="_destinationId" Data="_otherCategories" TValue="int?"
+                                            TextProperty="@nameof(CategoryOverviewModel.DisplayName)"
+                                            ValueProperty="@nameof(CategoryOverviewModel.Id)"
+                                            AllowClear="true" AllowFiltering="true"/>
+                        </RadzenFormField>
+                        <RadzenButton Text="Merge" ButtonStyle="ButtonStyle.Warning" IsBusy="_merging"
+                                      Disabled="@(_destinationId == null || _merging || _saving)" Click="Merge"/>
+                    </RadzenStack>
+                </RadzenFieldset>
+                @if (_category.DocumentCount == 0)
+                {
+                    <RadzenFieldset Text="Delete category" class="rz-mt-4">
+                        <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                            <RadzenText TextStyle="TextStyle.Body2">This category is not used by any document.</RadzenText>
+                            <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger" IsBusy="_deleting"
+                                          Disabled="_deleting" Click="Delete"/>
+                        </RadzenStack>
+                    </RadzenFieldset>
+                }
+            </RadzenColumn>
+        </RadzenRow>
+    }
+    else
+    {
+        <p>Loading ...</p>
+    }
+</RadzenStack>

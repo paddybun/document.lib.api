@@ -1,0 +1,42 @@
+@page "/Categories"
+@using document.lib.bl.contracts.Categories.UseCases
+@using document.lib.bl.contracts.Categories.ViewModels
+@using Microsoft.EntityFrameworkCore
+
+@rendermode InteractiveServer
+
+@inject IDbContextFactory<DatabaseContext> DbContextFactory
+@inject IGetCategoryOverviewUseCase<UnitOfWork> GetCategoryOverviewUseCase
+@inject NavigationManager NavigationManager
+@inject NotificationService NotificationService
+
+<RadzenStack Orientation="Orientation.Vertical" Gap="1rem" class="rz-m-12">
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="/" Text="Home"/>
+            <RadzenBreadCrumbItem Text="Categories"/>
+        </ChildContent>
+    </RadzenBreadCrumb>
+    @if (_categories == null)
+    {
+        <p>Loading ...</p>
+    }
+    else
+    {
+        <RadzenDataGrid Data="_categories" TItem="CategoryOverviewModel" AllowSorting="true" AllowPaging="true" PageSize="20"
+                        RowSelect="@(x => Edit(x.Id))">
+            <Columns>
+                <RadzenDataGridColumn TItem="CategoryOverviewModel" Property="DisplayName" Title="Display name">
+                    <Template Context="category">@(category.DisplayName ?? category.Name)</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="CategoryOverviewModel" Property="Name" Title="Name"/>
+                <RadzenDataGridColumn TItem="CategoryOverviewModel" Property="DocumentCount" Title="Documents" TextAlign="TextAlign.Right"/>
+                <RadzenDataGridColumn TItem="CategoryOverviewModel" Title="" Sortable="false" TextAlign="TextAlign.Right">
+                    <Template Context="category">
+                        <RadzenButton Text="Edit" Size="ButtonSize.Small" Click="@(() => Edit(category.Id))"/>
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    }
+</RadzenStack>
