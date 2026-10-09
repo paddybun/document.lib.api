@@ -149,8 +149,29 @@ public partial class FolderDetail : ComponentBase
 
     private async Task DeleteFolder(int id)
     {
-        var uow = await UnitOfWork.CreateAsync(DbContextFactory);
-        await DeleteFolderUseCase.ExecuteAsync(uow, new (){  FolderId = id});
+        var confirmed = await DialogService.Confirm(
+            "Do you really want to delete this folder? Its empty registers are deleted as well.",
+            "Delete folder",
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+        if (confirmed != true) return;
+
+        using var uow = await UnitOfWork.CreateAsync(DbContextFactory);
+        var result = await DeleteFolderUseCase.ExecuteAsync(uow, new() { FolderId = id });
+
+        if (result is { IsSuccess: true })
+        {
+            NotificationService.Notify(NotificationSeverity.Success, "Folder deleted");
+            NavigationManager.NavigateTo($"/{ManagedPages.Folder}");
+            return;
+        }
+
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = result.HasWarning ? NotificationSeverity.Warning : NotificationSeverity.Error,
+            Summary = "Folder could not be deleted",
+            Detail = result.HasWarning ? result.Message : "An unexpected error occurred while deleting the folder.",
+            Duration = 8000
+        });
     }
 
     private async Task MakeFolderActive(bool arg)

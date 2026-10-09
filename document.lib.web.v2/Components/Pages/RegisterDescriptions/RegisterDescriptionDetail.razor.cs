@@ -1,108 +1,144 @@
-using System.Collections.ObjectModel;
+using document.lib.bl.contracts.RegisterDescriptions.UseCases;
 using document.lib.bl.shared;
 using document.lib.data.models.RegisterDescriptions;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.JSInterop;
 using Radzen;
-using Radzen.Blazor;
 
 namespace document.lib.web.v2.Components.Pages.RegisterDescriptions;
 
 public partial class RegisterDescriptionDetail
 {
-    [Parameter] public string Group { get; set; } = null!;
+    [Parameter] public string? Group { get; set; }
+    [SupplyParameterFromQuery] public string? CopyFrom { get; set; }
 
-    private DataGridEditMode _editMode = DataGridEditMode.Single;
-    private RadzenDataGrid<RegisterDescriptionEntryModel> _grid = null!;
-    private RegisterDescriptionDetailModel? _model;
-    private ObservableCollection<RegisterDescriptionEntryModel> _gridModel = null!;
-    private IList<RegisterDescriptionEntryModel>? _selectedDescriptions;
-    private RegisterDescriptionEntryModel _draggedItem = null!;
-    private List<RegisterDescriptionEntryModel> _descriptionToUpdate;
+    private bool _isNew;
+    private bool _loaded;
+    private bool _saving;
+    private bool _inUse;
+    private string _originalGroup = string.Empty;
+    private string _groupName = string.Empty;
+    private List<RegisterDescriptionEntryModel> _entries = [];
+    private string _customText = string.Empty;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (!firstRender) return;
+
+        _isNew = string.IsNullOrEmpty(Group);
+        if (_isNew)
         {
-            using var uow = await UnitOfWork.CreateAsync(DbContextFactory);
-            var descriptionsResult = await RegisterDescriptionQuery.ExecuteAsync(uow, new() { GroupName = Group });
-            if (descriptionsResult.HasWarning || !descriptionsResult.IsSuccess)
-            {
-                NotificationService.Notify(new()
-                {
-                    Severity = NotificationSeverity.Warning,
-                    Summary = L["Messages.LoadError"],
-                    Detail = L["Descriptions.NotFoundMessage"],
-                    Duration = 2000
-                });
-            }
-            
-            _model = descriptionsResult.Value;
-            _gridModel = new ObservableCollection<RegisterDescriptionEntryModel>(_model!.Entries);
+            if (!string.IsNullOrWhiteSpace(CopyFrom))
+                await LoadCopyAsync(CopyFrom);
+
+            _loaded = true;
             StateHasChanged();
+            return;
         }
+
+        await LoadAsync(Group!);
     }
 
-    void RowRender(RowRenderEventArgs<RegisterDescriptionEntryModel> args)
+    private async Task LoadAsync(string group)
     {
-        args.Attributes.Add("title", "Drag row to reorder");
-        args.Attributes.Add("style", "cursor:grab");
-        args.Attributes.Add("draggable", "true");
-        args.Attributes.Add("ondragover", "event.preventDefault();event.target.closest('.rz-data-row').classList.add('my-class')");
-        args.Attributes.Add("ondragleave", "event.target.closest('.rz-data-row').classList.remove('my-class')");
-        args.Attributes.Add("ondragstart", EventCallback.Factory.Create<DragEventArgs>(this, () => _draggedItem = args.Data));
-        args.Attributes.Add("ondrop", EventCallback.Factory.Create<DragEventArgs>(this, () =>
+        using var uow = await UnitOfWork.CreateAsync(DbContextFactory);
+        var result = await RegisterDescriptionQuery.ExecuteAsync(uow, new() { GroupName = group });
+        if (!result.IsSuccess || result.Value == null)
         {
-            var draggedIndex = _gridModel.IndexOf(_draggedItem);
-            var droppedIndex = _gridModel.IndexOf(args.Data);
-            _gridModel.Remove(_draggedItem);
-            _gridModel.Insert(draggedIndex <= droppedIndex ? droppedIndex++ : droppedIndex, _draggedItem);
-            JSRuntime.InvokeVoidAsync("eval", $"document.querySelector('.my-class').classList.remove('my-class')");
-        }));
-    }
-    
-    async Task EditRow(RegisterDescriptionEntryModel description)
-    {
-        if (!_grid.IsValid) return;
+            NotificationService.Notify(NotificationSeverity.Warning, "Register set could not be loaded");
+            Back();
+            return;
+        }
 
-        // if (_editMode == DataGridEditMode.Single)
-        // {
-        //     Reset();
-        // }
-
-        _descriptionToUpdate.Add(description);
-        await _grid.EditRow(description);
-    }
-
-    private void Up(RegisterDescriptionEntryModel entry)
-    {
-        var ix = _model!.Entries.IndexOf(entry);
-        if (ix == 0) return;
-        var newIx = ix - 1;
-        
-        MoveEntry(ix,newIx,entry);
+        Apply(result.Value);
+        _loaded = true;
         StateHasChanged();
     }
 
-    private void Down(RegisterDescriptionEntryModel entry)
+    private async Task LoadCopyAsync(string source)
     {
-        var ix = _model!.Entries.IndexOf(entry);
-        if (ix >= _model.Entries.Count - 1) return;
-        var newIx = ix + 1;
-        
-        MoveEntry(ix,newIx, entry);
-        StateHasChanged();
-    }
-    
-    private void MoveEntry(int oldIndex, int newIndex, RegisterDescriptionEntryModel entry)
-    {
-        _model!.Entries.RemoveAt(oldIndex);
-        _model.Entries.Insert(newIndex, entry);
-
-        foreach (var (value, index) in _model.Entries.Select((value, index) => (value, index)))
+        using var uow = await UnitOfWork.CreateAsync(DbContextFactory);
+        var result = await RegisterDescriptionQuery.ExecuteAsync(uow, new() { GroupName = source });
+        if (!result.IsSuccess || result.Value == null)
         {
-            value.Order = index;
+            NotificationService.Notify(NotificationSeverity.Warning, "Register set to copy could not be loaded");
+            return;
         }
+
+        _groupName = $"{source} (copy)";
+        _entries = result.Value.Entries.OrderBy(x => x.Order)
+            .Select(x => new RegisterDescriptionEntryModel { DisplayName = x.DisplayName })
+            .ToList();
     }
+
+    private void Copy() => NavigationManager.NavigateTo($"/RegisterSets/Create?CopyFrom={Uri.EscapeDataString(_originalGroup)}", forceLoad: true);
+
+    private void Apply(RegisterDescriptionDetailModel model)
+    {
+        _originalGroup = model.Group;
+        _inUse = model.InUse;
+        _groupName = model.Group;
+        _entries = model.Entries.OrderBy(x => x.Order).ToList();
+    }
+
+    private void Generate()
+    {
+        var names = RegisterSetTemplates.FromText(_customText);
+
+        if (names.Count == 0)
+        {
+            NotificationService.Notify(NotificationSeverity.Warning, "Please enter at least one entry");
+            return;
+        }
+
+        _entries = names.Select((x, i) => new RegisterDescriptionEntryModel { DisplayName = x, Order = i }).ToList();
+    }
+
+    private void AddEntry() => _entries.Add(new RegisterDescriptionEntryModel { DisplayName = string.Empty });
+
+    private void Remove(int index) => _entries.RemoveAt(index);
+
+    private void Move(int index, int offset)
+    {
+        var target = index + offset;
+        if (target < 0 || target >= _entries.Count) return;
+        (_entries[index], _entries[target]) = (_entries[target], _entries[index]);
+    }
+
+    private async Task Save()
+    {
+        var name = _groupName.Trim();
+        var model = new RegisterDescriptionSaveModel
+        {
+            GroupName = _isNew ? name : _originalGroup,
+            NewGroupName = _isNew ? null : name,
+            CreateNew = _isNew,
+            Entries = _entries
+                .Select((x, i) => new RegisterDescriptionEntryModel { Id = x.Id, DisplayName = x.DisplayName, Order = i })
+                .ToList()
+        };
+
+        _saving = true;
+        using var uow = await UnitOfWork.CreateAsync(DbContextFactory);
+        var result = await RegisterDescriptionSaveUseCase.ExecuteAsync(uow, new() { SaveModel = model });
+        _saving = false;
+
+        if (!result.IsSuccess || result.Value == null)
+        {
+            NotificationService.Notify(NotificationSeverity.Error,
+                result.HasWarning ? result.Message : "Register set could not be saved");
+            return;
+        }
+
+        NotificationService.Notify(NotificationSeverity.Success, _isNew ? "Register set created" : "Register set saved");
+
+        if (_isNew || result.Value.Group != _originalGroup)
+        {
+            NavigationManager.NavigateTo($"/{ManagedPages.Description}/{Uri.EscapeDataString(result.Value.Group)}", forceLoad: true);
+            return;
+        }
+
+        Apply(result.Value);
+    }
+
+    private void Back() => NavigationManager.NavigateTo($"/{ManagedPages.Description}");
 }

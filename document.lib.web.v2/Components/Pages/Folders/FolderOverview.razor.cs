@@ -1,6 +1,7 @@
 using document.lib.bl.shared;
 using document.lib.data.entities;
 using Microsoft.AspNetCore.Components.Web;
+using Radzen;
 
 namespace document.lib.web.v2.Components.Pages.Folders;
 
@@ -18,6 +19,13 @@ public partial class FolderOverview
             _folders = foldersResult.IsSuccess ? foldersResult.Value! : [];
             StateHasChanged();
         }
+    }
+
+    private static void OnRowRender(RowRenderEventArgs<Folder> args)
+    {
+        if (!args.Data.IsActive) return;
+
+        args.Attributes["style"] = "background-color: var(--rz-success-lighter); font-weight: bold; border-left: 6px solid var(--rz-success);";
     }
 
     private void NavigateTo(Folder folder)

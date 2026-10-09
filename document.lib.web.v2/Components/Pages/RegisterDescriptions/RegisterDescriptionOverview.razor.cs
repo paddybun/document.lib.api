@@ -8,6 +8,7 @@ public partial class RegisterDescriptionOverview
     private List<RegisterDescription> _registerDescriptions = [];
     private Dictionary<string, int> _registerDescriptionsGroups = [];
     
+    private bool _loaded;
     private string _selectedGroup = string.Empty;
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -15,13 +16,14 @@ public partial class RegisterDescriptionOverview
         using var uow = await UnitOfWork.CreateAsync(DbContextFactory); 
         if (firstRender)
         {
-            var descriptionsResult = await RegisterDescriptionsQuery.ExecuteAsync(uow, new() { HideSystemDescriptions = false });
+            var descriptionsResult = await RegisterDescriptionsQuery.ExecuteAsync(uow, new() { HideSystemDescriptions = true });
             _registerDescriptions = descriptionsResult.Value ?? [];
             
             _registerDescriptionsGroups = _registerDescriptions
                 .GroupBy(x => x.Group)
                 .ToDictionary(g => g.Key, g => g.Count());
             
+            _loaded = true;
             StateHasChanged();
         }
     }
@@ -29,6 +31,6 @@ public partial class RegisterDescriptionOverview
     private void Edit(string context)
     {
         _selectedGroup = context;
-        NavigationManager.NavigateTo($"{ManagedPages.Description}/{_selectedGroup}");
+        NavigationManager.NavigateTo($"{ManagedPages.Description}/{Uri.EscapeDataString(_selectedGroup)}");
     }
 }

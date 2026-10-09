@@ -18,7 +18,7 @@ public class UploadBlobUseCase(
     public async Task<Document?> ExecuteAsync(string filename, MemoryStream blob)
     {
         var blobName = Guid.NewGuid().ToString();
-        var blobPath = $"{NewDocumentsFolder}/{blobName}";
+        var blobPath = $"{NewDocumentsFolder}/{blobName}.pdf";
         try
         {
             await context.Database.BeginTransactionAsync();

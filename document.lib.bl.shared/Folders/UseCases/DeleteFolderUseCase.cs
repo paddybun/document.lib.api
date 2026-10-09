@@ -1,6 +1,7 @@
 using document.lib.bl.contracts.Folders.Queries;
 using document.lib.bl.contracts.Folders.UseCases;
 using document.lib.core;
+using document.lib.core.System;
 using Microsoft.Extensions.Logging;
 
 namespace document.lib.bl.shared.Folders.UseCases;
@@ -27,17 +28,19 @@ public class DeleteFolderUseCase(
                 return Result<bool>.Warning("Folder not found");
             }
 
-            var hasRegisters = folder.Registers.Any();
-            var hasDocuments = folder.Registers.SelectMany(r => r.Documents).Any();
+            if (folder.Name is SystemConstants.UnsortedFolderName or SystemConstants.DigitalFolderName)
+                return Result<bool>.Warning("System folders cannot be deleted.");
 
-            if (hasRegisters || hasDocuments)
+            var documentCount = folder.Registers.Sum(r => r.Documents.Count);
+            if (documentCount > 0)
             {
-                logger.LogWarning("Cannot delete folder {FolderId} - folder is not empty. Has {RegisterCount} registers and {DocumentCount} documents",
-                    parameters.FolderId, folder.Registers.Count, folder.Registers.SelectMany(r => r.Documents).Count());
-                return Result<bool>.Warning("Cannot delete folder - folder is not empty. Remove all registers and documents first.");
+                logger.LogWarning("Cannot delete folder {FolderId} - it contains {DocumentCount} documents in {RegisterCount} registers",
+                    parameters.FolderId, documentCount, folder.Registers.Count);
+                return Result<bool>.Warning($"The folder cannot be deleted because it still contains {documentCount} document(s). Move or delete them first.");
             }
 
-            // Folder is empty, proceed with deletion
+            // Registers without documents are removed together with the folder
+            unitOfWork.Connection.RemoveRange(folder.Registers);
             unitOfWork.Connection.Remove(folder);
             await unitOfWork.CommitAsync();
 

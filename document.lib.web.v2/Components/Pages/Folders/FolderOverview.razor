@@ -1,4 +1,4 @@
-﻿@page "/Folder"
+@page "/Folder"
 @using Microsoft.EntityFrameworkCore
 
 @rendermode InteractiveServer
@@ -26,14 +26,14 @@
 </RadzenRow>
 @if (_folders != null!)
 {
-    <RadzenDataGrid @bind-Value="@_selectedFolders" Data="_folders" TItem="Folder">
+    <RadzenDataGrid @bind-Value="@_selectedFolders" Data="_folders" TItem="Folder" RowRender="@OnRowRender">
         <Columns>
             <RadzenDataGridColumn Property="@nameof(Folder.Id)" Title=@L[$"{nameof(Folder)}.{nameof(Folder.Id)}"] />
             <RadzenDataGridColumn Title=@L[$"{nameof(Folder)}.{nameof(Folder.IsActive)}"]>
                 <Template>
                     @if (context.IsActive)
                     {
-                        <RadzenIcon Icon="check"/>
+                        <RadzenIcon Icon="check_circle" IconColor="var(--rz-success)"/>
                     }
                     else
                     {

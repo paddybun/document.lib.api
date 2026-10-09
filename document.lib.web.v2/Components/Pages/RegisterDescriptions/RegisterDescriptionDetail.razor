@@ -1,5 +1,7 @@
 @page "/Description/{group}"
+@page "/RegisterSets/Create"
 @using document.lib.bl.contracts.RegisterDescriptions.Queries
+@using document.lib.bl.contracts.RegisterDescriptions.UseCases
 @using document.lib.data.models.RegisterDescriptions
 @using Microsoft.EntityFrameworkCore
 
@@ -7,42 +9,92 @@
 
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
 @inject NotificationService NotificationService
-@inject IStringLocalizer<Resources> L
-@inject IJSRuntime JSRuntime
-
+@inject NavigationManager NavigationManager
 @inject IRegisterDescriptionQuery<UnitOfWork> RegisterDescriptionQuery
+@inject IRegisterDescriptionSaveUseCase<UnitOfWork> RegisterDescriptionSaveUseCase
 
-@if (_model != null)
-{
-    <RadzenRow>
-        <RadzenColumn Size="6">
-            <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
-                <RadzenFieldset>
-                    <RadzenStack Orientation="Orientation.Vertical">
-                        <RadzenFormField AllowFloatingLabel="false" Text=@L["Descriptions.Group"]>
-                            <RadzenTextBox @bind-Value="_model.Group"/>
+<RadzenStack Orientation="Orientation.Vertical" Gap="1rem" class="rz-m-12">
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="/" Text="Home"/>
+            <RadzenBreadCrumbItem Path="/Description" Text="Register sets"/>
+            <RadzenBreadCrumbItem Text="@(_isNew ? "New" : _originalGroup)"/>
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+    @if (_inUse)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
+            This register set is in use by a folder. Its entries are locked, only the name can be changed.
+            To change the entries, copy it as a new set.
+        </RadzenAlert>
+    }
+
+    @if (!_loaded)
+    {
+        <p>Loading ...</p>
+    }
+    else
+    {
+        <RadzenRow>
+            <RadzenColumn Size="8">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                    <RadzenFieldset Text="Register set">
+                        <RadzenFormField Text="Name" AllowFloatingLabel="false">
+                            <RadzenTextBox @bind-Value="_groupName" MaxLength="250"/>
                         </RadzenFormField>
-                    </RadzenStack>
-                </RadzenFieldset>
-                <RadzenFieldset>
-                    <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
-                        @foreach (var entry in _model.Entries.OrderBy(x => x.Order))
-                        {
-                            <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center">
-                                <RadzenFormField Text="@L["Descriptions.DisplayName"]" AllowFloatingLabel="false">
-                                    <RadzenTextBox @bind-Value="entry.DisplayName"/>    
+                    </RadzenFieldset>
+
+                    @if (_isNew)
+                    {
+                        <RadzenFieldset Text="Create entries from list">
+                            <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                                <RadzenFormField Text="One entry per line" AllowFloatingLabel="false">
+                                    <RadzenTextArea @bind-Value="_customText" Rows="6"/>
                                 </RadzenFormField>
-                                <RadzenFormField Text="@L["Descriptions.Order"]" AllowFloatingLabel="false">
-                                    <RadzenNumeric @bind-Value="entry.Order" ReadOnly="true" Disabled="true"/>
-                                </RadzenFormField>
-                                
-                                <RadzenButton Icon="arrow_upward" Click="@(_ => { Up(entry); })"/>
-                                <RadzenButton Icon="arrow_downward" Click="@(_ => { Down(entry); })"/>
+                                <div>
+                                    <RadzenButton Text="Apply list" ButtonStyle="ButtonStyle.Secondary" Click="Generate"/>
+                                </div>
                             </RadzenStack>
+                        </RadzenFieldset>
+                    }
+
+                    <RadzenFieldset Text="Entries">
+                        <RadzenStack Orientation="Orientation.Vertical" Gap="0.5rem">
+                            @for (var i = 0; i < _entries.Count; i++)
+                            {
+                                var entry = _entries[i];
+                                var index = i;
+                                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                                    <RadzenText TextStyle="TextStyle.Body2" style="width:2.5rem">@(index + 1)</RadzenText>
+                                    <RadzenTextBox @bind-Value="entry.DisplayName" MaxLength="250" style="width:16rem" ReadOnly="_inUse"/>
+                                    @if (!_inUse)
+                                    {
+                                        <RadzenButton Icon="arrow_upward" Variant="Variant.Text" Disabled="@(index == 0)" Click="@(() => Move(index, -1))"/>
+                                        <RadzenButton Icon="arrow_downward" Variant="Variant.Text" Disabled="@(index == _entries.Count - 1)" Click="@(() => Move(index, 1))"/>
+                                        <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Click="@(() => Remove(index))"/>
+                                    }
+                                </RadzenStack>
+                            }
+                            @if (!_inUse)
+                            {
+                                <div>
+                                    <RadzenButton Icon="add" Text="Add entry" ButtonStyle="ButtonStyle.Light" Click="AddEntry"/>
+                                </div>
+                            }
+                        </RadzenStack>
+                    </RadzenFieldset>
+
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem">
+                        <RadzenButton Text="@(_isNew ? "Create" : "Save")" IsBusy="_saving" Disabled="_saving" Click="Save"/>
+                        @if (!_isNew)
+                        {
+                            <RadzenButton Text="Copy as new set" Icon="content_copy" ButtonStyle="ButtonStyle.Secondary" Click="Copy"/>
                         }
+                        <RadzenButton Text="Back" ButtonStyle="ButtonStyle.Light" Click="Back"/>
                     </RadzenStack>
-                </RadzenFieldset>
-            </RadzenStack>
-        </RadzenColumn>
-    </RadzenRow>
-}
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+    }
+</RadzenStack>

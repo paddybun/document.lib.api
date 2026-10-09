@@ -1,4 +1,4 @@
-﻿@page "/Description"
+@page "/Description"
 @using document.lib.bl.contracts.RegisterDescriptions.Queries
 @using document.lib.bl.shared
 @using document.lib.data.context
@@ -11,6 +11,9 @@
 @inject IRegisterDescriptionsQuery<UnitOfWork> RegisterDescriptionsQuery
 @inject NavigationManager NavigationManager
 
+<RadzenStack Orientation="Orientation.Horizontal" class="rz-m-4">
+    <RadzenButton Text="New register set" Icon="add" Click="@(() => NavigationManager.NavigateTo("/RegisterSets/Create"))"/>
+</RadzenStack>
 <RadzenRow>
     <RadzenColumn Size="6">
         @if (_registerDescriptions.Any() && string.IsNullOrWhiteSpace(_selectedGroup))
@@ -42,7 +45,7 @@
         }
         else
         {
-            <p>Loading ...</p>
+            <p>@(_loaded ? "No register sets yet." : "Loading ...")</p>
         }
     </RadzenColumn >
 </RadzenRow>

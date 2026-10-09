@@ -34,9 +34,12 @@ public class RegisterDescriptionQuery(ILogger<RegisterDescriptionQuery> logger):
                     Order = x.Order
                 })
                 .ToList();
+            var inUse = await uow.Connection.Folders.AnyAsync(f => f.DescriptionGroup == parameters.GroupName)
+                        || await uow.Connection.Registers.AnyAsync(r => r.Description.Group == parameters.GroupName);
             var model = new RegisterDescriptionDetailModel
             {
                 Group = parameters.GroupName,
+                InUse = inUse,
                 Entries = entries.ToList()
             };
             

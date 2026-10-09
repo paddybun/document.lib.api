@@ -34,6 +34,16 @@ public class DeleteFolderUseCaseTests : UnitTestBase
     }
 
     [Fact]
+    public async Task FolderWithOnlyEmptyRegisters_ExecuteAsync_DeletesFolderAndRegisters()
+    {
+        var uow = new UnitOfWork(Context);
+        var sut = new DeleteFolderUseCase(NullLogger<DeleteFolderUseCase>.Instance, new FolderQuery(NullLogger<FolderQuery>.Instance));
+        var result = await sut.ExecuteAsync(uow, new() { FolderId = GetFolderId(4) });
+        Assert.True(result.IsSuccess);
+        Assert.Empty(Context.Registers.Where(x => x.FolderId == GetFolderId(4)));
+    }
+
+    [Fact]
     public async Task ProvidedInvalidInputs_ExecuteAsync_CreatesNotFoundWarning()
     {
         var uow = new UnitOfWork(Context);
@@ -53,6 +63,10 @@ public class DeleteFolderUseCaseTests : UnitTestBase
         Context.Registers.Add(new Register {Id = 1, FolderId = GetFolderId(2), Name = "1", DisplayName = "1" });
         Context.Documents.Add(new Document { RegisterId = 1, BlobLocation = "", Name = "", PhysicalName = ""});
         
+        // Folder 4 with an empty register
+        Context.Folders.Add(new Folder { Id = GetFolderId(4), Name = "EmptyRegister", MaxDocumentsRegister = 2, MaxDocumentsFolder = 10, DescriptionGroup = "default" });
+        Context.Registers.Add(new Register { Id = 2, FolderId = GetFolderId(4), Name = "1", DisplayName = "1" });
+
         Context.SaveChanges();
     }
 

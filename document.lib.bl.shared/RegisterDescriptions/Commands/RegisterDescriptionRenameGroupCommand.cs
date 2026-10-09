@@ -15,11 +15,11 @@ public class RegisterDescriptionRenameGroupCommand(ILogger<RegisterDescriptionRe
             logger.LogInformation("Executing {command}", nameof(RegisterDescriptionRenameGroupCommand));
 
             await uow.Connection.Folders
-                .Where(x => x.DescriptionGroup.Equals(parameters.OldGroupName, StringComparison.OrdinalIgnoreCase))
+                .Where(x => x.DescriptionGroup == parameters.OldGroupName)
                 .ExecuteUpdateAsync(setter => setter.SetProperty(x => x.DescriptionGroup, parameters.NewGroupName));
             
             await uow.Connection.RegisterDescriptions
-                .Where(x => x.Group.Equals(parameters.OldGroupName, StringComparison.OrdinalIgnoreCase))
+                .Where(x => x.Group == parameters.OldGroupName)
                 .ExecuteUpdateAsync(setter => setter.SetProperty(x => x.Group, parameters.NewGroupName));
             
             return Result<bool>.Success(true);
