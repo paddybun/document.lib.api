@@ -19,6 +19,7 @@ public partial class DocumentEdit : ComponentBase
     private List<string> _companies = [];
     private bool _saving;
     private bool _showPreview;
+    private bool _deleting;
     private string _newTag = string.Empty;
     private int _nextTempId = -1;
 
@@ -95,6 +96,32 @@ public partial class DocumentEdit : ComponentBase
 
         _model.TagIds = _model.TagIds.Append(tag.Id).Distinct().ToList();
         _newTag = string.Empty;
+    }
+
+    private async Task Delete()
+    {
+        if (_model == null) return;
+
+        var confirmed = await DialogService.Confirm(
+            "Do you really want to delete this document? The file is moved to the deleted storage.",
+            "Delete document",
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+        if (confirmed != true) return;
+
+        _deleting = true;
+        using var uow = await UnitOfWork.CreateAsync(DbContextFactory);
+        var result = await DeleteDocumentUseCase.ExecuteAsync(uow, new DeleteDocumentUseCaseParameters(_model.Id));
+        _deleting = false;
+
+        if (result.IsSuccess)
+        {
+            Notify(NotificationSeverity.Success, "Document deleted");
+            NavigationManager.NavigateTo("/Documents");
+        }
+        else
+        {
+            Notify(NotificationSeverity.Error, "Document could not be deleted");
+        }
     }
 
     private void Back() => NavigationManager.NavigateTo("/Documents");

@@ -10,6 +10,8 @@
 @inject IDbContextFactory<DatabaseContext> DbContextFactory
 @inject NavigationManager NavigationManager
 @inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject IDeleteDocumentUseCase<UnitOfWork> DeleteDocumentUseCase
 @inject IGetDocumentUseCase<UnitOfWork> GetDocumentUseCase
 @inject ISaveDocumentUseCase<UnitOfWork> SaveDocumentUseCase
 @inject IGetCategoriesUseCase<UnitOfWork> GetCategoriesUseCase
@@ -95,6 +97,7 @@
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem">
                             <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Primary" ButtonType="ButtonType.Submit" IsBusy="_saving"/>
                             <RadzenButton Text="@(_showPreview ? "Hide preview" : "Preview")" Icon="picture_as_pdf" ButtonStyle="ButtonStyle.Secondary" ButtonType="ButtonType.Button" Click="@(() => _showPreview = !_showPreview)"/>
+                            <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" ButtonType="ButtonType.Button" Click="Delete" IsBusy="_deleting"/>
                             <RadzenButton Text="Back" ButtonStyle="ButtonStyle.Light" Click="Back"/>
                         </RadzenStack>
                     </RadzenStack>

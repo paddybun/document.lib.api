@@ -5,7 +5,9 @@ using document.lib.bl.shared;
 using document.lib.core;
 using document.lib.data.context;
 using document.lib.web.v2.Components;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Server.IIS;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Mvc;
@@ -24,6 +26,11 @@ builder.Services.AddLocalization();
 
 var configSection = builder.Configuration.GetSection("Config");
 var appConfig = configSection.Get<SharedConfig>();
+
+var maxUploadBytes = (appConfig?.MaxUploadSizeMb ?? 500) * 1024L * 1024L;
+builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = maxUploadBytes);
+builder.Services.Configure<FormOptions>(options => options.MultipartBodyLengthLimit = maxUploadBytes);
+builder.Services.Configure<IISServerOptions>(options => options.MaxRequestBodySize = maxUploadBytes);
 builder.Services.AddDbContextFactory<DatabaseContext>(opts =>
 {
     opts.UseSqlServer(appConfig!.DbConnectionString, x => x.MigrationsAssembly("document.lib.data.context"));
@@ -71,10 +78,10 @@ app.MapPost("api/upload/single", async (IUploadBlobUseCase uploadBlobUse, [FromF
     {
         await file.CopyToAsync(memStream);
         memStream.Position = 0;
-        await uploadBlobUse.ExecuteAsync(file.FileName, memStream);
+        var doc = await uploadBlobUse.ExecuteAsync(file.FileName, memStream);
+        if (doc == null) return Results.Problem("The document could not be stored");
+        return Results.Ok(new { id = doc.Id });
     }
-
-    return TypedResults.Ok();
 }).DisableAntiforgery();
 
 app.MapGet("api/documents/{id:int}/file", async (

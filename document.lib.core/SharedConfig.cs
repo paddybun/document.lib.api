@@ -1,4 +1,4 @@
-﻿
+
 namespace document.lib.core;
 
 public class SharedConfig
@@ -9,4 +9,5 @@ public class SharedConfig
     public string? BlobContainer { get; init; }
     public string? DbConnectionString { get; init; }
     public string? StorageAccount { get; init; }
+    public int MaxUploadSizeMb { get; init; } = 500;
 }

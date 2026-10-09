@@ -1,47 +1,52 @@
-﻿@page "/Document/create"
-@using Microsoft.EntityFrameworkCore
-
-@inject IDbContextFactory<DatabaseContext> DbContextFactory
-
+@page "/Document/create"
 
 @rendermode InteractiveServer
 
-<RadzenRow>
-    <RadzenColumn Size="12">
-        <RadzenCard>
-            <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
-                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem">
-                    <RadzenText TextStyle="TextStyle.Subtitle2" Text="Upload New Document"/>
-                    <RadzenUpload @ref="_upload" Url="api/upload/single" Progress="@OnProgress" Error="@OnError" Auto="false"/>        
-                </RadzenStack>
-                <RadzenButton Text="Upload" Click=@OnUpload class="rz-mt-4" />
+@inject NavigationManager NavigationManager
+@inject NotificationService NotificationService
+
+<RadzenStack Orientation="Orientation.Vertical" Gap="1rem" class="rz-m-12">
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="/" Text="Home"/>
+            <RadzenBreadCrumbItem Path="/Documents" Text="Documents"/>
+            <RadzenBreadCrumbItem Text="Upload"/>
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+    <RadzenCard>
+        <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+            <RadzenText TextStyle="TextStyle.H5" Text="Upload new document"/>
+            <RadzenText TextStyle="TextStyle.Body2">
+                Choose a PDF. After the upload it lands in the unsorted folder, where you can complete its details and file it.
+            </RadzenText>
+
+            <RadzenUpload @ref="_upload" Url="api/upload/single" Accept="application/pdf" Auto="false"
+                          ChooseText="Choose PDF" Style="width: 100%"
+                          Change="OnChange" Progress="OnProgress" Complete="OnComplete" Error="OnError"/>
+
+            @if (_uploading)
+            {
+                <RadzenProgressBar Value="_progress" ShowValue="true" Unit="%"/>
+            }
+
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem">
+                <RadzenButton Text="Upload" Icon="upload" ButtonStyle="ButtonStyle.Primary"
+                              Disabled="@(!_hasFile || _uploading)" IsBusy="_uploading" Click="OnUpload"/>
             </RadzenStack>
-        </RadzenCard>
-    </RadzenColumn>
-</RadzenRow>
+        </RadzenStack>
+    </RadzenCard>
 
-@code{
-    private byte[] _data;
-    private RadzenUpload _upload;
-    private string? _docName = null;
-
-    protected override async Task OnInitializedAsync()
+    @if (_uploadedIds.Count > 0)
     {
-        await base.OnInitializedAsync();
+        <RadzenAlert AlertStyle="AlertStyle.Success" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false">
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0.5rem">
+                <RadzenText TextStyle="TextStyle.Subtitle1" Text="Uploaded successfully"/>
+                @foreach (var item in _uploadedIds)
+                {
+                    <RadzenLink Path="@($"/Documents/{item.Id}")" Text="@($"{item.FileName} - open to complete details")"/>
+                }
+            </RadzenStack>
+        </RadzenAlert>
     }
-
-    private async Task OnProgress(UploadProgressArgs arg)
-    {
-    }
-
-    private void OnError(UploadErrorEventArgs obj)
-    {
-        Console.WriteLine(obj.Message);
-    }
-
-    private async Task OnUpload(MouseEventArgs arg)
-    {
-        await _upload.Upload();
-    }
-
-}
+</RadzenStack>
