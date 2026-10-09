@@ -1,7 +1,8 @@
-﻿using document.lib.bl.contracts.Categories.Queries;
+using document.lib.bl.contracts.Categories.Queries;
 using document.lib.bl.contracts.Categories.UseCases;
 using document.lib.bl.contracts.DocumentHandling.Queries;
 using document.lib.bl.contracts.DocumentHandling.UseCases;
+using document.lib.bl.contracts.Documents.Commands;
 using document.lib.bl.contracts.Documents.Queries;
 using document.lib.bl.contracts.Documents.UseCases;
 using document.lib.bl.contracts.Folders.Queries;
@@ -10,12 +11,14 @@ using document.lib.bl.contracts.RegisterDescriptions.Commands;
 using document.lib.bl.contracts.RegisterDescriptions.Queries;
 using document.lib.bl.contracts.RegisterDescriptions.UseCases;
 using document.lib.bl.contracts.Tags.Queries;
+using document.lib.bl.contracts.Tags.UseCases;
 using document.lib.bl.contracts.Upload.Commands;
 using document.lib.bl.contracts.Upload.UseCases;
 using document.lib.bl.shared.Categories.Queries;
 using document.lib.bl.shared.Categories.UseCases;
 using document.lib.bl.shared.DocumentHandling.Queries;
 using document.lib.bl.shared.DocumentHandling.UseCases;
+using document.lib.bl.shared.Documents.Commands;
 using document.lib.bl.shared.Documents.Queries;
 using document.lib.bl.shared.Documents.UseCases;
 using document.lib.bl.shared.Folders.Queries;
@@ -24,6 +27,7 @@ using document.lib.bl.shared.RegisterDescriptions.Commands;
 using document.lib.bl.shared.RegisterDescriptions.Queries;
 using document.lib.bl.shared.RegisterDescriptions.UseCases;
 using document.lib.bl.shared.Tags.Queries;
+using document.lib.bl.shared.Tags.UseCases;
 using document.lib.bl.shared.Upload.Commands;
 using document.lib.bl.shared.Upload.UseCases;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,15 +49,23 @@ public static class CqrsDependencyModule
         serviceCollection.AddTransient<IAddToIndexCommand, AddToIndexCommand>();
         serviceCollection.AddTransient<IUploadBlobUseCase, UploadBlobUseCase>();
         serviceCollection.AddTransient<IDeleteBlobCommand, DeleteBlobCommand>();
+        serviceCollection.AddTransient<ICopyBlobCommand, CopyBlobCommand>();
+        serviceCollection.AddTransient<IDownloadBlobCommand, DownloadBlobCommand>();
         
         // Documents
         serviceCollection.AddTransient<IDocumentListUseCase<UnitOfWork>, DocumentListUseCase>();
         serviceCollection.AddTransient<IDocumentOverviewQuery<UnitOfWork>, DocumentOverviewQuery>();
         serviceCollection.AddTransient<IDocumentQuery<UnitOfWork>, DocumentQuery>();
+        serviceCollection.AddTransient<IGetDocumentUseCase<UnitOfWork>, GetDocumentUseCase>();
+        serviceCollection.AddTransient<ISaveDocumentUseCase<UnitOfWork>, SaveDocumentUseCase>();
+        serviceCollection.AddTransient<IGetDocumentFileUseCase<UnitOfWork>, GetDocumentFileUseCase>();
+        serviceCollection.AddTransient<IMoveDocumentCommand<UnitOfWork>, MoveDocumentCommand>();
+        serviceCollection.AddTransient<IUpdateDocumentCommand<UnitOfWork>, UpdateDocumentCommand>();
         
         // Folders
         serviceCollection.AddTransient<IFolderQuery<UnitOfWork>, FolderQuery>();
         serviceCollection.AddTransient<IFoldersQuery<UnitOfWork>, FoldersQuery>();
+        serviceCollection.AddTransient<IActiveFolderQuery<UnitOfWork>, ActiveFolderQuery>();
         serviceCollection.AddTransient<IGetRegisterUseCase<UnitOfWork>, GetRegisterUseCase>();
         serviceCollection.AddTransient<INextDescriptionQuery<UnitOfWork>, NextDescriptionQuery>();
         serviceCollection.AddTransient<IGetFolderOverviewUseCase<UnitOfWork>, GetFolderOverviewUseCase>();
@@ -71,6 +83,7 @@ public static class CqrsDependencyModule
         
         // Tags
         serviceCollection.AddTransient<ITagsQuery<UnitOfWork>, TagsQuery>();
+        serviceCollection.AddTransient<IGetTagsUseCase<UnitOfWork>, GetTagsUseCase>();
         
         return serviceCollection;
     }

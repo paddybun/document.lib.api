@@ -1,4 +1,5 @@
 using Azure.Identity;
+using document.lib.bl.contracts.Documents.UseCases;
 using document.lib.bl.contracts.Upload.UseCases;
 using document.lib.bl.shared;
 using document.lib.core;
@@ -6,6 +7,7 @@ using document.lib.data.context;
 using document.lib.web.v2.Components;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
@@ -74,6 +76,21 @@ app.MapPost("api/upload/single", async (IUploadBlobUseCase uploadBlobUse, [FromF
 
     return TypedResults.Ok();
 }).DisableAntiforgery();
+
+app.MapGet("api/documents/{id:int}/file", async (
+    int id,
+    IDbContextFactory<DatabaseContext> dbContextFactory,
+    IGetDocumentFileUseCase<UnitOfWork> getDocumentFileUseCase) =>
+{
+    using var uow = await UnitOfWork.CreateAsync(dbContextFactory);
+    var result = await getDocumentFileUseCase.ExecuteAsync(uow, new GetDocumentFileUseCaseParameters(id));
+    if (!result.HasData) return Results.NotFound();
+
+    if (!new FileExtensionContentTypeProvider().TryGetContentType(result.Value!.FileName, out var contentType))
+        contentType = "application/pdf";
+
+    return Results.File(result.Value.Content, contentType);
+});
 
 app.MapGet("api/culture", (string culture, string redirectUri, HttpContext context) =>
 {

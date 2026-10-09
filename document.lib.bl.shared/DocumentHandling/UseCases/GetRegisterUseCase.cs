@@ -1,4 +1,4 @@
-﻿using document.lib.bl.contracts.DocumentHandling.Queries;
+using document.lib.bl.contracts.DocumentHandling.Queries;
 using document.lib.bl.contracts.DocumentHandling.UseCases;
 using document.lib.core;
 using document.lib.data.entities;
@@ -44,7 +44,7 @@ public class GetRegisterUseCase(
                     DisplayName = newFolderDescriptionResult.Value.DisplayName,
                     DescriptionId = newFolderDescriptionResult.Value!.Id,
                     FolderId = parameters.FolderId,
-                    DocumentCount = 1
+                    DocumentCount = 0
                 };
             }
             else if (registers.Count > 0 && nextRegister == null)
@@ -65,7 +65,7 @@ public class GetRegisterUseCase(
                     DisplayName = existingFolderDescriptionResult.Value.DisplayName,
                     DescriptionId = existingFolderDescriptionResult.Value!.Id,
                     FolderId = parameters.FolderId,
-                    DocumentCount = 1
+                    DocumentCount = 0
                 };
                 nextRegister = newRegister;
             }

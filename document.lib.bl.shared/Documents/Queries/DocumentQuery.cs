@@ -13,6 +13,7 @@ public class DocumentQuery: IDocumentQuery<UnitOfWork>
             .AsNoTracking()
             .Include(x => x.Category)
             .Include(x => x.Tags)
+            .ThenInclude(x => x.Tag)
             .Include(x => x.Register)
             .ThenInclude(x => x.Folder)
             .Include(x => x.Register)

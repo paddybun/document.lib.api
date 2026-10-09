@@ -1,4 +1,4 @@
-﻿using document.lib.bl.contracts.Upload.Commands;
+using document.lib.bl.contracts.Upload.Commands;
 using document.lib.data.context;
 using document.lib.data.entities;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +7,7 @@ namespace document.lib.bl.shared.Upload.Commands;
 
 public class AddToIndexCommand(DatabaseContext context): IAddToIndexCommand
 {
-    const string NewDocumentCategory = "uncategorized";
+    const string NewDocumentCategory = Constants.UncategorizedName;
     const string NewFolderName = "unsorted";
     
     public async Task<Document> ExecuteAsync(string originalFilename, string blobName, string blobPath)

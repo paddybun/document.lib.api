@@ -1,6 +1,118 @@
 @page "/Documents/{Id:int}"
-@using Microsoft.EntityFrameworkCore.Internal
+@using document.lib.bl.contracts.Categories.UseCases
+@using document.lib.bl.contracts.Documents.UseCases
+@using document.lib.bl.contracts.Tags.UseCases
+@using document.lib.bl.contracts.Documents.ViewModels
+@using Microsoft.EntityFrameworkCore
 
 @rendermode InteractiveServer
 
-@inject DbContextFactory<DatabaseContext> DbContextFactory
+@inject IDbContextFactory<DatabaseContext> DbContextFactory
+@inject NavigationManager NavigationManager
+@inject NotificationService NotificationService
+@inject IGetDocumentUseCase<UnitOfWork> GetDocumentUseCase
+@inject ISaveDocumentUseCase<UnitOfWork> SaveDocumentUseCase
+@inject IGetCategoriesUseCase<UnitOfWork> GetCategoriesUseCase
+@inject IGetTagsUseCase<UnitOfWork> GetTagsUseCase
+
+@if (_model != null)
+{
+    <RadzenStack Orientation="Orientation.Vertical" Gap="1rem" class="rz-m-12">
+        <RadzenBreadCrumb>
+            <ChildContent>
+                <RadzenBreadCrumbItem Path="/" Text="Home"/>
+                <RadzenBreadCrumbItem Path="/Documents" Text="Documents"/>
+                <RadzenBreadCrumbItem Text="@_model.Id.ToString()"/>
+            </ChildContent>
+        </RadzenBreadCrumb>
+        <RadzenCard class="rz-p-4" Variant="Variant.Filled" style="border-left: 8px solid var(--rz-primary);">
+            <RadzenText TextStyle="TextStyle.Overline" class="rz-mb-2">Physical location</RadzenText>
+            @if (_model.Unsorted)
+            {
+                <RadzenText TextStyle="TextStyle.Body1">Not filed yet. Saving moves it to the active folder.</RadzenText>
+            }
+            <RadzenRow Gap="2rem">
+                <RadzenColumn Size="6">
+                    <RadzenText TextStyle="TextStyle.Caption">Folder</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H3" class="rz-m-0"><strong>@_model.Folder</strong></RadzenText>
+                </RadzenColumn>
+                <RadzenColumn Size="6">
+                    <RadzenText TextStyle="TextStyle.Caption">Register</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H3" class="rz-m-0"><strong>@_model.Register</strong></RadzenText>
+                </RadzenColumn>
+            </RadzenRow>
+        </RadzenCard>
+        <RadzenRow>
+            <RadzenColumn Size="6">
+                <RadzenFieldset Text="Document Details">
+                    <RadzenTemplateForm TItem="DocumentEditModel" Data="_model" Submit="@(_ => Save())">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                        <RadzenFormField Text="Display name">
+                            <RadzenTextBox Name="DisplayName" @bind-Value="_model.DisplayName" MaxLength="1000"/>
+                            <RadzenRequiredValidator Component="DisplayName" Text="Display name is required" Popup="true"/>
+                        </RadzenFormField>
+                        <RadzenFormField Text="Date of document">
+                            <RadzenDatePicker Name="DateOfDocument" @bind-Value="_model.DateOfDocument" DateFormat="d"/>
+                            <RadzenRequiredValidator Component="DateOfDocument" Text="Date of document is required" Popup="true"/>
+                        </RadzenFormField>
+                        <RadzenFormField Text="Category">
+                            <RadzenDropDown Name="Category" @bind-Value="_model.CategoryId" Data="_categories"
+                                            TextProperty="@nameof(Category.DisplayName)"
+                                            ValueProperty="@nameof(Category.Id)"/>
+                            <RadzenRequiredValidator Component="Category" Text="Category is required" Popup="true"/>
+                        </RadzenFormField>
+                        <RadzenFormField Text="Tags">
+                            <RadzenDropDown @bind-Value="_model.TagIds" Data="_tags" Multiple="true" Chips="true"
+                                            AllowClear="true" AllowFiltering="true"
+                                            TextProperty="@nameof(Tag.DisplayName)"
+                                            ValueProperty="@nameof(Tag.Id)"/>
+                        </RadzenFormField>
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                            <RadzenFormField Text="New tag">
+                                <RadzenTextBox @bind-Value="_newTag" MaxLength="250"/>
+                            </RadzenFormField>
+                            <RadzenButton Text="Add tag" ButtonStyle="ButtonStyle.Secondary" ButtonType="ButtonType.Button" Click="AddTag"/>
+                        </RadzenStack>
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem">
+                            <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Primary" ButtonType="ButtonType.Submit" IsBusy="_saving"/>
+                            <RadzenButton Text="@(_showPreview ? "Hide preview" : "Preview")" Icon="picture_as_pdf" ButtonStyle="ButtonStyle.Secondary" ButtonType="ButtonType.Button" Click="@(() => _showPreview = !_showPreview)"/>
+                            <RadzenButton Text="Back" ButtonStyle="ButtonStyle.Light" Click="Back"/>
+                        </RadzenStack>
+                    </RadzenStack>
+                    </RadzenTemplateForm>
+                </RadzenFieldset>
+            </RadzenColumn>
+            <RadzenColumn Size="6">
+                @if (_showPreview)
+                {
+                    <iframe src="/api/documents/@_model.Id/file" title="Document preview"
+                            style="width: 100%; height: 80vh; border: 1px solid var(--rz-base-300);"></iframe>
+                }
+                <RadzenFieldset Text="More information" AllowCollapse="true" Collapsed="true">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                        <RadzenFormField Text="File name">
+                            <RadzenTextBox Value="@_model.Filename" ReadOnly="true" Disabled="true"/>
+                        </RadzenFormField>
+                        <RadzenFormField Text="Company">
+                            <RadzenTextBox Value="@_model.Company" ReadOnly="true" Disabled="true"/>
+                        </RadzenFormField>
+                        <RadzenFormField Text="Description">
+                            <RadzenTextArea Value="@_model.Description" ReadOnly="true" Disabled="true"/>
+                        </RadzenFormField>
+                        <RadzenFormField Text="Upload date">
+                            <RadzenTextBox Value="@_model.UploadDate.ToString("g")" ReadOnly="true" Disabled="true"/>
+                        </RadzenFormField>
+                        <RadzenFormField Text="Last modified">
+                            <RadzenTextBox Value="@_model.DateModified.ToString("g")" ReadOnly="true" Disabled="true"/>
+                        </RadzenFormField>
+                        <RadzenFormField Text="File size (bytes)">
+                            <RadzenTextBox Value="@_model.FilesizeInBytes.ToString("N0")" ReadOnly="true" Disabled="true"/>
+                        </RadzenFormField>
+                        <RadzenCheckBox Value="@_model.Digital" ReadOnly="true" Disabled="true" Name="Digital"/>
+                        <RadzenLabel Text="Digital" Component="Digital"/>
+                    </RadzenStack>
+                </RadzenFieldset>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenStack>
+}
