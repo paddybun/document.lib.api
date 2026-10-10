@@ -14,6 +14,15 @@ public partial class DocumentOverview
     private RadzenDataGrid<DocumentOverviewModel> _grid = null!;
     private string _lastFilter = string.Empty;
 
+    private readonly List<string> _overviewProperties =
+    [
+        nameof(DocumentOverviewModel.DisplayName),
+        nameof(DocumentOverviewModel.DateOfDocument),
+        nameof(DocumentOverviewModel.Folder),
+        nameof(DocumentOverviewModel.Register),
+        nameof(DocumentOverviewModel.Unsorted)
+    ];
+
     private async Task LoadData(LoadDataArgs arg)
     {
         var uow = await UnitOfWork.CreateAsync(DbContextFactory);

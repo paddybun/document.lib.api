@@ -1,0 +1,40 @@
+@page "/Categories/Create"
+@using document.lib.bl.contracts.Categories.UseCases
+@using document.lib.bl.contracts.Categories.ViewModels
+@using Microsoft.EntityFrameworkCore
+
+@rendermode InteractiveServer
+
+@inject IDbContextFactory<DatabaseContext> DbContextFactory
+@inject ICreateCategoryUseCase<UnitOfWork> CreateCategoryUseCase
+@inject NavigationManager NavigationManager
+@inject NotificationService NotificationService
+
+<RadzenStack Orientation="Orientation.Vertical" Gap="1rem" class="rz-m-12">
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="/" Text="Home"/>
+            <RadzenBreadCrumbItem Path="/Categories" Text="Categories"/>
+            <RadzenBreadCrumbItem Text="New category"/>
+        </ChildContent>
+    </RadzenBreadCrumb>
+    <RadzenRow>
+        <RadzenColumn Size="6">
+            <RadzenFieldset Text="New category">
+                <RadzenTemplateForm TItem="CategoryOverviewModel" Data="_model" Submit="@(_ => Create())">
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                        <RadzenFormField Text="Display name">
+                            <RadzenTextBox Name="DisplayName" @bind-Value="_model.DisplayName" MaxLength="500"/>
+                            <RadzenRequiredValidator Component="DisplayName" Text="Display name is required" Popup="true"/>
+                        </RadzenFormField>
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem">
+                            <RadzenButton ButtonType="ButtonType.Submit" Text="Create" IsBusy="_saving" Disabled="_saving"/>
+                            <RadzenButton Text="Back" ButtonStyle="ButtonStyle.Light" Disabled="_saving"
+                                          Click="@(() => NavigationManager.NavigateTo("/Categories"))"/>
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenTemplateForm>
+            </RadzenFieldset>
+        </RadzenColumn>
+    </RadzenRow>
+</RadzenStack>

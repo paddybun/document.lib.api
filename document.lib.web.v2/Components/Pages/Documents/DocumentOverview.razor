@@ -23,9 +23,9 @@
             LoadData="@LoadData"
             RowDoubleClick="Callback">
             <Columns>
-                @foreach (var prop in typeof(DocumentOverviewModel).GetProperties())
+                @foreach (var prop in _overviewProperties)
                 {
-                    <RadzenDataGridColumn Property="@prop.Name" Title="@prop.Name"/>
+                    <RadzenDataGridColumn Property="@prop" Title="@prop"/>
                 }
             </Columns>
         </RadzenDataGrid>

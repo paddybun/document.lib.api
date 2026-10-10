@@ -43,7 +43,8 @@ public class DocumentListUseCase(ILogger<DocumentListUseCase> logger, IDocumentO
             Unsorted = doc.Unsorted,
             Filename = doc.OriginalFileName,
             Folder = doc.Register.Folder?.DisplayName ?? string.Empty,
-            Register = doc.Register.DisplayName ?? string.Empty
+            Register = doc.Register.DisplayName ?? string.Empty,
+            DateOfDocument = doc.DateOfDocument ?? null
         };
     }
 }

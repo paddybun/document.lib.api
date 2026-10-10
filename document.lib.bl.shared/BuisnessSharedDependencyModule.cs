@@ -51,6 +51,8 @@ public static class CqrsDependencyModule
         serviceCollection.AddTransient<IUpdateCategoryCommand<UnitOfWork>, UpdateCategoryCommand>();
         serviceCollection.AddTransient<IGetCategoryOverviewUseCase<UnitOfWork>, GetCategoryOverviewUseCase>();
         serviceCollection.AddTransient<IUpdateCategoryUseCase<UnitOfWork>, UpdateCategoryUseCase>();
+        serviceCollection.AddScoped<ICreateCategoryCommand<UnitOfWork>, CreateCategoryCommand>();
+        serviceCollection.AddScoped<ICreateCategoryUseCase<UnitOfWork>, CreateCategoryUseCase>();
         serviceCollection.AddTransient<IMergeCategoryCommand<UnitOfWork>, MergeCategoryCommand>();
         serviceCollection.AddTransient<IDeleteCategoryCommand<UnitOfWork>, DeleteCategoryCommand>();
         serviceCollection.AddTransient<IMergeCategoryUseCase<UnitOfWork>, MergeCategoryUseCase>();

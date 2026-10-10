@@ -8,4 +8,5 @@ public class DocumentOverviewModel
     public required string Filename { get; set; }
     public required string Folder { get; set; }
     public required string Register { get; set; }
+    public DateTimeOffset? DateOfDocument { get; set; }
 }

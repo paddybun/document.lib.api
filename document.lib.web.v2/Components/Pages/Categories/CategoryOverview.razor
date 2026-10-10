@@ -17,6 +17,9 @@
             <RadzenBreadCrumbItem Text="Categories"/>
         </ChildContent>
     </RadzenBreadCrumb>
+    <div>
+        <RadzenButton Text="New category" Icon="add" Click="@(() => NavigationManager.NavigateTo("/Categories/Create"))"/>
+    </div>
     @if (_categories == null)
     {
         <p>Loading ...</p>
